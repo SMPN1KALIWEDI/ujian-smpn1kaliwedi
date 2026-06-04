@@ -107,11 +107,17 @@ table.tn th{padding:9px 11px;text-align:left;font-size:.76rem;font-weight:700;le
 table.tn td{padding:8px 11px;border-bottom:1px solid #eef2f6}
 table.tn tbody tr:last-child td{border-bottom:none}
 table.tn tbody tr:nth-child(even){background:#f8fbff}
-.bdg{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.74rem;font-weight:700}
-.bdg.l{background:#e8f7f0;color:var(--hijau)}
-.bdg.k{background:#fdecea;color:var(--merah)}
-.bdg.b{background:#f4f6f8;color:var(--abu2)}
-.n-val{font-weight:800}
+.bdg{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:700}
+/* Status Sudah/Belum */
+.bdg.sdh{background:#e8f7f0;color:#1a7f5a}
+.bdg.blm{background:#f4f6f8;color:#90a4ae}
+/* Keterangan nilai */
+.bdg.k{background:#fdecea;color:#e53935}       /* Kurang    < 75  */
+.bdg.c{background:#fff8e1;color:#f57f17}       /* Cukup    75-80  */
+.bdg.m{background:#e3f2fd;color:#1565c0}       /* Memuaskan 80-90 */
+.bdg.i{background:#f3e5f5;color:#6a1b9a}       /* Istimewa 90-100 */
+.bdg.b{background:#f4f6f8;color:#90a4ae}       /* Belum ujian     */
+
 .btn-row2{display:flex;gap:10px;margin-top:4px}
 .btn-kel{flex:1;padding:11px;background:var(--abu);color:var(--abu2);border:2px solid #d8e6f0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer}
 .btn-kel:hover{background:#fdecea;color:var(--merah);border-color:#ffcdd2}
@@ -219,7 +225,7 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
       </div>
       <div class="sec-title">📊 Rekap Nilai Ujian</div>
       <table class="tn">
-        <thead><tr><th>#</th><th>Mata Pelajaran</th><th>Nilai</th><th>Keterangan</th></tr></thead>
+        <thead><tr><th>#</th><th>Mata Pelajaran</th><th>Status</th><th>Keterangan</th></tr></thead>
         <tbody id="tbNilai"><tr><td colspan="4" style="text-align:center;padding:14px;color:#b0bec5">⏳ Memuat...</td></tr></tbody>
       </table>
       <div class="btn-row2">
@@ -684,14 +690,45 @@ async function muatNilai(siswa) {
   }
   if (r.nilai.length === 0) {
     const mapel = getMapel(siswa.kelas);
-    tb.innerHTML = `<tr><td>1</td><td><b>${mapel||'-'}</b></td><td style="color:#b0bec5">-</td><td><span class="bdg b">Belum Ujian</span></td></tr>`;
+    tb.innerHTML = `<tr><td>1</td><td><b>${mapel||'-'}</b></td>
+      <td style="text-align:center"><span class="bdg blm">Belum</span></td>
+      <td><span class="bdg b"></span></td></tr>`;
     return;
   }
   tb.innerHTML = r.nilai.map((item,i)=>{
-    const n=item.nilai;
-    const cls = n===null?'b':n>=75?'l':'k';
-    const ket = n===null?'Belum Ujian':n>=75?'✅ Lulus':'⚠️ Kurang';
-    return `<tr><td>${i+1}</td><td><b>${item.mapel}</b></td><td class="n-val">${n!==null?n:'-'}</td><td><span class="bdg ${cls}">${ket}</span></td></tr>`;
+    const n = item.nilai;
+
+    let cls, ket, status;
+    if (n === null || n === '') {
+      cls    = 'b';
+      ket    = '';           // kosong jika belum ujian
+      status = 'Belum';
+    } else if (n < 75) {
+      cls    = 'k';
+      ket    = '⚠️ Kurang';
+      status = 'Sudah';
+    } else if (n < 80) {
+      cls    = 'c';
+      ket    = '👍 Cukup';
+      status = 'Sudah';
+    } else if (n < 90) {
+      cls    = 'm';
+      ket    = '🌟 Memuaskan';
+      status = 'Sudah';
+    } else {
+      cls    = 'i';
+      ket    = '🏆 Istimewa';
+      status = 'Sudah';
+    }
+
+    return `<tr>
+      <td>${i+1}</td>
+      <td><b>${item.mapel}</b></td>
+      <td style="text-align:center;font-weight:700">
+        <span class="bdg ${status==='Sudah'?'sdh':'blm'}">${status}</span>
+      </td>
+      <td><span class="bdg ${cls}">${ket}</span></td>
+    </tr>`;
   }).join('');
 }
 

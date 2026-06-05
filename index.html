@@ -16,6 +16,7 @@
 
 <!-- PWA Manifest -->
 <link rel="manifest" href="manifest.json">
+<base href="/ujian-smpn1kaliwedi/">
 <link rel="apple-touch-icon" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png">
 
 <title>Portal Ujian — SMPN 1 Kaliwedi</title>
@@ -1265,7 +1266,10 @@ init();
 // ============================================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    // Path harus sesuai subdirektori GitHub Pages
+    navigator.serviceWorker.register('./sw.js', {
+      scope: './'
+    })
       .then(r => console.log('✅ SW terdaftar:', r.scope))
       .catch(e => console.warn('SW gagal:', e));
   });

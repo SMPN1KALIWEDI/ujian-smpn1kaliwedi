@@ -3,24 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Ujian SMPN1">
 <meta name="theme-color" content="#1a7f5a">
-<meta name="application-name" content="Ujian SMPN 1 Kaliwedi">
 
 <!-- Keamanan browser -->
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="referrer" content="no-referrer">
 
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json">
-<base href="/ujian-smpn1kaliwedi/">
-<link rel="apple-touch-icon" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png">
+
 
 <title>Portal Ujian — SMPN 1 Kaliwedi</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Library QR Scanner -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <style>
 /* Keamanan: blokir seleksi teks dan screenshot CSS */
 * {
@@ -189,7 +184,8 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
         <label>Nomor ID Siswa</label>
         <div class="iw">
           <span class="ic">🪪</span>
-          <input type="text" id="inpID" placeholder="Masukkan No. ID Anda" autocomplete="off">
+          <input type="text" id="inpID" placeholder="Masukkan No. ID atau scan QR" autocomplete="off">
+          <button class="btn-scan" onclick="bukaQR()" title="Scan QR Code">📷</button>
         </div>
       </div>
       <div class="fg">
@@ -200,6 +196,17 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
           <span class="eye" onclick="tglPw('inpPw',this)">👁</span>
         </div>
       </div>
+      <!-- Info biometrik -->
+      <div class="bio-wrap" id="bioWrap" style="display:none">
+        <button class="btn-bio" id="btnBio" onclick="loginBiometrik()" title="Login dengan sidik jari">
+          👆
+        </button>
+        <div class="bio-info">
+          <b>Sidik Jari Tersimpan</b><br>
+          Tap untuk login tanpa password
+        </div>
+      </div>
+
       <button class="btn-login" onclick="login()">Masuk →</button>
       <a class="link-ubah" onclick="bukaUbahPw()">🔄 Ubah Password</a>
     </div>
@@ -243,6 +250,21 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
         <div class="susulan-title">⚠️ Ujian Susulan Tersedia</div>
         <div id="listSusulan"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: QR SCANNER -->
+<div class="modal-bg" id="modalQR">
+  <div class="modal" style="max-width:340px">
+    <h3 style="text-align:center;margin-bottom:4px">📷 Scan QR Code</h3>
+    <p style="text-align:center;font-size:.82rem;color:var(--abu2);margin-bottom:14px">
+      Arahkan kamera ke QR Code kartu ujian siswa
+    </p>
+    <div id="qr-reader"></div>
+    <div class="qr-status" id="qrStatus">Memulai kamera...</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn-batal" onclick="tutupQR()">Tutup</button>
     </div>
   </div>
 </div>
@@ -342,6 +364,67 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
 <style>
 @keyframes denyut{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 @keyframes kedip{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* MODAL QR SCANNER */
+#modalQR { z-index: 2000; }
+#qr-reader {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+#qr-reader video {
+  border-radius: 12px;
+  width: 100% !important;
+}
+.qr-status {
+  text-align: center;
+  font-size: .85rem;
+  color: var(--abu2);
+  margin-top: 10px;
+  min-height: 20px;
+}
+.btn-scan {
+  position: absolute;
+  right: 42px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 4px;
+  opacity: .6;
+  transition: opacity .2s;
+}
+.btn-scan:hover { opacity: 1; }
+
+/* BIOMETRIC */
+.bio-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.btn-bio {
+  flex-shrink: 0;
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  border: 2px solid #d8e6f0;
+  background: var(--abu);
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: .2s;
+}
+.btn-bio:hover { border-color: var(--hijau); background: var(--hijau-bg); }
+.btn-bio.aktif { border-color: var(--hijau); background: var(--hijau-bg); }
+.bio-info {
+  font-size: .75rem;
+  color: var(--abu2);
+  line-height: 1.4;
+}
+.bio-info b { color: var(--teks); }
 
 /* TOMBOL FULLSCREEN */
 #btnFullscreen {
@@ -641,7 +724,11 @@ async function login() {
   // Login berhasil
   siswaLokal.status = 'AKTIF';
   D.aktif = siswaLokal;
+  // Simpan password (base64) di session untuk keperluan biometrik
+  sessionStorage.setItem('pwc_' + id, btoa(pw));
   tampilDashboard(siswaLokal);
+  // Tawarkan daftar sidik jari setelah 2 detik
+  setTimeout(() => tawarBiometrik(siswaLokal), 2000);
 }
 
 // ============================================================
@@ -1259,21 +1346,174 @@ function pesan(el,t,s){ el.className='msg '+t; el.textContent=s; }
 function tglPw(id,ico){ const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; ico.textContent=i.type==='password'?'👁':'🙈'; }
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('h1').style.display!=='none') login(); });
 
-init();
+// ============================================================
+// QR CODE SCANNER — Html5Qrcode
+// ============================================================
+let qrScanner = null;
+
+function bukaQR() {
+  buka('modalQR');
+  setText('qrStatus', 'Memulai kamera...');
+  setTimeout(() => {
+    try {
+      qrScanner = new Html5Qrcode('qr-reader');
+      qrScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const id = decodedText.trim();
+          document.getElementById('inpID').value = id;
+          setText('qrStatus', '✅ ID terbaca: ' + id);
+          cekBiometrikTersimpan(id);
+          setTimeout(() => tutupQR(), 800);
+        },
+        () => {} // abaikan error frame kosong
+      ).then(() => {
+        setText('qrStatus', '🔍 Arahkan ke QR Code siswa...');
+      }).catch(err => {
+        setText('qrStatus', '❌ Kamera tidak bisa diakses');
+        console.warn(err);
+      });
+    } catch(e) {
+      setText('qrStatus', '❌ ' + e.message);
+    }
+  }, 300);
+}
+
+function tutupQR() {
+  if (qrScanner) {
+    qrScanner.stop().catch(() => {});
+    qrScanner.clear();
+    qrScanner = null;
+  }
+  tutup('modalQR');
+}
 
 // ============================================================
-// PWA — Registrasi Service Worker
+// BIOMETRIK — WebAuthn (sidik jari / face ID)
+// Data TIDAK dikirim ke server — tersimpan lokal di HP
 // ============================================================
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    // Path harus sesuai subdirektori GitHub Pages
-    navigator.serviceWorker.register('./sw.js', {
-      scope: './'
-    })
-      .then(r => console.log('✅ SW terdaftar:', r.scope))
-      .catch(e => console.warn('SW gagal:', e));
-  });
+function dukungBiometrik() {
+  return window.PublicKeyCredential !== undefined &&
+         navigator.credentials     !== undefined;
 }
+
+function cekBiometrikTersimpan(idSiswa) {
+  if (!dukungBiometrik()) return;
+  const ada = localStorage.getItem('bio_' + idSiswa);
+  document.getElementById('bioWrap').style.display = ada ? 'flex' : 'none';
+}
+
+// Update ikon sidik jari saat ID diketik manual
+document.getElementById('inpID').addEventListener('input', function() {
+  cekBiometrikTersimpan(this.value.trim());
+});
+
+async function loginBiometrik() {
+  const id = val('inpID');
+  const el = document.getElementById('msgLogin');
+  el.className = 'msg';
+  if (!id) { pesan(el,'err','⚠️ Isi No. ID dulu.'); return; }
+
+  const raw = localStorage.getItem('bio_' + id);
+  if (!raw) { pesan(el,'err','⚠️ Sidik jari belum didaftarkan di HP ini.'); return; }
+
+  try {
+    const { credentialId } = JSON.parse(raw);
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge       : crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{
+          id  : Uint8Array.from(atob(credentialId), c => c.charCodeAt(0)),
+          type: 'public-key',
+        }],
+        userVerification: 'required',
+        timeout         : 30000,
+      }
+    });
+
+    if (assertion) {
+      // Biometrik sukses — ambil password dari cache lokal lalu login
+      const siswa = D.siswa.find(s => s.id === id);
+      if (!siswa) { pesan(el,'err','❌ ID tidak ditemukan.'); return; }
+
+      const pwCache = sessionStorage.getItem('pwc_' + id);
+      if (!pwCache) { pesan(el,'err','⚠️ Sesi habis. Login manual sekali lagi lalu coba lagi.'); return; }
+
+      setText('loadTeks','Memverifikasi...');
+      show('loading');
+      const r = await apiFetch({ action:'login', id, pw: atob(pwCache) });
+      hide('loading');
+
+      if (r && r.status === 'ok') {
+        siswa.status = 'AKTIF';
+        D.aktif = siswa;
+        tampilDashboard(siswa);
+        setTimeout(() => tawarBiometrik(siswa), 1500);
+      } else {
+        pesan(el,'err','❌ Login gagal. Coba dengan password.');
+      }
+    }
+  } catch(e) {
+    if (e.name === 'NotAllowedError') {
+      pesan(el,'err','❌ Sidik jari tidak cocok atau dibatalkan.');
+    } else {
+      pesan(el,'err','⚠️ Biometrik tidak tersedia. Gunakan password.');
+    }
+  }
+}
+
+async function tawarBiometrik(siswa) {
+  if (!dukungBiometrik()) return;
+  if (localStorage.getItem('bio_' + siswa.id)) return;
+
+  const mau = confirm(
+    '👆 Daftarkan Sidik Jari?\n\n' +
+    'Berikutnya login cukup tap sidik jari — tanpa ketik password.\n\n' +
+    '⚠️ Hanya berlaku di HP ini. Sidik jari tidak dikirim ke server.'
+  );
+  if (!mau) return;
+
+  try {
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: {
+          name: 'Portal Ujian SMPN1',
+          id  : location.hostname,
+        },
+        user: {
+          id         : new TextEncoder().encode(siswa.id),
+          name       : siswa.id,
+          displayName: siswa.nama,
+        },
+        pubKeyCredParams   : [{ alg: -7, type: 'public-key' }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification       : 'required',
+        },
+        timeout: 30000,
+      }
+    });
+
+    if (cred) {
+      const credId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+      localStorage.setItem('bio_' + siswa.id, JSON.stringify({
+        credentialId: credId,
+        nama        : siswa.nama,
+        terdaftar   : new Date().toISOString(),
+      }));
+      alert('✅ Sidik jari berhasil didaftarkan!\nLogin berikutnya cukup tap 👆');
+    }
+  } catch(e) {
+    if (e.name !== 'NotAllowedError') console.warn('Daftar biometrik:', e.message);
+  }
+}
+
+
+init();
+
+// PWA dihapus — app akan dibungkus ke APK Android
 
 // ============================================================
 // KEAMANAN TAMBAHAN ANDROID / MOBILE
@@ -1329,27 +1569,7 @@ if (navigator.mediaDevices) {
   };
 }
 
-// 6. Tampilkan tombol "Pasang Aplikasi" jika PWA bisa diinstall
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  // Tampilkan tombol install kecil di footer login
-  const btn = document.createElement('button');
-  btn.textContent = '📲 Pasang sebagai Aplikasi';
-  btn.style.cssText = `
-    display:block; margin:12px auto 0; padding:9px 18px;
-    background:transparent; border:2px solid var(--hijau);
-    border-radius:10px; color:var(--hijau); font-family:'Nunito',sans-serif;
-    font-size:.82rem; font-weight:700; cursor:pointer;
-  `;
-  btn.onclick = () => {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; btn.remove(); });
-  };
-  // Tambahkan ke bawah card login
-  document.querySelector('#h1 .body')?.appendChild(btn);
-});
+// Tombol install PWA dihapus
 
 // 7. Cegah back button saat ujian berlangsung (Android)
 history.pushState(null, '', location.href);

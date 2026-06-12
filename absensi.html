@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1565c0">
+<title>AbsensiKu — SMPN 1 Kaliwedi</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root {
+  --biru1: #0d47a1;
+  --biru2: #1565c0;
+  --biru3: #1976d2;
+  --biru4: #42a5f5;
+  --biru5: #bbdefb;
+  --biru6: #e3f2fd;
+  --putih: #ffffff;
+  --teks:  #0d1b2a;
+  --abu:   #f0f4f8;
+  --abu2:  #78909c;
+  --hijau: #2e7d32;
+  --hijau2:#e8f5e9;
+  --merah: #c62828;
+  --merah2:#ffebee;
+  --kuning:#f57f17;
+  --kuning2:#fff8e1;
+  --shadow: 0 8px 32px rgba(13,71,161,0.15);
+  --r: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: linear-gradient(160deg, #e3f2fd 0%, #bbdefb 40%, #e8eaf6 100%);
+  min-height: 100vh;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 16px 12px 40px;
+}
+
+/* LOADING */
+#loading {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.spin {
+  width: 52px; height: 52px;
+  border: 5px solid var(--biru5);
+  border-top-color: var(--biru2);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin-bottom: 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading p { color: var(--biru2); font-weight: 700; font-size: 1rem; }
+#loading small { color: var(--abu2); font-size: .8rem; margin-top: 4px; }
+
+/* CONTAINER */
+.wrap { width: 100%; max-width: 480px; }
+
+/* CARD */
+.card {
+  background: var(--putih);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: up .5s ease both;
+}
+@keyframes up { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+
+/* HEADER */
+.hdr {
+  background: linear-gradient(135deg, var(--biru1) 0%, var(--biru3) 60%, #5c6bc0 100%);
+  padding: 28px 22px 36px;
+  text-align: center;
+  color: var(--putih);
+  position: relative;
+}
+.hdr::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 24px; background: var(--putih);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+/* Dekorasi bulat */
+.hdr::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  background: rgba(255,255,255,.07);
+  border-radius: 50%;
+}
+.logo-ring {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.8);
+  background: #fff;
+  padding: 6px;
+  margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(0,0,0,.25);
+  overflow: hidden;
+}
+.logo-ring img { width:100%; height:100%; object-fit:contain; }
+.hdr-app {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.6rem; font-weight: 800;
+  letter-spacing: .5px; margin-bottom: 2px;
+}
+.hdr-app span { color: #90caf9; }
+.hdr-sekolah {
+  font-size: .82rem; font-weight: 600;
+  opacity: .9; letter-spacing: .3px;
+}
+
+/* FORM LOGIN */
+.body { padding: 28px 24px 20px; }
+.msg {
+  padding: 10px 14px; border-radius: 10px;
+  font-size: .87rem; font-weight: 700;
+  margin-bottom: 14px; display: none;
+}
+.msg.err { background: var(--merah2); color: var(--merah); border-left: 4px solid var(--merah); display: block; }
+.msg.ok  { background: var(--hijau2); color: var(--hijau); border-left: 4px solid var(--hijau); display: block; }
+.fg { margin-bottom: 14px; }
+label {
+  display: block; font-size: .78rem; font-weight: 700;
+  color: var(--abu2); text-transform: uppercase;
+  letter-spacing: .5px; margin-bottom: 6px;
+}
+.iw { position: relative; }
+.iw .ic {
+  position: absolute; left: 13px; top: 50%;
+  transform: translateY(-50%); font-size: 1rem; opacity: .4;
+}
+input[type=text], input[type=password] {
+  width: 100%; padding: 12px 42px;
+  border: 2px solid #cfd8dc; border-radius: 12px;
+  font-family: 'Nunito', sans-serif; font-size: .98rem;
+  color: var(--teks); background: var(--abu);
+  outline: none; transition: .2s;
+}
+input:focus {
+  border-color: var(--biru3);
+  box-shadow: 0 0 0 3px rgba(25,118,210,.12);
+  background: var(--putih);
+}
+.eye, .qr-btn {
+  position: absolute; right: 13px; top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer; font-size: 1.1rem;
+  opacity: .45; background: none; border: none;
+  padding: 2px; transition: opacity .2s;
+  user-select: none;
+}
+.eye:hover, .qr-btn:hover { opacity: .9; }
+.btn-login {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--biru1), var(--biru3));
+  color: #fff; border: none; border-radius: 12px;
+  font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 700;
+  cursor: pointer; margin-top: 4px;
+  box-shadow: 0 4px 14px rgba(13,71,161,.3);
+  transition: .2s; letter-spacing: .3px;
+}
+.btn-login:hover { opacity: .92; transform: translateY(-1px); }
+.link-ubah {
+  display: block; text-align: center; margin-top: 12px;
+  font-size: .82rem; color: var(--biru3); font-weight: 700;
+  cursor: pointer; text-decoration: none;
+}
+.link-ubah:hover { text-decoration: underline; }
+
+/* HALAMAN ABSENSI */
+#hAbsen { display: none; }
+.profil-bar {
+  background: linear-gradient(135deg, var(--biru1), var(--biru3));
+  padding: 20px 22px 28px; color: #fff; position: relative;
+}
+.profil-bar::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 22px; background: var(--putih);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+.profil-nama {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.2rem; font-weight: 800; margin-bottom: 4px;
+}
+.profil-sub { font-size: .82rem; opacity: .85; }
+.profil-grid {
+  display: flex; gap: 10px; margin-top: 12px;
+}
+.profil-chip {
+  background: rgba(255,255,255,.2);
+  border: 1.5px solid rgba(255,255,255,.4);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: .78rem; font-weight: 700;
+}
+
+/* FILTER BULAN */
+.filter-bar {
+  padding: 14px 20px 0;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.filter-bar label { text-transform: none; font-size: .82rem; white-space: nowrap; }
+select {
+  flex: 1; padding: 8px 12px;
+  border: 2px solid #cfd8dc; border-radius: 10px;
+  font-family: 'Nunito', sans-serif; font-size: .9rem;
+  color: var(--teks); background: var(--abu); outline: none;
+  cursor: pointer; transition: .2s;
+}
+select:focus { border-color: var(--biru3); }
+.btn-refresh {
+  padding: 8px 14px;
+  background: var(--biru6); color: var(--biru2);
+  border: 2px solid var(--biru5); border-radius: 10px;
+  font-family: 'Nunito', sans-serif; font-size: .85rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap; transition: .2s;
+}
+.btn-refresh:hover { background: var(--biru5); }
+
+/* REKAP KEHADIRAN */
+.rekap-grid {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 8px; padding: 14px 20px;
+}
+.rekap-box {
+  background: var(--abu);
+  border-radius: 12px; padding: 10px 6px;
+  text-align: center;
+}
+.rekap-box .rn { font-size: 1.4rem; font-weight: 800; font-family:'Poppins',sans-serif; }
+.rekap-box .rl { font-size: .68rem; font-weight: 700; color: var(--abu2); text-transform: uppercase; letter-spacing: .3px; margin-top: 2px; }
+.rekap-box.hadir   { background: var(--hijau2); }
+.rekap-box.hadir .rn { color: var(--hijau); }
+.rekap-box.sakit   { background: #e3f2fd; }
+.rekap-box.sakit .rn { color: var(--biru2); }
+.rekap-box.izin    { background: var(--kuning2); }
+.rekap-box.izin .rn { color: var(--kuning); }
+.rekap-box.alfa    { background: var(--merah2); }
+.rekap-box.alfa .rn { color: var(--merah); }
+
+/* TABEL ABSENSI */
+.tbl-wrap {
+  padding: 0 20px 20px; overflow-x: auto;
+}
+.sec-title {
+  font-size: .78rem; font-weight: 700; color: var(--abu2);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 10px; padding-top: 4px;
+}
+table.tab {
+  width: 100%; border-collapse: collapse;
+  font-size: .83rem; border-radius: 12px;
+  overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.07);
+  min-width: 360px;
+}
+table.tab thead tr {
+  background: linear-gradient(135deg, var(--biru1), var(--biru3));
+  color: #fff;
+}
+table.tab th {
+  padding: 10px 10px; text-align: left;
+  font-size: .74rem; font-weight: 700; letter-spacing: .3px;
+}
+table.tab td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e8edf2; vertical-align: middle;
+}
+table.tab tbody tr:last-child td { border-bottom: none; }
+table.tab tbody tr:nth-child(even) { background: var(--biru6); }
+table.tab tbody tr:hover { background: var(--biru5); }
+.tgl { font-weight: 700; font-size: .78rem; white-space: nowrap; }
+.hari { font-size: .7rem; color: var(--abu2); }
+.bdg {
+  display: inline-block; padding: 2px 9px;
+  border-radius: 20px; font-size: .72rem; font-weight: 700;
+}
+.bdg.h  { background: var(--hijau2); color: var(--hijau); }
+.bdg.s  { background: var(--biru6); color: var(--biru2); }
+.bdg.i  { background: var(--kuning2); color: var(--kuning); }
+.bdg.a  { background: var(--merah2); color: var(--merah); }
+.bdg.tk { background: #f3e5f5; color: #6a1b9a; }
+.waktu  { font-size: .75rem; color: var(--abu2); white-space: nowrap; }
+.kosong { text-align: center; padding: 24px; color: var(--abu2); font-size: .9rem; }
+
+/* TOMBOL KELUAR */
+.btn-keluar {
+  width: 100%; padding: 12px;
+  background: var(--abu); color: var(--abu2);
+  border: 2px solid #cfd8dc; border-radius: 12px;
+  font-family: 'Nunito', sans-serif; font-size: .93rem; font-weight: 700;
+  cursor: pointer; margin-top: 4px; transition: .2s;
+}
+.btn-keluar:hover { background: var(--merah2); color: var(--merah); border-color: #ef9a9a; }
+
+/* UPDATE BADGE */
+.update-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .74rem; color: var(--abu2);
+  padding: 8px 20px 0; margin-bottom: -4px;
+}
+.dot-live {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #4caf50; animation: kedip 1.2s ease infinite;
+  flex-shrink: 0;
+}
+@keyframes kedip { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* MODAL */
+.modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 1000;
+  align-items: center; justify-content: center;
+}
+.modal-bg.show { display: flex; }
+.modal {
+  background: #fff; border-radius: var(--r);
+  padding: 28px 24px; width: 90%; max-width: 380px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.2); animation: up .3s ease;
+}
+.modal h3 {
+  font-family: 'Poppins',sans-serif;
+  font-size: 1rem; margin-bottom: 16px; color: var(--teks);
+}
+.btn-row { display: flex; gap: 10px; margin-top: 16px; }
+.btn-batal {
+  flex: 1; padding: 11px; background: var(--abu);
+  color: var(--abu2); border: none; border-radius: 10px;
+  font-family: 'Nunito',sans-serif; font-size: .93rem; font-weight: 700; cursor: pointer;
+}
+.btn-simpan {
+  flex: 1; padding: 11px; background: var(--biru2);
+  color: #fff; border: none; border-radius: 10px;
+  font-family: 'Nunito',sans-serif; font-size: .93rem; font-weight: 700; cursor: pointer;
+}
+
+/* QR MODAL */
+#qr-reader { width:100%; border-radius:12px; overflow:hidden; background:#000; }
+#qr-reader video { border-radius:12px; width:100%!important; }
+.qr-status { text-align:center; font-size:.83rem; color:var(--abu2); margin-top:8px; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="spin"></div>
+  <p>Memuat data absensi...</p>
+  <small id="loadSub"></small>
+</div>
+
+<div class="wrap">
+
+<!-- ===== HALAMAN LOGIN ===== -->
+<div id="hLogin">
+  <div class="card">
+    <div class="hdr">
+      <div class="logo-ring">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo" onerror="this.style.display='none'">
+      </div>
+      <div class="hdr-app">Absensi<span>Ku</span></div>
+      <div class="hdr-sekolah">SMP NEGERI 1 KALIWEDI</div>
+    </div>
+
+    <div class="body">
+      <div id="msgLogin" class="msg"></div>
+
+      <div class="fg">
+        <label>NISN Siswa</label>
+        <div class="iw">
+          <span class="ic">🪪</span>
+          <input type="text" id="inpNISN" placeholder="Masukkan NISN atau scan QR" autocomplete="off" inputmode="numeric">
+          <button class="qr-btn" onclick="bukaQR()" title="Scan QR">📷</button>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Password</label>
+        <div class="iw">
+          <span class="ic">🔑</span>
+          <input type="password" id="inpPw" placeholder="Masukkan password">
+          <span class="eye" onclick="tglPw('inpPw',this)">👁</span>
+        </div>
+      </div>
+
+      <button class="btn-login" onclick="login()">Lihat Absensi →</button>
+      <a class="link-ubah" onclick="bukaUbahPw()">🔄 Ubah Password</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HALAMAN ABSENSI ===== -->
+<div id="hAbsen">
+  <div class="card">
+    <!-- Profil Siswa -->
+    <div class="profil-bar">
+      <div class="profil-nama" id="abNama"></div>
+      <div class="profil-sub" id="abSub"></div>
+      <div class="profil-grid">
+        <div class="profil-chip" id="abNISN"></div>
+        <div class="profil-chip" id="abKls"></div>
+      </div>
+    </div>
+
+    <!-- Filter bulan -->
+    <div class="filter-bar">
+      <label>📅 Bulan:</label>
+      <select id="selBulan" onchange="filterAbsen()">
+        <option value="">Semua</option>
+        <option value="1">Januari</option>
+        <option value="2">Februari</option>
+        <option value="3">Maret</option>
+        <option value="4">April</option>
+        <option value="5">Mei</option>
+        <option value="6">Juni</option>
+        <option value="7">Juli</option>
+        <option value="8">Agustus</option>
+        <option value="9">September</option>
+        <option value="10">Oktober</option>
+        <option value="11">November</option>
+        <option value="12">Desember</option>
+      </select>
+      <button class="btn-refresh" onclick="refreshAbsen()">🔄 Live</button>
+    </div>
+
+    <!-- Rekap -->
+    <div class="rekap-grid">
+      <div class="rekap-box hadir">
+        <div class="rn" id="rkHadir">0</div>
+        <div class="rl">Hadir</div>
+      </div>
+      <div class="rekap-box sakit">
+        <div class="rn" id="rkSakit">0</div>
+        <div class="rl">Sakit</div>
+      </div>
+      <div class="rekap-box izin">
+        <div class="rn" id="rkIzin">0</div>
+        <div class="rl">Izin</div>
+      </div>
+      <div class="rekap-box alfa">
+        <div class="rn" id="rkAlfa">0</div>
+        <div class="rl">Alfa</div>
+      </div>
+    </div>
+
+    <!-- Update live -->
+    <div class="update-badge">
+      <div class="dot-live"></div>
+      <span id="teksUpdate">Memuat...</span>
+    </div>
+
+    <!-- Tabel Absensi -->
+    <div class="tbl-wrap">
+      <div class="sec-title" style="margin-top:12px">📋 Detail Kehadiran</div>
+      <table class="tab">
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Ket</th>
+            <th>Masuk</th>
+            <th>Pulang</th>
+          </tr>
+        </thead>
+        <tbody id="tbAbsen">
+          <tr><td colspan="4" class="kosong">⏳ Memuat...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="padding:0 20px 20px">
+      <button class="btn-keluar" onclick="logout()">⬅ Keluar</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .wrap -->
+
+<!-- MODAL: QR SCANNER -->
+<div class="modal-bg" id="modalQR">
+  <div class="modal" style="max-width:340px">
+    <h3 style="text-align:center">📷 Scan QR NISN</h3>
+    <div id="qr-reader"></div>
+    <div class="qr-status" id="qrStatus">Memulai kamera...</div>
+    <div class="btn-row">
+      <button class="btn-batal" onclick="tutupQR()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: UBAH PASSWORD -->
+<div class="modal-bg" id="mUbah">
+  <div class="modal">
+    <h3>🔄 Ubah Password</h3>
+    <div id="msgUbah" class="msg"></div>
+    <div class="fg"><label>NISN</label>
+      <div class="iw"><span class="ic">🪪</span>
+        <input type="text" id="uNISN" placeholder="NISN Anda" autocomplete="off" inputmode="numeric">
+      </div>
+    </div>
+    <div class="fg"><label>Password Lama</label>
+      <div class="iw"><span class="ic">🔑</span>
+        <input type="password" id="uLama" placeholder="Password saat ini">
+        <span class="eye" onclick="tglPw('uLama',this)">👁</span>
+      </div>
+    </div>
+    <div class="fg"><label>Password Baru</label>
+      <div class="iw"><span class="ic">✨</span>
+        <input type="password" id="uBaru" placeholder="Min. 4 karakter">
+        <span class="eye" onclick="tglPw('uBaru',this)">👁</span>
+      </div>
+    </div>
+    <div class="fg"><label>Konfirmasi Baru</label>
+      <div class="iw"><span class="ic">✅</span>
+        <input type="password" id="uKonfirm" placeholder="Ulangi password baru">
+        <span class="eye" onclick="tglPw('uKonfirm',this)">👁</span>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-batal" onclick="tutup('mUbah')">Batal</button>
+      <button class="btn-simpan" onclick="ubahPw()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
+const SPREADSHEET_ID  = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
+
+// Data lokal
+let D = { user: [], aktif: null, absen: [] };
+const _cache = {};
+
+// ============================================================
+// FETCH APPS SCRIPT (login & ubah password)
+// ============================================================
+async function apiFetch(params, retry=0) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('GANTI')) return null;
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 12000);
+    const res  = await fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams(params), { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error && retry < 2) {
+      await sleep(1000*(retry+1));
+      return apiFetch(params, retry+1);
+    }
+    return data;
+  } catch(e) {
+    if (retry < 2) { await sleep(1000*(retry+1)); return apiFetch(params, retry+1); }
+    return null;
+  }
+}
+
+// ============================================================
+// BACA DATA LANGSUNG DARI GOOGLE SHEETS via gviz (publik)
+// Tidak perlu Apps Script untuk baca — hemat kuota
+// Spreadsheet harus sudah dibagikan "Anyone with link can view"
+// ============================================================
+async function bacaSheet(namaSheet) {
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&t=${Date.now()}`;
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 10000);
+    const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+    clearTimeout(tid);
+    const text = await res.text();
+    const start = text.indexOf('{');
+    const end   = text.lastIndexOf('}');
+    if (start < 0) throw new Error('Format tidak dikenal');
+    const json = JSON.parse(text.substring(start, end+1));
+    return json.table;
+  } catch(e) {
+    console.error('Gagal baca sheet:', namaSheet, e.message);
+    return null;
+  }
+}
+
+function getCel(table, row, col) {
+  try {
+    const c = table.rows[row].c[col];
+    return (c && c.v !== null) ? String(c.v).trim() : '';
+  } catch { return ''; }
+}
+
+// Parse tanggal dari gviz (format: "Date(2025,0,15)" = 15 Jan 2025)
+function parseTgl(val) {
+  if (!val) return null;
+  if (typeof val === 'string' && val.startsWith('Date(')) {
+    const p = val.replace('Date(','').replace(')','').split(',');
+    return new Date(+p[0], +p[1], +p[2]);
+  }
+  const d = new Date(val);
+  return isNaN(d) ? null : d;
+}
+
+const HARI = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+const BULAN_NAMA = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+
+function formatTgl(d) {
+  if (!d) return '-';
+  return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN_NAMA[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ============================================================
+// INIT — muat data USER dari gviz
+// ============================================================
+async function init() {
+  show('loading');
+  setText('loadSub', 'Mengambil data pengguna...');
+
+  const tblUser = await bacaSheet('Sheet6');
+  if (tblUser) {
+    D.user = [];
+    for (let i = 1; i < tblUser.rows.length; i++) {
+      const nisn = getCel(tblUser, i, 0);
+      if (!nisn) continue;
+      D.user.push({
+        nisn    : nisn,
+        nama    : getCel(tblUser, i, 1),
+        kelas   : getCel(tblUser, i, 2),
+        password: getCel(tblUser, i, 3),
+      });
+    }
+    console.log('✅ User:', D.user.length);
+  }
+
+  hide('loading');
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+async function login() {
+  const nisn = val('inpNISN');
+  const pw   = val('inpPw');
+  const el   = document.getElementById('msgLogin');
+  el.className = 'msg';
+
+  if (!nisn || !pw) { pesan(el,'err','⚠️ Isi NISN dan password terlebih dahulu.'); return; }
+
+  const user = D.user.find(u => u.nisn === nisn);
+  if (!user)           { pesan(el,'err','❌ NISN tidak ditemukan.'); return; }
+  if (user.password !== pw) { pesan(el,'err','❌ Password salah.'); return; }
+
+  D.aktif = user;
+  await tampilAbsen(user);
+}
+
+// ============================================================
+// TAMPIL ABSENSI
+// ============================================================
+async function tampilAbsen(user) {
+  show('loading');
+  setText('loadSub', 'Mengambil data absensi...');
+
+  // Isi profil
+  setText('abNama', user.nama);
+  setText('abSub',  'Data Kehadiran Sekolah');
+  setText('abNISN', '🪪 ' + user.nisn);
+  setText('abKls',  '🏫 Kelas ' + user.kelas);
+
+  // Set bulan default = bulan sekarang
+  const bln = new Date().getMonth() + 1;
+  document.getElementById('selBulan').value = bln;
+
+  hide('hLogin');
+  show('hAbsen');
+  hide('loading');
+
+  // Muat data absensi live dari sheet
+  await muatAbsen(user, bln);
+}
+
+async function muatAbsen(user, bulanFilter) {
+  setText('teksUpdate', 'Memperbarui data...');
+  const tb = document.getElementById('tbAbsen');
+  tb.innerHTML = '<tr><td colspan="4" class="kosong">⏳ Memuat absensi...</td></tr>';
+
+  const tblAbsen = await bacaSheet('Sheet2');
+  if (!tblAbsen) {
+    tb.innerHTML = '<tr><td colspan="4" class="kosong">❌ Gagal memuat data. Coba lagi.</td></tr>';
+    setText('teksUpdate', 'Gagal memuat');
+    return;
+  }
+
+  // Filter baris milik NISN ini
+  const baris = [];
+  for (let i = 1; i < tblAbsen.rows.length; i++) {
+    const row = tblAbsen.rows[i];
+    if (!row || !row.c) continue;
+
+    // Cek kolom NISN (index 1)
+    const nisnSel = getCel(tblAbsen, i, 1);
+    if (nisnSel !== user.nisn) continue;
+
+    // Ambil timestamp (index 0) — bisa berupa Date atau string
+    let tgl = null;
+    try {
+      const rawC = row.c[0];
+      if (rawC) {
+        if (rawC.v && String(rawC.v).startsWith('Date(')) {
+          tgl = parseTgl(rawC.v);
+        } else if (rawC.f) {
+          // Formatted value biasanya "DD/MM/YYYY HH:mm:ss" atau serupa
+          tgl = new Date(rawC.f);
+          if (isNaN(tgl)) tgl = null;
+        }
+      }
+    } catch { tgl = null; }
+
+    // Filter bulan
+    if (bulanFilter && tgl && (tgl.getMonth()+1) !== parseInt(bulanFilter)) continue;
+
+    baris.push({
+      tgl    : tgl,
+      nisn   : nisnSel,
+      nama   : getCel(tblAbsen, i, 2),
+      kelas  : getCel(tblAbsen, i, 3),
+      ket    : getCel(tblAbsen, i, 4),
+      status : getCel(tblAbsen, i, 5),
+    });
+  }
+
+  // Simpan untuk rekap
+  D.absen = baris;
+
+  // Hitung rekap
+  hitungRekap(baris);
+
+  if (baris.length === 0) {
+    tb.innerHTML = `<tr><td colspan="4" class="kosong">📭 Tidak ada data absensi${bulanFilter ? ' di bulan ini' : ''}.</td></tr>`;
+    setText('teksUpdate', 'Data kosong');
+    return;
+  }
+
+  // Urutkan: terbaru di atas
+  baris.sort((a,b) => (b.tgl||0) - (a.tgl||0));
+
+  // Render tabel
+  // Kelompokkan: tiap tanggal = 1 baris (masuk + pulang)
+  const perTgl = {};
+  baris.forEach(b => {
+    const keyTgl = b.tgl ? b.tgl.toDateString() : 'unknown_' + Math.random();
+    if (!perTgl[keyTgl]) perTgl[keyTgl] = { tgl: b.tgl, ket: b.ket, masuk: '', pulang: '', status: b.status };
+    const jam = b.tgl ? b.tgl.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) : '';
+    // Deteksi masuk/pulang dari status atau jam
+    const st = (b.status||'').toLowerCase();
+    if (st.includes('pulang') || st.includes('out')) {
+      perTgl[keyTgl].pulang = jam;
+    } else {
+      perTgl[keyTgl].masuk = jam || '—';
+      perTgl[keyTgl].ket   = b.ket || b.status;
+    }
+  });
+
+  const rows = Object.values(perTgl);
+  rows.sort((a,b) => (b.tgl||0) - (a.tgl||0));
+
+  tb.innerHTML = rows.map(r => {
+    const ketUp  = (r.ket||'').toUpperCase();
+    let cls = 'tk';
+    if (ketUp.includes('HADIR') || ketUp.includes('MASUK'))   cls = 'h';
+    else if (ketUp.includes('SAKIT'))   cls = 's';
+    else if (ketUp.includes('IZIN'))    cls = 'i';
+    else if (ketUp.includes('ALFA') || ketUp.includes('TANPA')) cls = 'a';
+
+    return `<tr>
+      <td>
+        <div class="tgl">${r.tgl ? r.tgl.getDate() + ' ' + BULAN_NAMA[r.tgl.getMonth()] : '—'}</div>
+        <div class="hari">${r.tgl ? HARI[r.tgl.getDay()] : ''}</div>
+      </td>
+      <td><span class="bdg ${cls}">${r.ket||'—'}</span></td>
+      <td class="waktu">${r.masuk||'—'}</td>
+      <td class="waktu">${r.pulang||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const now = new Date();
+  setText('teksUpdate', `Diperbarui ${now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}`);
+}
+
+function hitungRekap(baris) {
+  let h=0, s=0, iz=0, a=0;
+  // Hitung per hari unik
+  const tglSet = new Set();
+  baris.forEach(b => {
+    if (!b.tgl) return;
+    const k = b.tgl.toDateString();
+    if (tglSet.has(k)) return;
+    tglSet.add(k);
+    const ket = (b.ket||'').toUpperCase();
+    if (ket.includes('HADIR') || ket.includes('MASUK')) h++;
+    else if (ket.includes('SAKIT')) s++;
+    else if (ket.includes('IZIN')) iz++;
+    else a++;
+  });
+  setText('rkHadir', h);
+  setText('rkSakit', s);
+  setText('rkIzin',  iz);
+  setText('rkAlfa',  a);
+}
+
+function filterAbsen() {
+  if (!D.aktif) return;
+  const bln = document.getElementById('selBulan').value;
+  muatAbsen(D.aktif, bln ? parseInt(bln) : null);
+}
+
+async function refreshAbsen() {
+  if (!D.aktif) return;
+  const bln = document.getElementById('selBulan').value;
+  await muatAbsen(D.aktif, bln ? parseInt(bln) : null);
+}
+
+function logout() {
+  D.aktif = null; D.absen = [];
+  hide('hAbsen'); show('hLogin');
+  document.getElementById('inpNISN').value = '';
+  document.getElementById('inpPw').value   = '';
+  document.getElementById('msgLogin').className = 'msg';
+}
+
+// ============================================================
+// UBAH PASSWORD — via Apps Script
+// ============================================================
+function bukaUbahPw() {
+  ['uNISN','uLama','uBaru','uKonfirm'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('msgUbah').className='msg';
+  buka('mUbah');
+}
+async function ubahPw() {
+  const nisn = val('uNISN'), lama=val('uLama'), baru=val('uBaru'), konfirm=val('uKonfirm');
+  const el = document.getElementById('msgUbah'); el.className='msg';
+  if (!nisn||!lama||!baru||!konfirm) { pesan(el,'err','⚠️ Semua kolom wajib diisi.'); return; }
+  const user = D.user.find(u=>u.nisn===nisn);
+  if (!user)              { pesan(el,'err','❌ NISN tidak ditemukan.'); return; }
+  if (user.password!==lama) { pesan(el,'err','❌ Password lama salah.'); return; }
+  if (baru.length<4)      { pesan(el,'err','⚠️ Password baru minimal 4 karakter.'); return; }
+  if (baru!==konfirm)     { pesan(el,'err','❌ Konfirmasi tidak cocok.'); return; }
+
+  // Update via Apps Script
+  const r = await apiFetch({ action:'ubahPassword', nisn, pwBaru: baru });
+  if (r && r.status==='ok') {
+    user.password = baru; // update lokal
+    pesan(el,'ok','✅ Password berhasil diubah!');
+    setTimeout(()=>tutup('mUbah'), 2000);
+  } else {
+    // Jika Apps Script belum tersedia, update lokal saja
+    user.password = baru;
+    pesan(el,'ok','✅ Password diubah (sesi ini). Hubungi admin untuk update permanen.');
+  }
+}
+
+// ============================================================
+// QR SCANNER
+// ============================================================
+let qrScanner = null;
+function bukaQR() {
+  buka('modalQR');
+  setText('qrStatus','Memulai kamera...');
+  setTimeout(()=>{
+    try {
+      qrScanner = new Html5Qrcode('qr-reader');
+      qrScanner.start(
+        {facingMode:'environment'},
+        {fps:10, qrbox:{width:220,height:220}},
+        (text)=>{
+          document.getElementById('inpNISN').value = text.trim();
+          setText('qrStatus','✅ NISN terbaca: '+text.trim());
+          setTimeout(()=>tutupQR(), 800);
+        },
+        ()=>{}
+      ).then(()=>setText('qrStatus','🔍 Arahkan ke QR Code kartu siswa...'))
+       .catch(e=>setText('qrStatus','❌ Kamera tidak bisa diakses'));
+    } catch(e){ setText('qrStatus','❌ '+e.message); }
+  },300);
+}
+function tutupQR() {
+  if(qrScanner){ qrScanner.stop().catch(()=>{}); qrScanner.clear(); qrScanner=null; }
+  tutup('modalQR');
+}
+
+// ============================================================
+// HELPER
+// ============================================================
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+function val(id)   { return document.getElementById(id)?.value.trim()||''; }
+function setText(id,t){ const e=document.getElementById(id); if(e) e.textContent=t; }
+function pesan(el,t,s){ el.className='msg '+t; el.textContent=s; }
+function show(id)  { const e=document.getElementById(id); if(e) e.style.display='block'; }
+function hide(id)  { const e=document.getElementById(id); if(e) e.style.display='none'; }
+function buka(id)  { document.getElementById(id)?.classList.add('show'); }
+function tutup(id) { document.getElementById(id)?.classList.remove('show'); }
+function tglPw(id,ico){ const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; ico.textContent=i.type==='password'?'👁':'🙈'; }
+document.addEventListener('keydown',e=>{ if(e.key==='Enter') login(); });
+
+init();
+</script>
+</body>
+</html>

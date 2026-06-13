@@ -7,6 +7,7 @@
 <title>AbsensiKu — SMPN 1 Kaliwedi</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root {
   --b1:#0d47a1; --b2:#1565c0; --b3:#1976d2; --b4:#42a5f5; --b5:#bbdefb; --b6:#e3f2fd;
@@ -200,6 +201,146 @@ table.tab tbody tr:hover{background:var(--b5)}
 #qr-box{width:100%;border-radius:12px;overflow:hidden;background:#000;min-height:260px}
 #qr-box video{width:100%!important;border-radius:12px}
 .qr-status{text-align:center;font-size:.83rem;color:var(--abu2);margin-top:8px;min-height:20px}
+/* ===== KARTU ABSEN ===== */
+#hKartu { display:none; }
+
+.kartu-wrap {
+  padding: 18px;
+}
+.sec-kartu-title {
+  font-size:.78rem;font-weight:700;color:var(--abu2);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;
+}
+
+/* Kartu yang akan di-download */
+#kartuCetak {
+  background: linear-gradient(160deg, #0d47a1 0%, #1976d2 60%, #5c6bc0 100%);
+  border-radius: 18px;
+  padding: 24px 20px 20px;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(13,71,161,.35);
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 320px;
+  margin-left: auto; margin-right: auto;
+}
+
+/* Dekorasi lingkaran */
+#kartuCetak::before {
+  content:'';position:absolute;top:-50px;right:-50px;
+  width:160px;height:160px;background:rgba(255,255,255,.08);border-radius:50%;
+}
+#kartuCetak::after {
+  content:'';position:absolute;bottom:-40px;left:-40px;
+  width:130px;height:130px;background:rgba(255,255,255,.06);border-radius:50%;
+}
+
+.kartu-judul {
+  font-family:'Poppins',sans-serif;
+  font-size:.72rem;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;opacity:.85;margin-bottom:2px;
+}
+.kartu-sekolah {
+  font-family:'Poppins',sans-serif;
+  font-size:.9rem;font-weight:800;margin-bottom:14px;letter-spacing:.3px;
+}
+
+/* Logo + QR berdampingan */
+.kartu-visual {
+  display:flex;align-items:center;justify-content:center;
+  gap:12px;margin-bottom:14px;position:relative;z-index:1;
+}
+.kartu-logo-ring {
+  width:64px;height:64px;border-radius:50%;
+  border:2.5px solid rgba(255,255,255,.8);
+  background:#fff;padding:5px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;flex-shrink:0;
+  box-shadow:0 3px 10px rgba(0,0,0,.2);
+}
+.kartu-logo-ring img {width:100%;height:100%;object-fit:contain;}
+.kartu-qr-box {
+  background:#fff;border-radius:12px;
+  padding:6px;width:90px;height:90px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 10px rgba(0,0,0,.2);
+  flex-shrink:0;
+}
+.kartu-qr-box img {width:78px;height:78px;}
+
+/* Info siswa */
+.kartu-divider {
+  height:1px;background:rgba(255,255,255,.25);
+  margin:12px 0;position:relative;z-index:1;
+}
+.kartu-nisn {
+  font-family:'Poppins',sans-serif;
+  font-size:1.1rem;font-weight:800;letter-spacing:2px;
+  margin-bottom:4px;position:relative;z-index:1;
+}
+.kartu-nama {
+  font-size:.85rem;font-weight:700;opacity:.9;
+  margin-bottom:2px;position:relative;z-index:1;
+}
+.kartu-kelas {
+  font-size:.75rem;opacity:.75;
+  position:relative;z-index:1;
+}
+.kartu-footer {
+  margin-top:10px;font-size:.62rem;opacity:.55;
+  letter-spacing:.5px;position:relative;z-index:1;
+}
+
+/* Tombol download */
+.btn-dl-wrap {
+  display:flex;gap:10px;
+  max-width:320px;margin:0 auto;
+}
+.btn-dl {
+  flex:1;padding:11px 8px;border:none;border-radius:12px;
+  font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:700;
+  cursor:pointer;transition:.2s;display:flex;align-items:center;
+  justify-content:center;gap:6px;
+}
+.btn-dl.jpg {
+  background:linear-gradient(135deg,var(--b1),var(--b3));
+  color:#fff;box-shadow:0 4px 12px rgba(13,71,161,.3);
+}
+.btn-dl.png {
+  background:linear-gradient(135deg,#1b5e20,#388e3c);
+  color:#fff;box-shadow:0 4px 12px rgba(27,94,32,.3);
+}
+.btn-dl:hover{opacity:.9;transform:translateY(-1px);}
+
+.btn-back-kartu {
+  width:100%;margin-top:10px;max-width:320px;
+  display:block;margin-left:auto;margin-right:auto;
+  padding:11px;background:var(--abu);color:var(--abu2);
+  border:2px solid #cfd8dc;border-radius:12px;
+  font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;
+  cursor:pointer;transition:.2s;text-align:center;
+}
+.btn-back-kartu:hover{background:var(--merah2);color:var(--merah);border-color:#ef9a9a;}
+
+.btn-kartu {
+  width:100%;padding:11px;margin-top:6px;
+  background:var(--b6);color:var(--b2);
+  border:2px solid var(--b5);border-radius:12px;
+  font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;
+  cursor:pointer;transition:.2s;
+}
+.btn-kartu:hover{background:var(--b5);}
+
+.kartu-loading {
+  text-align:center;padding:20px;color:var(--abu2);font-size:.88rem;
+}
+
+.btn-dl.loading { opacity:.6; pointer-events:none; }
+
+/* ===== END KARTU ===== */
 .btn-tutup-qr{
   width:100%;margin-top:12px;padding:12px;
   border:2px solid #cfd8dc;border-radius:10px;
@@ -313,7 +454,62 @@ table.tab tbody tr:hover{background:var(--b5)}
     </div>
 
     <div style="padding:0 18px 18px">
-      <button class="btn-keluar" onclick="logout()">⬅ Keluar</button>
+      <button class="btn-kartu" onclick="bukaHalamanKartu()">🪪 Lihat Kartu Absen Saya</button>
+      <button class="btn-keluar" style="margin-top:10px" onclick="logout()">⬅ Keluar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HALAMAN KARTU ===== -->
+<div id="hKartu">
+  <div class="card">
+    <div class="profil-bar">
+      <div class="profil-nama">🪪 Kartu Absen</div>
+      <div style="font-size:.82rem;opacity:.85" id="kartuNamaSub"></div>
+    </div>
+
+    <div class="kartu-wrap">
+      <div class="sec-kartu-title">Kartu Identitas Absensi</div>
+
+      <!-- Kartu yang akan di-screenshot -->
+      <div id="kartuCetak">
+        <div class="kartu-judul">Kartu Absen Siswa</div>
+        <div class="kartu-sekolah">SMP NEGERI 1 KALIWEDI</div>
+
+        <div class="kartu-visual">
+          <!-- Logo sekolah -->
+          <div class="kartu-logo-ring">
+            <img id="kartuLogoImg"
+              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png"
+              alt="Logo" onerror="this.style.display='none'">
+          </div>
+          <!-- QR Code -->
+          <div class="kartu-qr-box">
+            <img id="kartuQRImg" src="" alt="QR">
+          </div>
+        </div>
+
+        <div class="kartu-divider"></div>
+
+        <div class="kartu-nisn"  id="kartuNISN"></div>
+        <div class="kartu-nama"  id="kartuNama"></div>
+        <div class="kartu-kelas" id="kartuKelas"></div>
+        <div class="kartu-footer">Scan QR untuk absen digital</div>
+      </div>
+
+      <!-- Tombol Download -->
+      <div class="btn-dl-wrap">
+        <button class="btn-dl jpg" onclick="downloadKartu('jpg')">
+          📥 Download JPG
+        </button>
+        <button class="btn-dl png" onclick="downloadKartu('png')">
+          📥 Download PNG
+        </button>
+      </div>
+
+      <button class="btn-back-kartu" onclick="kembaliDashboard()">
+        ⬅ Kembali ke Absensi
+      </button>
     </div>
   </div>
 </div>
@@ -757,6 +953,109 @@ function tglPw(id,ico){
   ico.textContent=i.type==='password'?'👁':'🙈';
 }
 document.addEventListener('keydown', e => { if(e.key==='Enter') login(); });
+
+// ============================================================
+// KARTU ABSEN
+// ============================================================
+function bukaHalamanKartu() {
+  if (!D.aktif) return;
+  const user = D.aktif;
+
+  // Isi data kartu
+  setText('kartuNamaSub', user.nama);
+  setText('kartuNISN',  user.nisn);
+  setText('kartuNama',  user.nama);
+  setText('kartuKelas', 'Kelas ' + user.kelas);
+
+  // Buat URL QR Code dari Google Chart API
+  // (tidak butuh API key, langsung dari URL)
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(user.nisn)}&bgcolor=ffffff&color=0d47a1&margin=4`;
+  document.getElementById('kartuQRImg').src = qrUrl;
+
+  // Tampilkan halaman kartu
+  hide('hAbsen');
+  show('hKartu');
+
+  // Scroll ke atas
+  window.scrollTo(0, 0);
+}
+
+function kembaliDashboard() {
+  hide('hKartu');
+  show('hAbsen');
+  window.scrollTo(0, 0);
+}
+
+async function downloadKartu(format) {
+  const kartu   = document.getElementById('kartuCetak');
+  const btnJpg  = document.querySelector('.btn-dl.jpg');
+  const btnPng  = document.querySelector('.btn-dl.png');
+
+  // Tampilkan loading
+  btnJpg.classList.add('loading');
+  btnPng.classList.add('loading');
+  btnJpg.textContent = '⏳ Memproses...';
+  btnPng.textContent = '⏳ Memproses...';
+
+  try {
+    // Tunggu QR image selesai load
+    const qrImg = document.getElementById('kartuQRImg');
+    if (!qrImg.complete) {
+      await new Promise(resolve => { qrImg.onload = resolve; });
+    }
+
+    // Render kartu ke canvas menggunakan html2canvas
+    const canvas = await html2canvas(kartu, {
+      scale          : 3,           // resolusi tinggi (3x)
+      useCORS        : true,        // izinkan gambar cross-origin
+      allowTaint     : true,
+      backgroundColor: null,        // transparan (untuk PNG)
+      logging        : false,
+      imageTimeout   : 8000,
+    });
+
+    // Konversi ke format yang dipilih
+    const user     = D.aktif;
+    const namaFile = `KartuAbsen_${user.nisn}_${user.nama.replace(/\s+/g,'_')}`;
+
+    if (format === 'jpg') {
+      // JPG: background putih
+      const canvasJpg = document.createElement('canvas');
+      canvasJpg.width  = canvas.width;
+      canvasJpg.height = canvas.height;
+      const ctx = canvasJpg.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvasJpg.width, canvasJpg.height);
+      ctx.drawImage(canvas, 0, 0);
+
+      unduhCanvas(canvasJpg, `${namaFile}.jpg`, 'image/jpeg', 0.95);
+    } else {
+      // PNG: transparan
+      unduhCanvas(canvas, `${namaFile}.png`, 'image/png');
+    }
+
+  } catch(e) {
+    console.error('Download gagal:', e);
+    alert('❌ Gagal membuat gambar. Pastikan koneksi internet aktif dan coba lagi.');
+  } finally {
+    // Kembalikan tombol
+    btnJpg.classList.remove('loading');
+    btnPng.classList.remove('loading');
+    btnJpg.innerHTML = '📥 Download JPG';
+    btnPng.innerHTML = '📥 Download PNG';
+  }
+}
+
+function unduhCanvas(canvas, namaFile, mimeType, kualitas) {
+  const link     = document.createElement('a');
+  link.download  = namaFile;
+  link.href      = kualitas
+    ? canvas.toDataURL(mimeType, kualitas)
+    : canvas.toDataURL(mimeType);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
 init();
 </script>

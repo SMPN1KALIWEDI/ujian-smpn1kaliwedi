@@ -370,7 +370,7 @@ table.tab tbody tr:hover{background:var(--b5)}
 // KONFIGURASI
 // ============================================================
 const SPREADSHEET_ID = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
-const APPS_SCRIPT_URL = 'GANTI_DENGAN_URL_APPS_SCRIPT';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
 
 // Data runtime
 let D = { users:[], aktif:null, absenAll:[] };
@@ -457,19 +457,35 @@ async function init() {
   const tbl = await bacaSheet('Sheet6');
   if (tbl) {
     D.users = [];
-    for (let i = 1; i < tbl.rows.length; i++) {
-      const nisn = cel(tbl, i, 0);
-      if (!nisn) continue;
+    // Sheet6 struktur: A=NISN | B=NAMA | C=KLS | D=PASSWORD
+    // index:               0  |    1   |    2  |     3
+    // Baris 0 = header, mulai baca dari baris 1
+    for (let i = 0; i < tbl.rows.length; i++) {
+      const row = tbl.rows[i];
+      if (!row || !row.c) continue;
+
+      // Ambil nilai setiap sel dengan aman
+      const getNilai = (col) => {
+        const c = row.c[col];
+        return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
+      };
+
+      const nisn = getNilai(0);
+
+      // Lewati baris kosong dan header
+      if (!nisn || nisn.toLowerCase() === 'nisn') continue;
+
       D.users.push({
-        nisn    : nisn,
-        nama    : cel(tbl, i, 1),
-        kelas   : cel(tbl, i, 2),
-        password: cel(tbl, i, 3),  // kolom D
+        nisn    : nisn,           // kolom A
+        nama    : getNilai(1),    // kolom B
+        kelas   : getNilai(2),    // kolom C
+        password: getNilai(3),    // kolom D = PASSWORD
       });
     }
     console.log('✅ User dimuat:', D.users.length);
+    console.log('Contoh user:', D.users.slice(0,2));
   } else {
-    console.warn('⚠️ Sheet6 gagal dimuat');
+    console.warn('⚠️ Sheet6 gagal dimuat — pastikan spreadsheet sudah dibagikan publik');
   }
 
   hide('loading');
@@ -648,7 +664,7 @@ async function ubahPw() {
   if(baru!==konfirm)     {pesan(el,'err','❌ Konfirmasi tidak cocok.');return}
 
   // Kirim ke Apps Script
-  if (!APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec')) {
+  if (!APPS_SCRIPT_URL.includes('GANTI')) {
     const r = await apiFetch({ action:'ubahPassword', nisn, pwBaru: baru });
     if (r && r.status==='ok') {
       user.password = baru;

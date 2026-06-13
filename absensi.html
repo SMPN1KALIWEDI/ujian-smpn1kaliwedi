@@ -482,12 +482,15 @@ table.tab tbody tr:hover { background: var(--biru5); }
 <!-- MODAL: QR SCANNER -->
 <div class="modal-bg" id="modalQR">
   <div class="modal" style="max-width:340px">
-    <h3 style="text-align:center">📷 Scan QR NISN</h3>
+    <h3 style="text-align:center;margin-bottom:12px">📷 Scan QR NISN</h3>
     <div id="qr-reader"></div>
-    <div class="qr-status" id="qrStatus">Memulai kamera...</div>
-    <div class="btn-row">
-      <button class="btn-batal" onclick="tutupQR()">Tutup</button>
-    </div>
+    <div class="qr-status" id="qrStatus">🔍 Arahkan ke QR Code...</div>
+    <button class="btn-batal" onclick="stopQR()"
+      style="width:100%;margin-top:12px;padding:11px;border-radius:10px;
+             border:2px solid #cfd8dc;background:#f0f4f8;font-family:Nunito,sans-serif;
+             font-size:.93rem;font-weight:700;cursor:pointer">
+      ✕ Batal
+    </button>
   </div>
 </div>
 
@@ -864,29 +867,49 @@ async function ubahPw() {
 // QR SCANNER
 // ============================================================
 let qrScanner = null;
+
 function bukaQR() {
+  // Bersihkan elemen qr-reader dulu
+  const el = document.getElementById('qr-reader');
+  el.innerHTML = '';
   buka('modalQR');
-  setText('qrStatus','Memulai kamera...');
-  setTimeout(()=>{
+  setText('qrStatus','🔍 Arahkan kamera ke QR Code kartu siswa...');
+
+  setTimeout(() => {
     try {
       qrScanner = new Html5Qrcode('qr-reader');
       qrScanner.start(
-        {facingMode:'environment'},
-        {fps:10, qrbox:{width:220,height:220}},
-        (text)=>{
-          document.getElementById('inpNISN').value = text.trim();
-          setText('qrStatus','✅ NISN terbaca: '+text.trim());
-          setTimeout(()=>tutupQR(), 800);
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        (text) => {
+          // NISN terbaca — langsung isi dan tutup tanpa notifikasi
+          const nisn = text.trim();
+          stopQR();
+          document.getElementById('inpNISN').value = nisn;
+          // Fokus ke input password agar user langsung ketik
+          document.getElementById('inpPw').focus();
         },
-        ()=>{}
-      ).then(()=>setText('qrStatus','🔍 Arahkan ke QR Code kartu siswa...'))
-       .catch(e=>setText('qrStatus','❌ Kamera tidak bisa diakses'));
-    } catch(e){ setText('qrStatus','❌ '+e.message); }
-  },300);
+        () => {} // abaikan error frame kosong
+      ).catch(err => {
+        setText('qrStatus', '❌ Kamera tidak bisa diakses. Izinkan akses kamera.');
+      });
+    } catch(e) {
+      setText('qrStatus', '❌ ' + e.message);
+    }
+  }, 300);
 }
-function tutupQR() {
-  if(qrScanner){ qrScanner.stop().catch(()=>{}); qrScanner.clear(); qrScanner=null; }
+
+function stopQR() {
+  if (qrScanner) {
+    qrScanner.stop()
+      .then(() => { qrScanner.clear(); qrScanner = null; })
+      .catch(() => { qrScanner = null; });
+  }
   tutup('modalQR');
+}
+
+function tutupQR() {
+  stopQR();
 }
 
 // ============================================================

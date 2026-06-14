@@ -728,200 +728,242 @@ async function tampilAbsen(user) {
 }
 
 // ============================================================
-// MUAT ABSENSI + KALENDER LENGKAP
-// Logic:
-// 1. Baca Sheet2 (absensi siswa) + Sheet7 (libur nasional & kegiatan)
-// 2. Generate SEMUA hari kerja di bulan terpilih
-// 3. Tiap tanggal dikategorikan:
-//    H  = hadir (ada masuk & pulang)
-//    B  = belum pulang (ada masuk, tidak ada pulang)
-//    S  = sakit (tanpa jam)
-//    I  = izin (tanpa jam)
-//    A  = alfa (tidak ada data & bukan libur)
-//    🔴 = libur nasional / kegiatan (warna merah)
-//    -  = Sabtu/Minggu (abu)
+// MUAT ABSENSI — logika bersih
+// Sheet2: A=TIMESTAMP | B=NISN | C=NAMA | D=KELAS | E=KET | F=STATUS
+//
+// LANGKAH:
+// 1. Generate semua tanggal dalam bulan (Ascending)
+// 2. Untuk setiap tanggal, cari baris di Sheet2 yang NISN-nya cocok
+//    - Jika ada baris STATUS=DATANG → catat jam sebagai JAM DATANG
+//    - Jika ada baris STATUS=PULANG → catat jam sebagai JAM PULANG
+//    - KET diambil dari kolom E baris DATANG
+// 3. Tentukan keterangan akhir per tanggal:
+//    - Ada DATANG + PULANG         → H, tampilkan kedua jam
+//    - Ada DATANG saja, no PULANG  → B, tampilkan jam datang saja
+//    - Ada S/I di KET               → S/I, tanpa jam
+//    - Tidak ada data sama sekali   → A, tanpa jam
+//    - Tanggal libur (Sheet7)       → merah, tampilkan nama libur
+//    - Sabtu/Minggu                 → strip abu
 // ============================================================
 async function muatAbsen() {
   setText('teksUpd', 'Memperbarui...');
-  const tb = document.getElementById('tbAbsen');
-  tb.innerHTML = '<tr><td colspan="5" class="kosong-row">⏳ Memuat...</td></tr>';
+  const tb  = document.getElementById('tbAbsen');
+  tb.innerHTML = '<tr><td colspan="4" class="kosong-row">⏳ Memuat...</td></tr>';
 
   const user = D.aktif;
   const bln  = parseInt(document.getElementById('selBulan').value) || new Date().getMonth()+1;
   const thn  = new Date().getFullYear();
 
-  // Muat Sheet2, Sheet7 bersamaan
+  // Muat Sheet2 dan Sheet7 bersamaan
   const [tblAbsen, tblLibur] = await Promise.all([
     bacaSheet('Sheet2'),
     bacaSheet('Sheet7'),
   ]);
 
   if (!tblAbsen) {
-    tb.innerHTML = '<tr><td colspan="5" class="kosong-row">❌ Gagal memuat data.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="4" class="kosong-row">❌ Gagal memuat data.</td></tr>';
     setText('teksUpd','Gagal'); return;
   }
 
-  // ── 1. Parse tanggal libur dari Sheet7 ──
-  // Tabel kiri: A=Tanggal(0), B=Hari(1), C=Keterangan(2)  mulai baris 4 (index 4)
-  // Tabel kanan: E=Tanggal(4), F=Hari(5), G=Keterangan(6) mulai baris 4 (index 4)
-  const mapLibur = {}; // key: "YYYY-M-D" → keterangan
+  // ────────────────────────────────────────────
+  // STEP 1: Baca tanggal libur dari Sheet7
+  // Tabel kiri : A(0)=Tanggal, C(2)=Keterangan  (libur nasional)
+  // Tabel kanan: E(4)=Tanggal, G(6)=Keterangan  (kegiatan/cuti)
+  // Data mulai baris index 4 (baris ke-5 di sheet, header di baris 4)
+  // ────────────────────────────────────────────
+  const mapLibur = {}; // "YYYY-M-D" → nama libur
 
   if (tblLibur) {
     for (let i = 0; i < tblLibur.rows.length; i++) {
       const row = tblLibur.rows[i];
       if (!row || !row.c) continue;
 
-      // Tabel kiri (kolom A=0, C=2)
-      const tglA = parseDate(tblLibur, i, 0);
-      const ketA = row.c[2] ? String(row.c[2].v||'').trim() : '';
-      if (tglA && ketA) mapLibur[keyTgl(tglA)] = ketA;
+      const ambil = (col) => {
+        const c = row.c[col];
+        return (c && c.v !== null && c.v !== undefined) ? c.v : null;
+      };
 
-      // Tabel kanan (kolom E=4, G=6)
+      // Tabel kiri — kolom A & C
+      const tglA = parseDate(tblLibur, i, 0);
+      const ketA = ambil(2);
+      if (tglA && ketA && String(ketA).trim()) {
+        mapLibur[keyTgl(tglA)] = String(ketA).trim();
+      }
+
+      // Tabel kanan — kolom E & G
       const tglE = parseDate(tblLibur, i, 4);
-      const ketG = row.c[6] ? String(row.c[6].v||'').trim() : '';
-      if (tglE && ketG) mapLibur[keyTgl(tglE)] = ketG;
+      const ketG = ambil(6);
+      if (tglE && ketG && String(ketG).trim()) {
+        mapLibur[keyTgl(tglE)] = String(ketG).trim();
+      }
     }
   }
 
-  // ── 2. Parse absensi Sheet2 milik siswa ini ──
-  // Sheet2: A=TIMESTAMP(0) | B=NISN(1) | C=NAMA(2) | D=KELAS(3) | E=KET(4) | F=STATUS(5)
-  // perHari: { key → { masuk:Date|null, pulang:Date|null, ket:string } }
+  // ────────────────────────────────────────────
+  // STEP 2: Baca Sheet2, kumpulkan data per tanggal untuk NISN ini
+  // perHari[keyTgl] = { tgl, datang: Date|null, pulang: Date|null, ket: string }
+  // ────────────────────────────────────────────
   const perHari = {};
 
   for (let i = 0; i < tblAbsen.rows.length; i++) {
     const row = tblAbsen.rows[i];
     if (!row || !row.c) continue;
 
-    // Fungsi aman ambil nilai sel
+    // Ambil nilai sel dengan aman
     const g = (col) => {
       const c = row.c[col];
       return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
     };
 
-    const nisnBaris = g(1); // kolom B = NISN
-    if (!nisnBaris || nisnBaris !== user.nisn) continue;
+    // Filter NISN — kolom B (index 1)
+    const nisnBaris = g(1);
+    if (nisnBaris !== user.nisn) continue;
 
-    const tgl    = parseDate(tblAbsen, i, 0);  // kolom A = TIMESTAMP
-    const ket    = g(4).toUpperCase();          // kolom E = KET  (H/S/I/A)
-    const status = g(5).toUpperCase();          // kolom F = STATUS (MASUK/PULANG)
-
+    // Ambil timestamp — kolom A (index 0)
+    const tgl = parseDate(tblAbsen, i, 0);
     if (!tgl) continue;
 
-    const k = keyTgl(tgl);
-    if (!perHari[k]) perHari[k] = { tgl, masuk:null, pulang:null, ket:'' };
+    // Filter bulan
+    if ((tgl.getMonth() + 1) !== bln) continue;
 
-    // Deteksi status MASUK / PULANG dari kolom F
-    if (status === 'MASUK' || status === 'DATANG') {
-      perHari[k].masuk = tgl;
-      // Ket dari kolom E: H/S/I/A
-      if (!perHari[k].ket) perHari[k].ket = ket || 'H';
-    } else if (status === 'PULANG' || status === 'KELUAR') {
-      perHari[k].pulang = tgl;
-      // Jika belum ada ket dari masuk, ambil dari baris pulang
-      if (!perHari[k].ket) perHari[k].ket = ket || 'H';
+    const k      = keyTgl(tgl);
+    const ket    = g(4).toUpperCase(); // kolom E = KET (H/S/I/A)
+    const status = g(5).toUpperCase(); // kolom F = STATUS (DATANG/PULANG)
+
+    if (!perHari[k]) {
+      perHari[k] = { tgl, datang: null, pulang: null, ket: '' };
     }
 
-    // Override ket jika S atau I (dari kolom E)
-    if (ket === 'S') perHari[k].ket = 'S';
-    if (ket === 'I') perHari[k].ket = 'I';
-    if (ket === 'A') perHari[k].ket = 'A';
+    // Tentukan DATANG atau PULANG dari kolom F (STATUS)
+    if (status === 'DATANG' || status === 'MASUK') {
+      perHari[k].datang = tgl;
+      // Ambil KET dari kolom E saat DATANG
+      if (!perHari[k].ket) perHari[k].ket = ket;
+    } else if (status === 'PULANG' || status === 'KELUAR') {
+      perHari[k].pulang = tgl;
+    }
+
+    // KET S atau I dari kolom E selalu menimpa
+    if (ket === 'S' || ket === 'I' || ket === 'A') {
+      perHari[k].ket = ket;
+    }
   }
 
-  // ── 3. Generate semua hari dalam bulan ──
-  const hari1   = new Date(thn, bln-1, 1);
-  const hariN   = new Date(thn, bln, 0); // hari terakhir bulan
-  const semua   = [];
-  for (let d = new Date(hari1); d <= hariN; d.setDate(d.getDate()+1)) {
-    semua.push(new Date(d));
+  // ────────────────────────────────────────────
+  // STEP 3: Generate semua tanggal bulan ini (Ascending)
+  // ────────────────────────────────────────────
+  const hari1 = new Date(thn, bln - 1, 1);
+  const hariN = new Date(thn, bln, 0);
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
+  const semuaHari = [];
+  for (let d = new Date(hari1); d <= hariN; d.setDate(d.getDate() + 1)) {
+    semuaHari.push(new Date(d));
   }
 
-  // ── 4. Hitung rekap (hanya hari kerja yang sudah lewat) ──
-  let rH=0, rS=0, rI=0, rA=0;
-  const now2 = new Date(); now2.setHours(23,59,59,999);
-  semua.forEach(d => {
+  // ────────────────────────────────────────────
+  // STEP 4: Hitung rekap
+  // ────────────────────────────────────────────
+  let rH = 0, rS = 0, rI = 0, rA = 0;
+  semuaHari.forEach(d => {
     const dow = d.getDay();
-    if (dow===0 || dow===6) return;     // skip weekend
+    if (dow === 0 || dow === 6) return;     // skip Sabtu/Minggu
     const k = keyTgl(d);
-    if (mapLibur[k]) return;            // skip libur
-    if (d > now2) return;               // skip hari depan
+    if (mapLibur[k]) return;                // skip libur
+    if (d > today) return;                  // skip hari depan
 
     const h = perHari[k];
-    if (!h) { rA++; return; }           // tidak ada data = Alfa
-    const ket = (h.ket||'H').toUpperCase();
-    if (ket==='S')      rS++;
-    else if (ket==='I') rI++;
-    else if (ket==='A') rA++;
-    else                rH++;           // H atau B = hadir
+    if (!h) { rA++; return; }              // tidak ada data = Alfa
+
+    const ket = (h.ket || '').toUpperCase();
+    if      (ket === 'S') rS++;
+    else if (ket === 'I') rI++;
+    else if (ket === 'A') rA++;
+    else rH++;                              // H atau B tetap dihitung hadir
   });
-  setText('rkH',rH); setText('rkS',rS);
-  setText('rkI',rI); setText('rkA',rA);
 
-  // ── 5. Render tabel semua hari ──
-  const today = new Date();
-  today.setHours(23,59,59,999);
+  setText('rkH', rH); setText('rkS', rS);
+  setText('rkI', rI); setText('rkA', rA);
 
+  // ────────────────────────────────────────────
+  // STEP 5: Render tabel Ascending
+  // ────────────────────────────────────────────
   let html = '';
-  // Urutkan Ascending (lama ke baru = tanggal 1 di atas)
-  [...semua].forEach(d => {
+
+  semuaHari.forEach(d => {
     const dow      = d.getDay();
     const k        = keyTgl(d);
     const isFuture = d > today;
     const isLibur  = !!mapLibur[k];
-    const isWeekend= dow===0 || dow===6;
+    const isWeekend= dow === 0 || dow === 6;
     const h        = perHari[k];
 
     // Warna baris
     let rowClass = '';
-    if (isLibur)   rowClass = 'row-libur';
-    else if (isWeekend) rowClass = 'row-weekend';
-    else if (isFuture)  rowClass = 'row-future';
+    if (isLibur)    rowClass = 'row-libur';
+    else if (isWeekend)  rowClass = 'row-weekend';
+    else if (isFuture)   rowClass = 'row-future';
 
     // Kolom tanggal
-    const tglTeks = `<div class="tgl-teks ${isLibur?'merah':''}">${d.getDate()} ${BLN[d.getMonth()]}</div>
-                     <div class="tgl-hari ${isLibur?'merah':''}">${HARI[dow]}</div>`;
+    const warnaTgl = isLibur ? 'merah' : '';
+    const tglCell  = `<div class="tgl-teks ${warnaTgl}">${d.getDate()} ${BLN[d.getMonth()]}</div>
+                      <div class="tgl-hari ${warnaTgl}">${HARI[dow]}</div>`;
 
-    // Kolom status + jam
-    let statusBdg = '', jamMasuk = '—', jamPulang = '—';
+    // Kolom KET + jam
+    let ketCell = '', jamDatang = '—', jamPulang = '—';
 
     if (isLibur) {
-      statusBdg = `<span class="bdg libur">🔴</span><div class="ket-libur">${mapLibur[k]}</div>`;
-      jamMasuk = '—'; jamPulang = '—';
+      // Tanggal libur — merah + nama libur
+      ketCell  = `<span class="bdg libur">🔴</span><div class="ket-libur">${mapLibur[k]}</div>`;
+
     } else if (isWeekend) {
-      statusBdg = `<span class="bdg weekend">—</span>`;
+      ketCell  = `<span class="bdg weekend">—</span>`;
+
     } else if (isFuture) {
-      statusBdg = `<span class="bdg future">—</span>`;
+      ketCell  = `<span class="bdg future">—</span>`;
+
     } else if (!h) {
-      // Tidak ada data = Alfa
-      statusBdg = `<span class="bdg a">A</span>`;
+      // Tidak ada data sama sekali = ALFA
+      ketCell  = `<span class="bdg a">A</span>`;
+
     } else {
-      const ket = (h.ket||'').toUpperCase();
-      if (ket==='S') {
-        statusBdg = `<span class="bdg s">S</span>`;
-      } else if (ket==='I') {
-        statusBdg = `<span class="bdg i">I</span>`;
-      } else if (ket==='A') {
-        statusBdg = `<span class="bdg a">A</span>`;
+      const ket = (h.ket || '').toUpperCase();
+
+      if (ket === 'S') {
+        // Sakit — tanpa jam
+        ketCell  = `<span class="bdg s">S</span>`;
+
+      } else if (ket === 'I') {
+        // Izin — tanpa jam
+        ketCell  = `<span class="bdg i">I</span>`;
+
+      } else if (ket === 'A') {
+        // Alfa eksplisit
+        ketCell  = `<span class="bdg a">A</span>`;
+
+      } else if (h.datang && h.pulang) {
+        // Ada DATANG dan PULANG = HADIR
+        ketCell   = `<span class="bdg h">H</span>`;
+        jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
+        jamPulang = `<span class="jam">${fmtJam(h.pulang)}</span>`;
+
+      } else if (h.datang && !h.pulang) {
+        // Ada DATANG saja = BELUM PULANG
+        ketCell   = `<span class="bdg b">B</span>`;
+        jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
+        jamPulang = `<span class="jam kosong">—</span>`;
+
       } else {
-        // Hadir
-        if (h.masuk && h.pulang) {
-          statusBdg = `<span class="bdg h">H</span>`;
-          jamMasuk  = `<span class="jam">${fmtJam(h.masuk)}</span>`;
-          jamPulang = `<span class="jam">${fmtJam(h.pulang)}</span>`;
-        } else if (h.masuk && !h.pulang) {
-          // Ada masuk, tidak ada pulang = B (Belum pulang)
-          statusBdg = `<span class="bdg b">B</span>`;
-          jamMasuk  = `<span class="jam">${fmtJam(h.masuk)}</span>`;
-          jamPulang = `<span class="jam kosong">—</span>`;
-        } else {
-          statusBdg = `<span class="bdg a">A</span>`;
-        }
+        // Tidak ada data yang valid = Alfa
+        ketCell  = `<span class="bdg a">A</span>`;
       }
     }
 
     html += `<tr class="${rowClass}">
-      <td>${tglTeks}</td>
-      <td>${statusBdg}</td>
-      <td>${jamMasuk}</td>
+      <td>${tglCell}</td>
+      <td style="text-align:center">${ketCell}</td>
+      <td>${jamDatang}</td>
       <td>${jamPulang}</td>
     </tr>`;
   });
@@ -929,10 +971,11 @@ async function muatAbsen() {
   tb.innerHTML = html || '<tr><td colspan="4" class="kosong-row">Tidak ada data</td></tr>';
 
   const now = new Date();
-  setText('teksUpd', `Diperbarui ${fmtJam(now)} · ${semua.length} hari`);
+  setText('teksUpd', `Diperbarui ${fmtJam(now)} · ${semuaHari.length} hari`);
 }
 
 function filterTampil() { if (D.aktif) muatAbsen(); }
+
 
 function logout() {
   D.aktif = null; D.absenAll = [];

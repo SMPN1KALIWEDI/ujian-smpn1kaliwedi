@@ -868,7 +868,7 @@ async function muatAbsen() {
   let rH = 0, rS = 0, rI = 0, rA = 0;
   semuaHari.forEach(d => {
     const dow = d.getDay();
-    if (dow === 0 || dow === 6) return;     // skip Sabtu/Minggu
+    if (dow === 0) return;                  // skip Minggu saja (Sabtu masuk)
     const k = keyTgl(d);
     if (mapLibur[k]) return;                // skip libur
     if (d > today) return;                  // skip hari depan
@@ -896,7 +896,7 @@ async function muatAbsen() {
     const k        = keyTgl(d);
     const isFuture = d > today;
     const isLibur  = !!mapLibur[k];
-    const isWeekend= dow === 0 || dow === 6;
+    const isWeekend= dow === 0;              // hanya Minggu (Sabtu = hari sekolah)
     const h        = perHari[k];
 
     // Warna baris

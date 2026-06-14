@@ -204,97 +204,136 @@ table.tab tbody tr:hover{background:var(--b5)}
 /* ===== KARTU ABSEN ===== */
 #hKartu { display:none; }
 
-.kartu-wrap {
-  padding: 18px;
-}
+.kartu-wrap { padding:18px 18px 20px; }
+
 .sec-kartu-title {
   font-size:.78rem;font-weight:700;color:var(--abu2);
-  text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;
 }
 
-/* Kartu yang akan di-download */
+/* ── KARTU FISIK: 53.9mm × 85.6mm ──
+   Pada layar 96dpi: 1mm ≈ 3.78px
+   53.9mm × 3.78 ≈ 204px  (lebar)
+   85.6mm × 3.78 ≈ 323px  (tinggi)
+   Skala 1.5× untuk tampilan lebih jelas di layar:
+   204×1.5 = 306px, 323×1.5 = 485px               */
 #kartuCetak {
-  background: linear-gradient(160deg, #0d47a1 0%, #1976d2 60%, #5c6bc0 100%);
-  border-radius: 18px;
-  padding: 24px 20px 20px;
-  text-align: center;
-  color: #fff;
-  position: relative;
+  width: 204px;
+  height: 323px;
+  margin: 0 auto 18px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 8px 28px rgba(13,71,161,.35);
-  margin-bottom: 16px;
-  width: 100%;
-  max-width: 320px;
-  margin-left: auto; margin-right: auto;
+  box-shadow: 0 10px 36px rgba(13,71,161,.35), 0 2px 8px rgba(0,0,0,.15);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Tampil lebih besar di layar tapi ukuran aslinya tetap proporsional */
+  transform: scale(1.5);
+  transform-origin: top center;
+  margin-bottom: 178px; /* kompensasi transform scale agar tidak overlap */
 }
 
-/* Dekorasi lingkaran */
-#kartuCetak::before {
-  content:'';position:absolute;top:-50px;right:-50px;
-  width:160px;height:160px;background:rgba(255,255,255,.08);border-radius:50%;
+/* ── ZONA BIRU (header) ── */
+.kartu-zona-biru {
+  width:100%;
+  background: linear-gradient(170deg, #0d47a1 0%, #1565c0 55%, #1976d2 100%);
+  padding: 10px 12px 12px;
+  text-align: center;
+  position: relative;
+  flex-shrink: 0;
 }
-#kartuCetak::after {
-  content:'';position:absolute;bottom:-40px;left:-40px;
-  width:130px;height:130px;background:rgba(255,255,255,.06);border-radius:50%;
+/* Dekorasi lingkaran di zona biru */
+.kartu-zona-biru::before {
+  content:'';position:absolute;top:-24px;right:-24px;
+  width:80px;height:80px;background:rgba(255,255,255,.09);border-radius:50%;
+}
+.kartu-zona-biru::after {
+  content:'';position:absolute;top:6px;left:-20px;
+  width:55px;height:55px;background:rgba(255,255,255,.06);border-radius:50%;
 }
 
+/* Logo di atas */
+.kartu-logo-ring {
+  width:44px;height:44px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.85);
+  background:#fff;padding:4px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;margin:0 auto 6px;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+  position:relative;z-index:1;
+}
+.kartu-logo-ring img {width:100%;height:100%;object-fit:contain;}
+
+/* Judul di bawah logo */
 .kartu-judul {
   font-family:'Poppins',sans-serif;
-  font-size:.72rem;font-weight:700;letter-spacing:1.5px;
-  text-transform:uppercase;opacity:.85;margin-bottom:2px;
+  font-size:5.5px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:rgba(255,255,255,.8);
+  margin-bottom:1px;position:relative;z-index:1;
 }
 .kartu-sekolah {
   font-family:'Poppins',sans-serif;
-  font-size:.9rem;font-weight:800;margin-bottom:14px;letter-spacing:.3px;
+  font-size:5.5px;font-weight:800;color:#fff;
+  letter-spacing:.3px;line-height:1.3;position:relative;z-index:1;
 }
 
-/* Logo + QR berdampingan */
-.kartu-visual {
-  display:flex;align-items:center;justify-content:center;
-  gap:12px;margin-bottom:14px;position:relative;z-index:1;
+/* ── ZONA PUTIH (tengah — QR) ── */
+.kartu-zona-putih {
+  width:100%;background:#fff;
+  padding:10px 14px 8px;
+  display:flex;flex-direction:column;align-items:center;
+  flex:1;
 }
-.kartu-logo-ring {
-  width:64px;height:64px;border-radius:50%;
-  border:2.5px solid rgba(255,255,255,.8);
-  background:#fff;padding:5px;
-  display:flex;align-items:center;justify-content:center;
-  overflow:hidden;flex-shrink:0;
-  box-shadow:0 3px 10px rgba(0,0,0,.2);
-}
-.kartu-logo-ring img {width:100%;height:100%;object-fit:contain;}
 .kartu-qr-box {
-  background:#fff;border-radius:12px;
-  padding:6px;width:90px;height:90px;
+  background:#fff;border-radius:8px;
+  padding:4px;
+  width:154px; /* 75% dari lebar kartu 204px */
+  height:154px;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 3px 10px rgba(0,0,0,.2);
+  box-shadow:0 0 0 1.5px #e0e0e0;
+}
+.kartu-qr-box img {
+  width:146px;height:146px;
+  image-rendering:pixelated;
+}
+
+/* ── ZONA KUNING (footer — info siswa) ── */
+.kartu-zona-kuning {
+  width:100%;
+  background: linear-gradient(160deg, #f9a825 0%, #ffb300 50%, #ffc107 100%);
+  padding:8px 10px 7px;
+  text-align:center;
+  position:relative;
   flex-shrink:0;
 }
-.kartu-qr-box img {width:78px;height:78px;}
-
-/* Info siswa */
-.kartu-divider {
-  height:1px;background:rgba(255,255,255,.25);
-  margin:12px 0;position:relative;z-index:1;
+.kartu-zona-kuning::before {
+  content:'';position:absolute;bottom:-20px;right:-20px;
+  width:60px;height:60px;background:rgba(255,255,255,.12);border-radius:50%;
 }
+
 .kartu-nisn {
   font-family:'Poppins',sans-serif;
-  font-size:1.1rem;font-weight:800;letter-spacing:2px;
-  margin-bottom:4px;position:relative;z-index:1;
+  font-size:6px;font-weight:700;letter-spacing:1px;
+  color:#5d4037;margin-bottom:2px;
 }
 .kartu-nama {
-  font-size:.85rem;font-weight:700;opacity:.9;
-  margin-bottom:2px;position:relative;z-index:1;
+  font-family:'Poppins',sans-serif;
+  font-size:7.5px;font-weight:800;color:#1a1a1a;
+  margin-bottom:1px;line-height:1.2;
 }
 .kartu-kelas {
-  font-size:.75rem;opacity:.75;
-  position:relative;z-index:1;
+  font-size:5.5px;color:#5d4037;font-weight:600;
+  margin-bottom:4px;
+}
+.kartu-divider-kuning {
+  height:0.5px;background:rgba(0,0,0,.15);margin:4px 0;
 }
 .kartu-footer {
-  margin-top:10px;font-size:.62rem;opacity:.55;
-  letter-spacing:.5px;position:relative;z-index:1;
+  font-size:4.5px;color:rgba(0,0,0,.5);letter-spacing:.3px;line-height:1.4;
 }
 
-/* Tombol download */
+/* ── TOMBOL DOWNLOAD ── */
 .btn-dl-wrap {
   display:flex;gap:10px;
   max-width:320px;margin:0 auto;
@@ -302,18 +341,19 @@ table.tab tbody tr:hover{background:var(--b5)}
 .btn-dl {
   flex:1;padding:11px 8px;border:none;border-radius:12px;
   font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:700;
-  cursor:pointer;transition:.2s;display:flex;align-items:center;
-  justify-content:center;gap:6px;
+  cursor:pointer;transition:.2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
 }
 .btn-dl.jpg {
   background:linear-gradient(135deg,var(--b1),var(--b3));
   color:#fff;box-shadow:0 4px 12px rgba(13,71,161,.3);
 }
 .btn-dl.png {
-  background:linear-gradient(135deg,#1b5e20,#388e3c);
-  color:#fff;box-shadow:0 4px 12px rgba(27,94,32,.3);
+  background:linear-gradient(135deg,#e65100,#f57c00);
+  color:#fff;box-shadow:0 4px 12px rgba(230,81,0,.3);
 }
 .btn-dl:hover{opacity:.9;transform:translateY(-1px);}
+.btn-dl.loading{opacity:.6;pointer-events:none;}
 
 .btn-back-kartu {
   width:100%;margin-top:10px;max-width:320px;
@@ -333,12 +373,6 @@ table.tab tbody tr:hover{background:var(--b5)}
   cursor:pointer;transition:.2s;
 }
 .btn-kartu:hover{background:var(--b5);}
-
-.kartu-loading {
-  text-align:center;padding:20px;color:var(--abu2);font-size:.88rem;
-}
-
-.btn-dl.loading { opacity:.6; pointer-events:none; }
 
 /* ===== END KARTU ===== */
 .btn-tutup-qr{
@@ -471,30 +505,38 @@ table.tab tbody tr:hover{background:var(--b5)}
     <div class="kartu-wrap">
       <div class="sec-kartu-title">Kartu Identitas Absensi</div>
 
-      <!-- Kartu yang akan di-screenshot -->
+      <!-- Kartu yang akan di-screenshot (ukuran ID card 53.9×85.6mm) -->
       <div id="kartuCetak">
-        <div class="kartu-judul">Kartu Absen Siswa</div>
-        <div class="kartu-sekolah">SMP NEGERI 1 KALIWEDI</div>
 
-        <div class="kartu-visual">
-          <!-- Logo sekolah -->
+        <!-- ZONA BIRU — Logo + Judul -->
+        <div class="kartu-zona-biru">
           <div class="kartu-logo-ring">
-            <img id="kartuLogoImg"
-              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png"
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png"
               alt="Logo" onerror="this.style.display='none'">
           </div>
-          <!-- QR Code -->
+          <div class="kartu-judul">Kartu Absen Siswa</div>
+          <div class="kartu-sekolah">SMP NEGERI 1 KALIWEDI</div>
+        </div>
+
+        <!-- ZONA PUTIH — QR Code 75% lebar -->
+        <div class="kartu-zona-putih">
           <div class="kartu-qr-box">
-            <img id="kartuQRImg" src="" alt="QR">
+            <img id="kartuQRImg" src="" alt="QR Code">
           </div>
         </div>
 
-        <div class="kartu-divider"></div>
+        <!-- ZONA KUNING — Info Siswa -->
+        <div class="kartu-zona-kuning">
+          <div class="kartu-nisn"  id="kartuNISN"></div>
+          <div class="kartu-nama"  id="kartuNama"></div>
+          <div class="kartu-kelas" id="kartuKelas"></div>
+          <div class="kartu-divider-kuning"></div>
+          <div class="kartu-footer">
+            Scan QR untuk absen digital<br>
+            Lakukan saat <b>Masuk</b> dan <b>Pulang</b>
+          </div>
+        </div>
 
-        <div class="kartu-nisn"  id="kartuNISN"></div>
-        <div class="kartu-nama"  id="kartuNama"></div>
-        <div class="kartu-kelas" id="kartuKelas"></div>
-        <div class="kartu-footer">Scan QR untuk absen digital</div>
       </div>
 
       <!-- Tombol Download -->
@@ -1004,15 +1046,28 @@ async function downloadKartu(format) {
       await new Promise(resolve => { qrImg.onload = resolve; });
     }
 
-    // Render kartu ke canvas menggunakan html2canvas
+    // Nonaktifkan transform scale sementara agar screenshot proporsional
+    const scaleAsli = kartu.style.transform;
+    const marginAsli = kartu.style.marginBottom;
+    kartu.style.transform = 'none';
+    kartu.style.marginBottom = '18px';
+
+    // Tunggu browser render ulang
+    await new Promise(r => setTimeout(r, 100));
+
+    // Render kartu ke canvas — skala tinggi untuk kualitas cetak
     const canvas = await html2canvas(kartu, {
-      scale          : 3,           // resolusi tinggi (3x)
-      useCORS        : true,        // izinkan gambar cross-origin
+      scale          : 6,       // 6x = kualitas cetak 300dpi
+      useCORS        : true,
       allowTaint     : true,
-      backgroundColor: null,        // transparan (untuk PNG)
+      backgroundColor: '#ffffff',
       logging        : false,
-      imageTimeout   : 8000,
+      imageTimeout   : 10000,
     });
+
+    // Kembalikan scale
+    kartu.style.transform    = scaleAsli;
+    kartu.style.marginBottom = marginAsli;
 
     // Konversi ke format yang dipilih
     const user     = D.aktif;

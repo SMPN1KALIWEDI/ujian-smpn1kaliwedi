@@ -784,35 +784,47 @@ async function muatAbsen() {
   }
 
   // ── 2. Parse absensi Sheet2 milik siswa ini ──
+  // Sheet2: A=TIMESTAMP(0) | B=NISN(1) | C=NAMA(2) | D=KELAS(3) | E=KET(4) | F=STATUS(5)
   // perHari: { key → { masuk:Date|null, pulang:Date|null, ket:string } }
   const perHari = {};
 
-  for (let i = 1; i < tblAbsen.rows.length; i++) {
-    const nisnBaris = cel(tblAbsen, i, 1);
-    if (nisnBaris !== user.nisn) continue;
+  for (let i = 0; i < tblAbsen.rows.length; i++) {
+    const row = tblAbsen.rows[i];
+    if (!row || !row.c) continue;
 
-    const tgl    = parseDate(tblAbsen, i, 0);
-    const ket    = cel(tblAbsen, i, 4).trim();
-    const status = cel(tblAbsen, i, 5).toUpperCase().trim();
+    // Fungsi aman ambil nilai sel
+    const g = (col) => {
+      const c = row.c[col];
+      return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
+    };
+
+    const nisnBaris = g(1); // kolom B = NISN
+    if (!nisnBaris || nisnBaris !== user.nisn) continue;
+
+    const tgl    = parseDate(tblAbsen, i, 0);  // kolom A = TIMESTAMP
+    const ket    = g(4).toUpperCase();          // kolom E = KET  (H/S/I/A)
+    const status = g(5).toUpperCase();          // kolom F = STATUS (MASUK/PULANG)
+
     if (!tgl) continue;
 
     const k = keyTgl(tgl);
     if (!perHari[k]) perHari[k] = { tgl, masuk:null, pulang:null, ket:'' };
 
-    if (status === 'MASUK' || status === 'DATANG' || status === 'HADIR') {
+    // Deteksi status MASUK / PULANG dari kolom F
+    if (status === 'MASUK' || status === 'DATANG') {
       perHari[k].masuk = tgl;
-      perHari[k].ket   = ket || 'H';
+      // Ket dari kolom E: H/S/I/A
+      if (!perHari[k].ket) perHari[k].ket = ket || 'H';
     } else if (status === 'PULANG' || status === 'KELUAR') {
       perHari[k].pulang = tgl;
-    } else if (status === 'SAKIT' || ket.toUpperCase().includes('SAKIT')) {
-      perHari[k].ket = 'S';
-      perHari[k].masuk = tgl;
-    } else if (status === 'IZIN' || ket.toUpperCase().includes('IZIN')) {
-      perHari[k].ket = 'I';
-      perHari[k].masuk = tgl;
-    } else if (status === 'ALFA' || status === 'ALPA') {
-      perHari[k].ket = 'A';
+      // Jika belum ada ket dari masuk, ambil dari baris pulang
+      if (!perHari[k].ket) perHari[k].ket = ket || 'H';
     }
+
+    // Override ket jika S atau I (dari kolom E)
+    if (ket === 'S') perHari[k].ket = 'S';
+    if (ket === 'I') perHari[k].ket = 'I';
+    if (ket === 'A') perHari[k].ket = 'A';
   }
 
   // ── 3. Generate semua hari dalam bulan ──
@@ -823,22 +835,23 @@ async function muatAbsen() {
     semua.push(new Date(d));
   }
 
-  // ── 4. Hitung rekap ──
+  // ── 4. Hitung rekap (hanya hari kerja yang sudah lewat) ──
   let rH=0, rS=0, rI=0, rA=0;
+  const now2 = new Date(); now2.setHours(23,59,59,999);
   semua.forEach(d => {
-    const dow = d.getDay(); // 0=Min, 6=Sab
-    if (dow===0 || dow===6) return; // skip weekend
-    const k   = keyTgl(d);
-    if (mapLibur[k]) return;        // skip libur
-    if (d > new Date()) return;     // skip hari depan
+    const dow = d.getDay();
+    if (dow===0 || dow===6) return;     // skip weekend
+    const k = keyTgl(d);
+    if (mapLibur[k]) return;            // skip libur
+    if (d > now2) return;               // skip hari depan
 
     const h = perHari[k];
-    if (!h) { rA++; return; }
-    const ket = (h.ket||'').toUpperCase();
-    if (ket==='S') rS++;
+    if (!h) { rA++; return; }           // tidak ada data = Alfa
+    const ket = (h.ket||'H').toUpperCase();
+    if (ket==='S')      rS++;
     else if (ket==='I') rI++;
     else if (ket==='A') rA++;
-    else rH++;
+    else                rH++;           // H atau B = hadir
   });
   setText('rkH',rH); setText('rkS',rS);
   setText('rkI',rI); setText('rkA',rA);
@@ -848,8 +861,8 @@ async function muatAbsen() {
   today.setHours(23,59,59,999);
 
   let html = '';
-  // Urutkan terbaru di atas
-  [...semua].reverse().forEach(d => {
+  // Urutkan Ascending (lama ke baru = tanggal 1 di atas)
+  [...semua].forEach(d => {
     const dow      = d.getDay();
     const k        = keyTgl(d);
     const isFuture = d > today;

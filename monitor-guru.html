@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1565c0">
+<title>Monitor Absensi Guru — SMPN 1 Kaliwedi</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --b1:#0d47a1; --b2:#1565c0; --b3:#1976d2; --b4:#42a5f5; --b5:#bbdefb; --b6:#e3f2fd;
+  --putih:#fff; --teks:#0d1b2a; --abu:#f0f4f8; --abu2:#78909c;
+  --hijau:#2e7d32; --hijau2:#e8f5e9;
+  --merah:#c62828; --merah2:#ffebee;
+  --kuning:#e65100; --kuning2:#fff3e0;
+  --shadow:0 8px 32px rgba(13,71,161,.15); --r:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Nunito',sans-serif;
+  background:linear-gradient(160deg,#e3f2fd 0%,#bbdefb 35%,#e8eaf6 100%);
+  min-height:100vh;
+}
+
+/* LOADING */
+#loading{
+  position:fixed;inset:0;background:rgba(255,255,255,.96);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;
+}
+.spin{width:50px;height:50px;border:5px solid var(--b5);border-top-color:var(--b2);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{color:var(--b2);font-weight:700}
+#loading small{color:var(--abu2);font-size:.8rem;margin-top:4px}
+
+/* HEADER APP */
+.topbar{
+  background:linear-gradient(135deg,var(--b1) 0%,var(--b3) 60%,#5c6bc0 100%);
+  padding:18px 16px 40px;color:#fff;text-align:center;position:relative;overflow:hidden;
+}
+.topbar::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(255,255,255,.07);border-radius:50%}
+.topbar::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:24px;background:var(--abu);border-radius:50% 50% 0 0/100% 100% 0 0}
+.logo-ring{width:56px;height:56px;border-radius:50%;border:2.5px solid rgba(255,255,255,.8);background:#fff;padding:5px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+.logo-ring img{width:100%;height:100%;object-fit:contain}
+.topbar h1{font-family:'Poppins',sans-serif;font-size:1.25rem;font-weight:800;margin-bottom:2px}
+.topbar p{font-size:.78rem;opacity:.88}
+
+/* CONTAINER */
+.container{max-width:720px;margin:-24px auto 0;padding:0 14px 30px;position:relative;z-index:1}
+
+/* CARD */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;animation:up .4s ease both}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.card-body{padding:20px}
+
+/* ===== STEP 1: PILIH TINGKAT ===== */
+#stepTingkat .pilihan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.btn-tingkat{
+  padding:24px 10px;border:none;border-radius:16px;cursor:pointer;
+  background:linear-gradient(135deg,var(--b1),var(--b3));color:#fff;
+  font-family:'Poppins',sans-serif;text-align:center;transition:.2s;
+  box-shadow:0 4px 14px rgba(13,71,161,.25);
+}
+.btn-tingkat:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(13,71,161,.35)}
+.btn-tingkat .tk-angka{font-size:2.2rem;font-weight:800;margin-bottom:2px}
+.btn-tingkat .tk-label{font-size:.72rem;opacity:.85;font-weight:600}
+
+.sec-title{font-size:.8rem;font-weight:700;color:var(--abu2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+
+/* ===== STEP 2: PILIH KELAS ===== */
+#stepKelas{display:none}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--abu2);margin-bottom:16px}
+.breadcrumb b{color:var(--b2)}
+.breadcrumb .pisah{opacity:.4}
+.btn-back-mini{
+  background:var(--abu);border:none;border-radius:8px;padding:5px 10px;
+  font-size:.78rem;font-weight:700;color:var(--abu2);cursor:pointer;
+}
+.kelas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:10px}
+.btn-kelas{
+  padding:16px 8px;border:2px solid var(--b5);border-radius:14px;cursor:pointer;
+  background:var(--b6);color:var(--b2);font-family:'Poppins',sans-serif;
+  font-weight:800;font-size:1.05rem;transition:.2s;text-align:center;
+}
+.btn-kelas:hover{background:var(--b2);color:#fff;transform:translateY(-2px);box-shadow:0 4px 12px rgba(13,71,161,.25)}
+.btn-kelas .jml{display:block;font-size:.62rem;font-weight:600;opacity:.75;margin-top:2px}
+
+/* ===== STEP 3: DASHBOARD KELAS ===== */
+#stepDashboard{display:none}
+.dash-header{
+  background:linear-gradient(135deg,var(--b1),var(--b3));
+  padding:18px 20px;color:#fff;
+}
+.dash-header .kelas-besar{font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:800}
+.dash-header .kelas-sub{font-size:.8rem;opacity:.85;margin-top:2px}
+
+.filter-tgl{
+  padding:14px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  border-bottom:1px solid #eef2f6;
+}
+.filter-tgl label{font-size:.78rem;font-weight:700;color:var(--abu2);white-space:nowrap}
+input[type=date]{
+  padding:8px 10px;border:2px solid #cfd8dc;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.88rem;color:var(--teks);
+  background:var(--abu);outline:none;flex:1;min-width:140px;
+}
+input[type=date]:focus{border-color:var(--b3)}
+.btn-hari-ini{
+  padding:8px 14px;background:var(--b6);color:var(--b2);
+  border:2px solid var(--b5);border-radius:10px;font-family:'Nunito',sans-serif;
+  font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;
+}
+.btn-hari-ini:hover{background:var(--b5)}
+
+/* Rekap ringkas */
+.rekap-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 18px}
+.rs-box{background:var(--abu);border-radius:10px;padding:9px 4px;text-align:center}
+.rs-box .rsn{font-size:1.25rem;font-weight:800;font-family:'Poppins',sans-serif}
+.rs-box .rsl{font-size:.62rem;font-weight:700;color:var(--abu2);text-transform:uppercase}
+.rs-box.h{background:var(--hijau2)} .rs-box.h .rsn{color:var(--hijau)}
+.rs-box.s{background:var(--b6)} .rs-box.s .rsn{color:var(--b2)}
+.rs-box.i{background:var(--kuning2)} .rs-box.i .rsn{color:var(--kuning)}
+.rs-box.a{background:var(--merah2)} .rs-box.a .rsn{color:var(--merah)}
+
+/* Cari nama */
+.search-wrap{padding:0 18px 12px}
+.search-box{position:relative}
+.search-box input{
+  width:100%;padding:10px 14px 10px 36px;border:2px solid #cfd8dc;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.88rem;background:var(--abu);outline:none;
+}
+.search-box input:focus{border-color:var(--b3)}
+.search-box .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.4}
+
+/* Tabel siswa */
+.tbl-wrap{padding:0 18px 18px;overflow-x:auto}
+table.tsiswa{width:100%;border-collapse:collapse;font-size:.85rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);min-width:340px}
+table.tsiswa thead tr{background:linear-gradient(135deg,var(--b1),var(--b3));color:#fff}
+table.tsiswa th{padding:10px 12px;text-align:left;font-size:.74rem;font-weight:700;letter-spacing:.3px}
+table.tsiswa td{padding:9px 12px;border-bottom:1px solid #eef2f6;vertical-align:middle}
+table.tsiswa tbody tr:last-child td{border-bottom:none}
+table.tsiswa tbody tr:nth-child(even){background:var(--b6)}
+table.tsiswa tbody tr:hover{background:var(--b5)}
+.no-urut{color:var(--abu2);font-size:.78rem;width:24px}
+.nama-siswa{font-weight:700;color:var(--teks)}
+.nisn-kecil{font-size:.7rem;color:var(--abu2)}
+.bdg{display:inline-block;padding:3px 10px;border-radius:8px;font-size:.76rem;font-weight:800;min-width:26px;text-align:center}
+.bdg.h{background:var(--hijau2);color:var(--hijau)}
+.bdg.s{background:var(--b6);color:var(--b2)}
+.bdg.i{background:var(--kuning2);color:var(--kuning)}
+.bdg.a{background:var(--merah2);color:var(--merah)}
+.bdg.b{background:#fff3e0;color:#e65100}
+.jam-kecil{font-size:.72rem;color:var(--abu2);margin-top:2px}
+.kosong-row{text-align:center;padding:30px;color:var(--abu2)}
+
+.btn-back-dash{
+  margin:0 18px 18px;padding:11px;background:var(--abu);color:var(--abu2);
+  border:2px solid #cfd8dc;border-radius:12px;font-family:'Nunito',sans-serif;
+  font-size:.9rem;font-weight:700;cursor:pointer;width:calc(100% - 36px);
+}
+.btn-back-dash:hover{background:var(--merah2);color:var(--merah);border-color:#ef9a9a}
+
+.update-info{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--abu2);padding:0 18px 8px}
+.dot-live{width:7px;height:7px;border-radius:50%;background:#4caf50;animation:kedip 1.2s infinite}
+@keyframes kedip{0%,100%{opacity:1}50%{opacity:.2}}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spin"></div>
+  <p>Memuat data...</p>
+  <small id="loadSub"></small>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-ring">
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo" onerror="this.style.display='none'">
+  </div>
+  <h1>Monitor Absensi</h1>
+  <p>SMP Negeri 1 Kaliwedi — Khusus Guru</p>
+</div>
+
+<div class="container">
+
+  <!-- ===== STEP 1: PILIH TINGKAT ===== -->
+  <div class="card" id="stepTingkat">
+    <div class="card-body">
+      <div class="sec-title">📚 Pilih Tingkat Kelas</div>
+      <div class="pilihan-grid">
+        <button class="btn-tingkat" onclick="pilihTingkat(7)">
+          <div class="tk-angka">7</div>
+          <div class="tk-label">KELAS VII</div>
+        </button>
+        <button class="btn-tingkat" onclick="pilihTingkat(8)">
+          <div class="tk-angka">8</div>
+          <div class="tk-label">KELAS VIII</div>
+        </button>
+        <button class="btn-tingkat" onclick="pilihTingkat(9)">
+          <div class="tk-angka">9</div>
+          <div class="tk-label">KELAS IX</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: PILIH KELAS (7A, 7B, dst) ===== -->
+  <div class="card" id="stepKelas">
+    <div class="card-body">
+      <div class="breadcrumb">
+        <button class="btn-back-mini" onclick="kembaliTingkat()">⬅ Tingkat</button>
+        <span class="pisah">/</span>
+        <b id="bcTingkat">Kelas 7</b>
+      </div>
+      <div class="sec-title">🏫 Pilih Kelas</div>
+      <div class="kelas-grid" id="kelasGrid"></div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: DASHBOARD KELAS ===== -->
+  <div class="card" id="stepDashboard">
+    <div class="dash-header">
+      <div class="kelas-besar" id="dashKelasNama"></div>
+      <div class="kelas-sub" id="dashTanggalTeks"></div>
+    </div>
+
+    <div class="filter-tgl">
+      <label>📅 Tanggal:</label>
+      <input type="date" id="inpTanggal" onchange="muatDashboard()">
+      <button class="btn-hari-ini" onclick="setHariIni()">Hari Ini</button>
+    </div>
+
+    <div class="rekap-strip">
+      <div class="rs-box h"><div class="rsn" id="dH">0</div><div class="rsl">Hadir</div></div>
+      <div class="rs-box s"><div class="rsn" id="dS">0</div><div class="rsl">Sakit</div></div>
+      <div class="rs-box i"><div class="rsn" id="dI">0</div><div class="rsl">Izin</div></div>
+      <div class="rs-box a"><div class="rsn" id="dA">0</div><div class="rsl">Alfa</div></div>
+    </div>
+
+    <div class="update-info">
+      <div class="dot-live"></div>
+      <span id="dashUpdate">Memuat...</span>
+    </div>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <span class="si">🔍</span>
+        <input type="text" id="inpCari" placeholder="Cari nama siswa..." oninput="renderTabelSiswa()">
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="tsiswa">
+        <thead>
+          <tr>
+            <th width="28">#</th>
+            <th>Nama Siswa</th>
+            <th style="text-align:center">Ket</th>
+            <th>Waktu</th>
+          </tr>
+        </thead>
+        <tbody id="tbSiswa">
+          <tr><td colspan="4" class="kosong-row">⏳ Memuat...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <button class="btn-back-dash" onclick="kembaliKelas()">⬅ Pilih Kelas Lain</button>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const SPREADSHEET_ID = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
+
+let D = {
+  siswa: [],      // semua siswa dari Sheet1
+  kelasList: {},  // { '7': ['7A','7B',...], '8': [...], '9': [...] }
+  tingkatAktif: null,
+  kelasAktif: null,
+  absenHari: {},  // hasil parsing absensi tanggal terpilih
+};
+
+// ============================================================
+// BACA SHEET via gviz
+// ============================================================
+async function bacaSheet(nama) {
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(nama)}&t=${Date.now()}`;
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(()=>ctrl.abort(), 12000);
+    const res  = await fetch(url, { signal: ctrl.signal, cache:'no-store' });
+    clearTimeout(tid);
+    const txt  = await res.text();
+    const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+    if (s<0) throw new Error('format');
+    return JSON.parse(txt.substring(s,e+1)).table;
+  } catch(err) {
+    console.error('Gagal baca', nama, err.message);
+    return null;
+  }
+}
+
+function parseDate(tbl, row, col) {
+  try {
+    const c = tbl.rows[row].c[col];
+    if (!c || c.v===null) return null;
+    if (typeof c.v === 'string' && c.v.startsWith('Date(')) {
+      const p = c.v.replace('Date(','').replace(')','').split(',').map(Number);
+      return new Date(p[0], p[1], p[2], p[3]||0, p[4]||0, p[5]||0);
+    }
+    const d = new Date(c.f || c.v);
+    return isNaN(d) ? null : d;
+  } catch { return null; }
+}
+
+function fmtJam(d) {
+  if (!d) return '';
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// ============================================================
+// INIT — muat Sheet1 (data siswa semua kelas)
+// ============================================================
+async function init() {
+  setText('loadSub', 'Memuat data siswa...');
+
+  const tbl = await bacaSheet('Sheet1');
+  if (tbl) {
+    D.siswa = [];
+    for (let i = 0; i < tbl.rows.length; i++) {
+      const row = tbl.rows[i];
+      if (!row || !row.c) continue;
+      const g = (col) => {
+        const c = row.c[col];
+        return (c && c.v!==null && c.v!==undefined) ? String(c.v).trim() : '';
+      };
+      const nisn = g(0);
+      if (!nisn || nisn.toLowerCase()==='nisn') continue;
+
+      const kelas = g(2);
+      D.siswa.push({ nisn, nama: g(1), kelas });
+
+      // Kelompokkan per tingkat
+      const tingkat = kelas.replace(/[^0-9]/g,'').charAt(0);
+      if (tingkat) {
+        if (!D.kelasList[tingkat]) D.kelasList[tingkat] = new Set();
+        D.kelasList[tingkat].add(kelas);
+      }
+    }
+    console.log('✅ Siswa dimuat:', D.siswa.length);
+  }
+
+  hide('loading');
+}
+
+// ============================================================
+// STEP 1 → STEP 2: Pilih tingkat
+// ============================================================
+function pilihTingkat(tingkat) {
+  D.tingkatAktif = String(tingkat);
+  setText('bcTingkat', 'Kelas ' + tingkat);
+
+  const kelasSet = D.kelasList[String(tingkat)] || new Set();
+  const kelasArr = Array.from(kelasSet).sort();
+
+  const grid = document.getElementById('kelasGrid');
+  grid.innerHTML = kelasArr.map(k => {
+    const jml = D.siswa.filter(s => s.kelas === k).length;
+    return `<button class="btn-kelas" onclick="pilihKelas('${k}')">
+      ${k}<span class="jml">${jml} siswa</span>
+    </button>`;
+  }).join('');
+
+  hide('stepTingkat'); show('stepKelas');
+}
+
+function kembaliTingkat() {
+  hide('stepKelas'); show('stepTingkat');
+}
+
+// ============================================================
+// STEP 2 → STEP 3: Pilih kelas spesifik
+// ============================================================
+function pilihKelas(kelas) {
+  D.kelasAktif = kelas;
+  setText('dashKelasNama', '🏫 Kelas ' + kelas);
+
+  hide('stepKelas'); show('stepDashboard');
+  setHariIni(); // otomatis muat hari ini
+}
+
+function kembaliKelas() {
+  hide('stepDashboard'); show('stepKelas');
+}
+
+function setHariIni() {
+  const today = new Date();
+  const iso = today.toISOString().split('T')[0];
+  document.getElementById('inpTanggal').value = iso;
+  muatDashboard();
+}
+
+// ============================================================
+// MUAT DASHBOARD — baca Sheet2, padukan dengan siswa kelas ini
+// ============================================================
+async function muatDashboard() {
+  const tglInput = document.getElementById('inpTanggal').value;
+  if (!tglInput) return;
+
+  const [thn, bln, tgl] = tglInput.split('-').map(Number);
+  const tglPilih = new Date(thn, bln-1, tgl);
+
+  setText('dashTanggalTeks', formatTanggalIndo(tglPilih));
+  setText('dashUpdate', 'Memuat...');
+
+  const tbody = document.getElementById('tbSiswa');
+  tbody.innerHTML = '<tr><td colspan="4" class="kosong-row">⏳ Memuat...</td></tr>';
+
+  // Baca Sheet2
+  const tblAbsen = await bacaSheet('Sheet2');
+  if (!tblAbsen) {
+    tbody.innerHTML = '<tr><td colspan="4" class="kosong-row">❌ Gagal memuat data.</td></tr>';
+    return;
+  }
+
+  // Siswa di kelas terpilih
+  const siswaKelas = D.siswa.filter(s => s.kelas === D.kelasAktif);
+
+  // Parse absensi untuk tanggal ini — key: NISN
+  const absenMap = {}; // nisn -> {datang, pulang, ket}
+
+  const keyTglPilih = `${thn}-${bln-1}-${tgl}`;
+
+  for (let i = 0; i < tblAbsen.rows.length; i++) {
+    const row = tblAbsen.rows[i];
+    if (!row || !row.c) continue;
+    const g = (col) => {
+      const c = row.c[col];
+      return (c && c.v!==null && c.v!==undefined) ? String(c.v).trim() : '';
+    };
+
+    const nisn = g(1); // kolom B
+    if (!nisn) continue;
+
+    const waktu = parseDate(tblAbsen, i, 0); // kolom A
+    if (!waktu) continue;
+
+    const k = `${waktu.getFullYear()}-${waktu.getMonth()}-${waktu.getDate()}`;
+    if (k !== keyTglPilih) continue; // hanya tanggal yang dipilih
+
+    const ket    = g(4).toUpperCase(); // kolom E
+    const status = g(5).toUpperCase(); // kolom F
+
+    if (!absenMap[nisn]) absenMap[nisn] = { datang:null, pulang:null, ket:'' };
+
+    if (status === 'DATANG' || status === 'MASUK') {
+      absenMap[nisn].datang = waktu;
+      if (!absenMap[nisn].ket) absenMap[nisn].ket = ket;
+    } else if (status === 'PULANG' || status === 'KELUAR') {
+      absenMap[nisn].pulang = waktu;
+    }
+    if (ket==='S' || ket==='I' || ket==='A') absenMap[nisn].ket = ket;
+  }
+
+  D.absenHari = absenMap;
+  D.siswaKelasAktif = siswaKelas;
+
+  // Hitung rekap
+  let rH=0, rS=0, rI=0, rA=0;
+  siswaKelas.forEach(s => {
+    const a = absenMap[s.nisn];
+    if (!a) { rA++; return; }
+    const ket = (a.ket||'').toUpperCase();
+    if (ket==='S') rS++;
+    else if (ket==='I') rI++;
+    else if (ket==='A') rA++;
+    else rH++; // H atau B dihitung hadir
+  });
+  setText('dH', rH); setText('dS', rS);
+  setText('dI', rI); setText('dA', rA);
+
+  renderTabelSiswa();
+
+  const now = new Date();
+  setText('dashUpdate', `Diperbarui ${fmtJam(now)} · ${siswaKelas.length} siswa`);
+}
+
+function renderTabelSiswa() {
+  const cari = (document.getElementById('inpCari').value || '').toLowerCase().trim();
+  const siswaKelas = D.siswaKelasAktif || [];
+  const tbody = document.getElementById('tbSiswa');
+
+  const filtered = cari
+    ? siswaKelas.filter(s => s.nama.toLowerCase().includes(cari))
+    : siswaKelas;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="kosong-row">Tidak ada siswa ditemukan</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((s, i) => {
+    const a = D.absenHari[s.nisn];
+    let bdgCls, bdgTeks, jamTeks = '';
+
+    if (!a) {
+      bdgCls = 'a'; bdgTeks = 'A';
+    } else {
+      const ket = (a.ket||'').toUpperCase();
+      if (ket === 'S') { bdgCls='s'; bdgTeks='S'; }
+      else if (ket === 'I') { bdgCls='i'; bdgTeks='I'; }
+      else if (ket === 'A') { bdgCls='a'; bdgTeks='A'; }
+      else if (a.datang && a.pulang) {
+        bdgCls='h'; bdgTeks='H';
+        jamTeks = `${fmtJam(a.datang)} - ${fmtJam(a.pulang)}`;
+      } else if (a.datang && !a.pulang) {
+        bdgCls='b'; bdgTeks='B';
+        jamTeks = `${fmtJam(a.datang)} - belum pulang`;
+      } else {
+        bdgCls='a'; bdgTeks='A';
+      }
+    }
+
+    return `<tr>
+      <td class="no-urut">${i+1}</td>
+      <td>
+        <div class="nama-siswa">${s.nama}</div>
+        <div class="nisn-kecil">${s.nisn}</div>
+      </td>
+      <td style="text-align:center"><span class="bdg ${bdgCls}">${bdgTeks}</span></td>
+      <td><span class="jam-kecil">${jamTeks||'—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// HELPER
+// ============================================================
+const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BLN  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+function formatTanggalIndo(d) {
+  return `${HARI[d.getDay()]}, ${d.getDate()} ${BLN[d.getMonth()]} ${d.getFullYear()}`;
+}
+function setText(id,t){ const e=document.getElementById(id); if(e) e.textContent=t; }
+function show(id){ const e=document.getElementById(id); if(e) e.style.display='block'; }
+function hide(id){ const e=document.getElementById(id); if(e) e.style.display='none'; }
+
+init();
+</script>
+</body>
+</html>

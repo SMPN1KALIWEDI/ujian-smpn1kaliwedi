@@ -2,14 +2,14 @@ key,value
 namaSekolah,SMP NEGERI 1 KALIMENDI
 alamat,Jl. Raya Kigesang Prajawinangun Kulon - Kaliwedi
 logo,https://drive.google.com/uc?export=view&id=1-KsiwAPWoR3bsBrJCxoxrDBQ5KYHs6RD
-judul,Asesmen Sumatif Tengah Semester Gasal
+judul,Uji Forensik
 tahun,2026/2027
 asesmenKe,4
 waktuMulai,07:00
 durasi,90
-mapelKls7,#VALUE!
-mapelKls8,#VALUE!
-mapelKls9,#VALUE!
+mapelKls7,
+mapelKls8,
+mapelKls9,
 linkKls7,
 linkKls8,
 linkKls9,

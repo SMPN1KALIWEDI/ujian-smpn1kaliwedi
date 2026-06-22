@@ -389,6 +389,21 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
       </div>
       <button class="btn-login" onclick="login()">Lihat Absensi →</button>
       <a class="link-ubah" onclick="bukaUbahPw()">🔄 Ubah Password</a>
+
+      <!-- Catatan lupa password -->
+      <div style="
+        margin-top:18px;
+        background:#e3f2fd;
+        border-left:4px solid #1565c0;
+        border-radius:10px;
+        padding:11px 14px;
+        font-size:.80rem;
+        color:#1565c0;
+        line-height:1.6;
+      ">
+        <b>🔑 Lupa Password?</b><br>
+        Hubungi <b>guru petugas absen</b> di sekolah dengan membawa <b>Kartu QR</b> Anda.
+      </div>
     </div>
   </div>
 </div>
@@ -567,7 +582,7 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
 // KONFIGURASI
 // ============================================================
 const SPREADSHEET_ID = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
+const APPS_SCRIPT_URL = 'GANTI_DENGAN_URL_APPS_SCRIPT';
 
 // Data runtime
 let D = { users:[], aktif:null, absenAll:[] };
@@ -1004,7 +1019,7 @@ async function ubahPw() {
   if(baru!==konfirm)     {pesan(el,'err','❌ Konfirmasi tidak cocok.');return}
 
   // Kirim ke Apps Script
-  if (!APPS_SCRIPT_URL.includes('GANTI')) {
+  if (!APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec')) {
     const r = await apiFetch({ action:'ubahPassword', nisn, pwBaru: baru });
     if (r && r.status==='ok') {
       user.password = baru;

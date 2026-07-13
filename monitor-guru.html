@@ -5,6 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1565c0">
 <title>Monitor Absensi Guru — SMPN 1 Kaliwedi</title>
+
+<!-- ICON APLIKASI (Home Screen / PWA) -->
+<link id="iconFav" rel="icon" type="image/png" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png">
+<link rel="apple-touch-icon" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Monitor Absensi">
+<meta name="mobile-web-app-capable" content="yes">
+<link id="manifestLink" rel="manifest" href="">
+<script>
+// Membuat manifest PWA secara dinamis (satu file HTML tanpa file manifest terpisah)
+// supaya saat "Add to Home Screen" / diinstal sebagai aplikasi, icon logo sekolah muncul.
+(function(){
+  const LOGO = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png";
+  const manifest = {
+    name: "Monitor Absensi Guru — SMPN 1 Kaliwedi",
+    short_name: "Monitor Absensi",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#1565c0",
+    theme_color: "#1565c0",
+    icons: [
+      { src: LOGO, sizes: "192x192", type: "image/png" },
+      { src: LOGO, sizes: "512x512", type: "image/png" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+  document.getElementById('manifestLink').setAttribute('href', URL.createObjectURL(blob));
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -153,7 +183,7 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
 .kosong-row{text-align:center;padding:30px;color:var(--abu2)}
 
 .btn-back-dash{
-  margin:0 18px 18px;padding:11px;background:var(--abu);color:var(--abu2);
+  margin:14px 18px 6px;padding:11px;background:var(--abu);color:var(--abu2);
   border:2px solid #cfd8dc;border-radius:12px;font-family:'Nunito',sans-serif;
   font-size:.9rem;font-weight:700;cursor:pointer;width:calc(100% - 36px);
 }
@@ -224,6 +254,8 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
       <div class="kelas-sub" id="dashTanggalTeks"></div>
     </div>
 
+    <button class="btn-back-dash" onclick="kembaliKelas()">⬅ Kembali / Pilih Kelas Lain</button>
+
     <div class="filter-tgl">
       <label>📅 Tanggal:</label>
       <input type="date" id="inpTanggal" onchange="muatDashboard()">
@@ -265,7 +297,6 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
       </table>
     </div>
 
-    <button class="btn-back-dash" onclick="kembaliKelas()">⬅ Pilih Kelas Lain</button>
   </div>
 
 </div>
@@ -468,17 +499,17 @@ async function muatDashboard() {
 
   D.absenHari = absenMap;
   D.siswaKelasAktif = siswaKelas;
+  D.tglPilihAktif = tglPilih;
 
-  // Hitung rekap
+  // Hitung rekap (memakai aturan cutoff jam 07:30 yang sama dengan tabel)
   let rH=0, rS=0, rI=0, rA=0;
   siswaKelas.forEach(s => {
-    const a = absenMap[s.nisn];
-    if (!a) { rA++; return; }
-    const ket = (a.ket||'').toUpperCase();
-    if (ket==='S') rS++;
-    else if (ket==='I') rI++;
-    else if (ket==='A') rA++;
-    else rH++; // H atau B dihitung hadir
+    const st = getStatusSiswa(s, tglPilih);
+    if (st.kategori==='H') rH++;
+    else if (st.kategori==='S') rS++;
+    else if (st.kategori==='I') rI++;
+    else if (st.kategori==='A') rA++;
+    // kategori 'belum' (belum datang, belum lewat 7:30) tidak dihitung ke box manapun
   });
   setText('dH', rH); setText('dS', rS);
   setText('dI', rI); setText('dA', rA);
@@ -489,9 +520,52 @@ async function muatDashboard() {
   setText('dashUpdate', `Diperbarui ${fmtJam(now)} · ${siswaKelas.length} siswa`);
 }
 
+// ============================================================
+// Menentukan status Ket & Waktu untuk 1 siswa pada tanggal terpilih
+// Aturan:
+// - Belum datang & belum lewat jam 07:30 pada tanggal tsb -> Ket kosong, Waktu "Belum Datang"
+// - Belum datang & sudah lewat jam 07:30 pada tanggal tsb -> Ket "A", Waktu "Tidak datang"
+// ============================================================
+function getStatusSiswa(s, tglPilih) {
+  const a = D.absenHari[s.nisn];
+  const cutoff = new Date(tglPilih.getFullYear(), tglPilih.getMonth(), tglPilih.getDate(), 7, 30, 0);
+  const lewatCutoff = new Date() >= cutoff;
+
+  let bdgCls = '', bdgTeks = '', jamTeks = '', kategori = '';
+
+  const belumDatang = () => {
+    if (lewatCutoff) {
+      bdgCls='a'; bdgTeks='A'; kategori='A'; jamTeks='Tidak datang';
+    } else {
+      bdgCls=''; bdgTeks=''; kategori='belum'; jamTeks='Belum Datang';
+    }
+  };
+
+  if (!a) {
+    belumDatang();
+  } else {
+    const ket = (a.ket||'').toUpperCase();
+    if (ket === 'S') { bdgCls='s'; bdgTeks='S'; kategori='S'; }
+    else if (ket === 'I') { bdgCls='i'; bdgTeks='I'; kategori='I'; }
+    else if (ket === 'A') { bdgCls='a'; bdgTeks='A'; kategori='A'; }
+    else if (a.datang && a.pulang) {
+      bdgCls='h'; bdgTeks='H'; kategori='H';
+      jamTeks = `${fmtJam(a.datang)} - ${fmtJam(a.pulang)}`;
+    } else if (a.datang && !a.pulang) {
+      bdgCls='b'; bdgTeks='B'; kategori='H';
+      jamTeks = `${fmtJam(a.datang)} - belum pulang`;
+    } else {
+      belumDatang();
+    }
+  }
+
+  return { bdgCls, bdgTeks, jamTeks, kategori };
+}
+
 function renderTabelSiswa() {
   const cari = (document.getElementById('inpCari').value || '').toLowerCase().trim();
   const siswaKelas = D.siswaKelasAktif || [];
+  const tglPilih = D.tglPilihAktif || new Date();
   const tbody = document.getElementById('tbSiswa');
 
   const filtered = cari
@@ -504,26 +578,8 @@ function renderTabelSiswa() {
   }
 
   tbody.innerHTML = filtered.map((s, i) => {
-    const a = D.absenHari[s.nisn];
-    let bdgCls, bdgTeks, jamTeks = '';
-
-    if (!a) {
-      bdgCls = 'a'; bdgTeks = 'A';
-    } else {
-      const ket = (a.ket||'').toUpperCase();
-      if (ket === 'S') { bdgCls='s'; bdgTeks='S'; }
-      else if (ket === 'I') { bdgCls='i'; bdgTeks='I'; }
-      else if (ket === 'A') { bdgCls='a'; bdgTeks='A'; }
-      else if (a.datang && a.pulang) {
-        bdgCls='h'; bdgTeks='H';
-        jamTeks = `${fmtJam(a.datang)} - ${fmtJam(a.pulang)}`;
-      } else if (a.datang && !a.pulang) {
-        bdgCls='b'; bdgTeks='B';
-        jamTeks = `${fmtJam(a.datang)} - belum pulang`;
-      } else {
-        bdgCls='a'; bdgTeks='A';
-      }
-    }
+    const st = getStatusSiswa(s, tglPilih);
+    const bdgHtml = st.bdgTeks ? `<span class="bdg ${st.bdgCls}">${st.bdgTeks}</span>` : '';
 
     return `<tr>
       <td class="no-urut">${i+1}</td>
@@ -531,8 +587,8 @@ function renderTabelSiswa() {
         <div class="nama-siswa">${s.nama}</div>
         <div class="nisn-kecil">${s.nisn}</div>
       </td>
-      <td style="text-align:center"><span class="bdg ${bdgCls}">${bdgTeks}</span></td>
-      <td><span class="jam-kecil">${jamTeks||'—'}</span></td>
+      <td style="text-align:center">${bdgHtml}</td>
+      <td><span class="jam-kecil">${st.jamTeks||'—'}</span></td>
     </tr>`;
   }).join('');
 }
@@ -552,4 +608,4 @@ function hide(id){ const e=document.getElementById(id); if(e) e.style.display='n
 init();
 </script>
 </body>
-</html>
+</html>M

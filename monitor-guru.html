@@ -423,13 +423,33 @@ async function bacaSheet(nama) {
 function parseDate(tbl, row, col) {
   try {
     const c = tbl.rows[row].c[col];
-    if (!c || c.v===null) return null;
+    if (!c || c.v===null || c.v===undefined) return null;
+
     if (typeof c.v === 'string' && c.v.startsWith('Date(')) {
       const p = c.v.replace('Date(','').replace(')','').split(',').map(Number);
       return new Date(p[0], p[1], p[2], p[3]||0, p[4]||0, p[5]||0);
     }
-    const d = new Date(c.f || c.v);
-    return isNaN(d) ? null : d;
+
+    // Coba parsing bawaan JS dulu (menangani angka serial, ISO, dll)
+    let d = new Date(c.f || c.v);
+    if (!isNaN(d)) return d;
+
+    // Fallback: sel diketik manual sebagai teks, misal "1 Juli 2026" atau "1-7-2026"
+    const teks = String(c.f || c.v || '').trim().toLowerCase();
+    const bulanIndo = ['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'];
+
+    const mNama = teks.match(/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/);
+    if (mNama) {
+      const idxBln = bulanIndo.indexOf(mNama[2]);
+      if (idxBln >= 0) return new Date(Number(mNama[3]), idxBln, Number(mNama[1]));
+    }
+
+    const mAngka = teks.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (mAngka) {
+      return new Date(Number(mAngka[3]), Number(mAngka[2])-1, Number(mAngka[1]));
+    }
+
+    return null;
   } catch { return null; }
 }
 
@@ -546,7 +566,9 @@ async function muatHariLibur() {
   const hijau = new Set(); // Sheet7!E4:E — hari libur sekolah
   const tbl = await bacaSheet('Sheet7');
   if (tbl) {
-    for (let i = 3; i < tbl.rows.length; i++) { // baris ke-4 dst (index 3)
+    // Periksa SEMUA baris (bukan asumsi index tertentu) — baris yang bukan
+    // tanggal valid (misalnya judul/header) otomatis diabaikan oleh parseDate.
+    for (let i = 0; i < tbl.rows.length; i++) {
       const row = tbl.rows[i];
       if (!row || !row.c) continue;
 
@@ -558,6 +580,8 @@ async function muatHariLibur() {
     }
   }
   D.hariLibur = { merah, hijau };
+  console.log('📅 Hari libur nasional (Sheet7!A):', Array.from(merah));
+  console.log('📅 Hari libur sekolah (Sheet7!E):', Array.from(hijau));
   return D.hariLibur;
 }
 

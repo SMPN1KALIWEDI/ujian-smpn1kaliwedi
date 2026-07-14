@@ -36,6 +36,7 @@
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --b1:#0d47a1; --b2:#1565c0; --b3:#1976d2; --b4:#42a5f5; --b5:#bbdefb; --b6:#e3f2fd;
@@ -361,6 +362,7 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
       <div class="filter-tgl" style="padding:0 0 14px;border:none">
         <label>🗓️ Bulan:</label>
         <input type="month" id="inpBulanRekap" onchange="muatRekapBulanan()">
+        <button class="btn-hari-ini" onclick="unduhRekapBulanan()">⬇️ Unduh Excel</button>
       </div>
 
       <div class="tbl-wrap" style="padding:0">
@@ -374,6 +376,8 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
         <span><b style="color:var(--b2)">S</b> Sakit</span>
         <span><b style="color:var(--kuning)">I</b> Izin</span>
         <span><b style="color:var(--merah)">A</b> Alfa</span>
+        <span><b style="color:var(--abu2)">-</b> Minggu</span>
+        <span><b style="color:var(--merah);background:var(--merah2);padding:1px 6px;border-radius:4px">-</b> Hari Libur</span>
       </div>
     </div>
   </div>
@@ -392,6 +396,8 @@ let D = {
   tingkatAktif: null,
   kelasAktif: null,
   absenHari: {},  // hasil parsing absensi tanggal terpilih
+  hariLibur: null,       // Set 'Y-M-D' hari libur dari Sheet7 (cache)
+  rekapBulananData: null, // data terakhir rekap bulanan (untuk unduh excel)
 };
 
 // ============================================================
@@ -530,6 +536,30 @@ function tutupRekapBulanan() {
   hide('stepRekapBulanan'); show('stepDashboard');
 }
 
+// ============================================================
+// HARI LIBUR — baca Sheet7!A6:A dan Sheet7!E6:E (di-cache)
+// ============================================================
+async function muatHariLibur() {
+  if (D.hariLibur) return D.hariLibur;
+
+  const set = new Set();
+  const tbl = await bacaSheet('Sheet7');
+  if (tbl) {
+    for (let i = 5; i < tbl.rows.length; i++) { // baris ke-6 dst (index 5)
+      const row = tbl.rows[i];
+      if (!row || !row.c) continue;
+
+      const dA = parseDate(tbl, i, 0); // kolom A
+      if (dA) set.add(`${dA.getFullYear()}-${dA.getMonth()}-${dA.getDate()}`);
+
+      const dE = parseDate(tbl, i, 4); // kolom E
+      if (dE) set.add(`${dE.getFullYear()}-${dE.getMonth()}-${dE.getDate()}`);
+    }
+  }
+  D.hariLibur = set;
+  return set;
+}
+
 async function muatRekapBulanan() {
   const val = document.getElementById('inpBulanRekap').value; // format YYYY-MM
   if (!val) return;
@@ -544,6 +574,8 @@ async function muatRekapBulanan() {
     tbl.innerHTML = '<tbody><tr><td class="kosong-row">❌ Gagal memuat data.</td></tr></tbody>';
     return;
   }
+
+  const hariLibur = await muatHariLibur();
 
   const jumlahHari = new Date(thn, bln, 0).getDate(); // hari terakhir bulan tsb
 
@@ -586,26 +618,50 @@ async function muatRekapBulanan() {
   const now = new Date();
   const hariIniSerial = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
 
+  const siswaRowsExport = []; // untuk keperluan unduh Excel
+
   const bodyHtml = siswaKelas.map((s, i) => {
     let cells = '';
-    for (let d = 1; d <= jumlahHari; d++) {
-      const a = absenBulan[s.nisn] ? absenBulan[s.nisn][d] : null;
-      const ket = a ? (a.ket||'').toUpperCase() : '';
-      let teks = '', warna = '';
+    const cellsExport = [];
 
-      if (ket === 'S') { teks='S'; warna='var(--b2)'; }
-      else if (ket === 'I') { teks='I'; warna='var(--kuning)'; }
-      else if (ket === 'A') { teks='A'; warna='var(--merah)'; }
-      else if (a && a.datang) { teks='H'; warna='var(--hijau)'; }
-      else {
-        // Belum ada catatan datang & tidak ada keterangan eksplisit
-        const serialHari = thn*10000 + bln*100 + d;
-        const cutoff = new Date(thn, bln-1, d, 7, 30, 0);
-        const sudahLewat = serialHari < hariIniSerial || (serialHari === hariIniSerial && now >= cutoff);
-        if (sudahLewat) { teks='A'; warna='var(--merah)'; }
+    for (let d = 1; d <= jumlahHari; d++) {
+      const dateObj = new Date(thn, bln-1, d);
+      const isMinggu = dateObj.getDay() === 0;
+      const keyHari = `${thn}-${bln-1}-${d}`;
+      const isLibur = hariLibur.has(keyHari);
+
+      let teks = '', warna = '', bg = '';
+
+      if (isMinggu) {
+        teks = '-'; warna = 'var(--abu2)';
+      } else if (isLibur) {
+        teks = '-'; warna = 'var(--merah)'; bg = 'var(--merah2)';
+      } else {
+        const a = absenBulan[s.nisn] ? absenBulan[s.nisn][d] : null;
+        const ket = a ? (a.ket||'').toUpperCase() : '';
+
+        if (ket === 'S') { teks='S'; warna='var(--b2)'; }
+        else if (ket === 'I') { teks='I'; warna='var(--kuning)'; }
+        else if (ket === 'A') { teks='A'; warna='var(--merah)'; }
+        else if (a && a.datang) { teks='H'; warna='var(--hijau)'; }
+        else {
+          // Belum ada catatan datang & tidak ada keterangan eksplisit
+          const serialHari = thn*10000 + bln*100 + d;
+          const cutoff = new Date(thn, bln-1, d, 7, 30, 0);
+          const sudahLewat = serialHari < hariIniSerial || (serialHari === hariIniSerial && now >= cutoff);
+          if (sudahLewat) { teks='A'; warna='var(--merah)'; }
+        }
       }
-      cells += `<td style="text-align:center${warna?`;color:${warna};font-weight:800`:''}">${teks}</td>`;
+
+      cellsExport.push(teks);
+      const styleTeks = warna ? `;color:${warna};font-weight:800` : '';
+      const styleBg = bg ? `;background:${bg}` : '';
+      const titleAttr = isLibur ? ' title="Hari Libur"' : '';
+      cells += `<td style="text-align:center${styleTeks}${styleBg}"${titleAttr}>${teks}</td>`;
     }
+
+    siswaRowsExport.push({ nisn: s.nisn, nama: s.nama, cells: cellsExport });
+
     return `<tr>
       <td class="no-urut">${i+1}</td>
       <td class="nisn-kecil">${s.nisn}</td>
@@ -615,6 +671,48 @@ async function muatRekapBulanan() {
   }).join('');
 
   tbl.innerHTML = theadHtml + `<tbody>${bodyHtml}</tbody>`;
+
+  D.rekapBulananData = {
+    kelas: D.kelasAktif,
+    thn, bln, jumlahHari,
+    siswaRows: siswaRowsExport,
+  };
+}
+
+// ============================================================
+// UNDUH REKAP BULANAN SEBAGAI FILE EXCEL (.xlsx)
+// ============================================================
+function unduhRekapBulanan() {
+  if (!D.rekapBulananData) { alert('Data rekap belum termuat, coba lagi sesaat.'); return; }
+  if (typeof XLSX === 'undefined') { alert('Pustaka Excel belum siap. Periksa koneksi internet lalu coba lagi.'); return; }
+
+  const { kelas, thn, bln, jumlahHari, siswaRows } = D.rekapBulananData;
+
+  const header = ['No', 'NISN', 'Nama'];
+  for (let d = 1; d <= jumlahHari; d++) header.push(d);
+
+  const dataRows = siswaRows.map((r, i) => [i+1, r.nisn, r.nama, ...r.cells]);
+
+  const aoa = [
+    [`Rekap Kehadiran Siswa Kelas ${kelas}`],
+    [`Bulan ${BLN[bln-1]} ${thn}`],
+    [],
+    header,
+    ...dataRows,
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:5},{wch:14},{wch:24}, ...Array(jumlahHari).fill({wch:4})];
+  ws['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:2+jumlahHari} },
+    { s:{r:1,c:0}, e:{r:1,c:2+jumlahHari} },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Rekap Bulanan');
+
+  const namaFile = `Rekap_Kehadiran_Kelas_${kelas}_${BLN[bln-1]}_${thn}.xlsx`;
+  XLSX.writeFile(wb, namaFile);
 }
 
 function setTanggalHariIni(inputId) {

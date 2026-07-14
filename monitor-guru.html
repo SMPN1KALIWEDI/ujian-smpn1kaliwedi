@@ -537,16 +537,16 @@ function tutupRekapBulanan() {
 }
 
 // ============================================================
-// HARI LIBUR — baca Sheet7!A6:A (merah) dan Sheet7!E6:E (hijau), di-cache
+// HARI LIBUR — baca Sheet7!A4:A (nasional/merah) dan Sheet7!E4:E (libur sekolah/hijau), di-cache
 // ============================================================
 async function muatHariLibur() {
   if (D.hariLibur) return D.hariLibur;
 
-  const merah = new Set(); // Sheet7!A6:A
-  const hijau = new Set(); // Sheet7!E6:E
+  const merah = new Set(); // Sheet7!A4:A — hari libur nasional
+  const hijau = new Set(); // Sheet7!E4:E — hari libur sekolah
   const tbl = await bacaSheet('Sheet7');
   if (tbl) {
-    for (let i = 5; i < tbl.rows.length; i++) { // baris ke-6 dst (index 5)
+    for (let i = 3; i < tbl.rows.length; i++) { // baris ke-4 dst (index 3)
       const row = tbl.rows[i];
       if (!row || !row.c) continue;
 

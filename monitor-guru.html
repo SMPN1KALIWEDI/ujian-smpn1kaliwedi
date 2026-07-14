@@ -96,6 +96,37 @@ body{
 
 .sec-title{font-size:.8rem;font-weight:700;color:var(--abu2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
 
+/* ===== REKAP KEDATANGAN DI HALAMAN TINGKAT ===== */
+.rekap-tingkat-wrap{margin-top:22px;padding-top:18px;border-top:1px solid #eef2f6}
+.rekap-tgl-teks{font-size:.85rem;font-weight:800;color:var(--b2);margin:-4px 0 12px}
+table.trekap{width:100%;border-collapse:collapse;font-size:.85rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+table.trekap thead tr{background:linear-gradient(135deg,var(--b1),var(--b3));color:#fff}
+table.trekap th{padding:9px 6px;text-align:center;font-size:.74rem;font-weight:700}
+table.trekap td{padding:9px 6px;text-align:center;border-bottom:1px solid #eef2f6}
+table.trekap tbody tr:nth-child(odd){background:var(--b6)}
+.rt-huruf{font-weight:800;color:var(--teks)}
+.rt-jumlah{background:var(--b6)}
+.rt-jumlah td{font-weight:800;color:var(--b2)}
+.rt-total td{background:var(--hijau2);color:var(--hijau);font-weight:800;padding:11px 6px}
+
+.btn-rekap-bulanan{
+  margin:0 18px 14px;padding:11px;background:var(--b6);color:var(--b2);
+  border:2px solid var(--b5);border-radius:12px;font-family:'Nunito',sans-serif;
+  font-size:.88rem;font-weight:700;cursor:pointer;width:calc(100% - 36px);
+}
+.btn-rekap-bulanan:hover{background:var(--b5)}
+
+/* ===== STEP 4: REKAP BULANAN ===== */
+#stepRekapBulanan{display:none}
+.rb-judul-kelas{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.1rem;color:var(--b2)}
+.rb-judul-bulan{font-size:.85rem;color:var(--abu2);margin-bottom:14px}
+table.tbulan{width:100%;border-collapse:collapse;font-size:.78rem;min-width:600px}
+table.tbulan thead tr{background:linear-gradient(135deg,var(--b1),var(--b3));color:#fff}
+table.tbulan th{padding:6px 5px;text-align:center;font-weight:700}
+table.tbulan td{padding:6px 5px;border-bottom:1px solid #eef2f6}
+table.tbulan tbody tr:nth-child(even){background:var(--b6)}
+.rb-legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.72rem;color:var(--abu2);margin-top:12px;padding:0 2px}
+
 /* ===== STEP 2: PILIH KELAS ===== */
 #stepKelas{display:none}
 .breadcrumb{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--abu2);margin-bottom:16px}
@@ -231,6 +262,22 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
           <div class="tk-label">KELAS IX</div>
         </button>
       </div>
+
+      <!-- REKAP KEDATANGAN SEMUA KELAS -->
+      <div class="rekap-tingkat-wrap">
+        <div class="sec-title">📊 Rekap Kedatangan</div>
+        <div class="filter-tgl" style="padding:0 0 10px;border:none">
+          <label>📅 Tanggal:</label>
+          <input type="date" id="inpTglRekap" onchange="muatRekapTingkat()">
+          <button class="btn-hari-ini" onclick="setHariIniRekap()">Hari Ini</button>
+        </div>
+        <div class="rekap-tgl-teks" id="rekapTanggalTeks"></div>
+        <div class="tbl-wrap" style="padding:0">
+          <table class="trekap" id="tblRekapTingkat">
+            <tbody><tr><td class="kosong-row">⏳ Memuat...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -274,6 +321,8 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
       <span id="dashUpdate">Memuat...</span>
     </div>
 
+    <button class="btn-rekap-bulanan" onclick="bukaRekapBulanan()">📅 Rekap Bulanan</button>
+
     <div class="search-wrap">
       <div class="search-box">
         <span class="si">🔍</span>
@@ -297,6 +346,36 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
       </table>
     </div>
 
+  </div>
+
+  <!-- ===== STEP 4: REKAP BULANAN ===== -->
+  <div class="card" id="stepRekapBulanan">
+    <div class="card-body">
+      <div class="breadcrumb">
+        <button class="btn-back-mini" onclick="tutupRekapBulanan()">⬅ Kembali</button>
+      </div>
+      <div class="sec-title">🗓️ Rekap Kehadiran Bulanan</div>
+      <div class="rb-judul-kelas" id="rbJudulKelas"></div>
+      <div class="rb-judul-bulan" id="rbJudulBulan"></div>
+
+      <div class="filter-tgl" style="padding:0 0 14px;border:none">
+        <label>🗓️ Bulan:</label>
+        <input type="month" id="inpBulanRekap" onchange="muatRekapBulanan()">
+      </div>
+
+      <div class="tbl-wrap" style="padding:0">
+        <table class="tbulan" id="tblRekapBulanan">
+          <tbody><tr><td class="kosong-row">⏳ Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="rb-legenda">
+        <span><b style="color:var(--hijau)">H</b> Hadir</span>
+        <span><b style="color:var(--b2)">S</b> Sakit</span>
+        <span><b style="color:var(--kuning)">I</b> Izin</span>
+        <span><b style="color:var(--merah)">A</b> Alfa</span>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -385,6 +464,9 @@ async function init() {
     console.log('✅ Siswa dimuat:', D.siswa.length);
   }
 
+  // Muat rekap kedatangan semua kelas untuk hari ini
+  setHariIniRekap();
+
   hide('loading');
 }
 
@@ -428,13 +510,129 @@ function kembaliKelas() {
   hide('stepDashboard'); show('stepKelas');
 }
 
-function setHariIni() {
+// ============================================================
+// REKAP BULANAN PER KELAS
+// ============================================================
+function bukaRekapBulanan() {
+  setText('rbJudulKelas', 'Rekap Kehadiran Siswa Kelas ' + D.kelasAktif);
+
+  const inp = document.getElementById('inpBulanRekap');
+  if (!inp.value) {
+    const now = new Date();
+    inp.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  }
+
+  hide('stepDashboard'); show('stepRekapBulanan');
+  muatRekapBulanan();
+}
+
+function tutupRekapBulanan() {
+  hide('stepRekapBulanan'); show('stepDashboard');
+}
+
+async function muatRekapBulanan() {
+  const val = document.getElementById('inpBulanRekap').value; // format YYYY-MM
+  if (!val) return;
+  const [thn, bln] = val.split('-').map(Number);
+  setText('rbJudulBulan', `Bulan ${BLN[bln-1]} ${thn}`);
+
+  const tbl = document.getElementById('tblRekapBulanan');
+  tbl.innerHTML = '<tbody><tr><td class="kosong-row">⏳ Memuat...</td></tr></tbody>';
+
+  const tblAbsen = await bacaSheet('Sheet2');
+  if (!tblAbsen) {
+    tbl.innerHTML = '<tbody><tr><td class="kosong-row">❌ Gagal memuat data.</td></tr></tbody>';
+    return;
+  }
+
+  const jumlahHari = new Date(thn, bln, 0).getDate(); // hari terakhir bulan tsb
+
+  // absenBulan[nisn][tanggal] = {datang, ket}
+  const absenBulan = {};
+  for (let i = 0; i < tblAbsen.rows.length; i++) {
+    const row = tblAbsen.rows[i];
+    if (!row || !row.c) continue;
+    const g = (col) => {
+      const c = row.c[col];
+      return (c && c.v!==null && c.v!==undefined) ? String(c.v).trim() : '';
+    };
+    const nisn = g(1);
+    if (!nisn) continue;
+
+    const waktu = parseDate(tblAbsen, i, 0);
+    if (!waktu) continue;
+    if (waktu.getFullYear() !== thn || (waktu.getMonth()+1) !== bln) continue;
+
+    const tglHari = waktu.getDate();
+    const ket    = g(4).toUpperCase();
+    const status = g(5).toUpperCase();
+
+    if (!absenBulan[nisn]) absenBulan[nisn] = {};
+    if (!absenBulan[nisn][tglHari]) absenBulan[nisn][tglHari] = { datang:null, ket:'' };
+
+    if (status === 'DATANG' || status === 'MASUK') {
+      absenBulan[nisn][tglHari].datang = waktu;
+      if (!absenBulan[nisn][tglHari].ket) absenBulan[nisn][tglHari].ket = ket;
+    }
+    if (ket==='S' || ket==='I' || ket==='A') absenBulan[nisn][tglHari].ket = ket;
+  }
+
+  const siswaKelas = D.siswa.filter(s => s.kelas === D.kelasAktif);
+
+  let theadHtml = '<thead><tr><th width="26">No</th><th>NISN</th><th style="text-align:left">Nama</th>';
+  for (let d = 1; d <= jumlahHari; d++) theadHtml += `<th>${d}</th>`;
+  theadHtml += '</tr></thead>';
+
+  const now = new Date();
+  const hariIniSerial = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
+
+  const bodyHtml = siswaKelas.map((s, i) => {
+    let cells = '';
+    for (let d = 1; d <= jumlahHari; d++) {
+      const a = absenBulan[s.nisn] ? absenBulan[s.nisn][d] : null;
+      const ket = a ? (a.ket||'').toUpperCase() : '';
+      let teks = '', warna = '';
+
+      if (ket === 'S') { teks='S'; warna='var(--b2)'; }
+      else if (ket === 'I') { teks='I'; warna='var(--kuning)'; }
+      else if (ket === 'A') { teks='A'; warna='var(--merah)'; }
+      else if (a && a.datang) { teks='H'; warna='var(--hijau)'; }
+      else {
+        // Belum ada catatan datang & tidak ada keterangan eksplisit
+        const serialHari = thn*10000 + bln*100 + d;
+        const cutoff = new Date(thn, bln-1, d, 7, 30, 0);
+        const sudahLewat = serialHari < hariIniSerial || (serialHari === hariIniSerial && now >= cutoff);
+        if (sudahLewat) { teks='A'; warna='var(--merah)'; }
+      }
+      cells += `<td style="text-align:center${warna?`;color:${warna};font-weight:800`:''}">${teks}</td>`;
+    }
+    return `<tr>
+      <td class="no-urut">${i+1}</td>
+      <td class="nisn-kecil">${s.nisn}</td>
+      <td class="nama-siswa" style="white-space:nowrap">${s.nama}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  tbl.innerHTML = theadHtml + `<tbody>${bodyHtml}</tbody>`;
+}
+
+function setTanggalHariIni(inputId) {
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm   = String(today.getMonth() + 1).padStart(2, '0');
   const dd   = String(today.getDate()).padStart(2, '0');
-  document.getElementById('inpTanggal').value = `${yyyy}-${mm}-${dd}`;
+  document.getElementById(inputId).value = `${yyyy}-${mm}-${dd}`;
+}
+
+function setHariIni() {
+  setTanggalHariIni('inpTanggal');
   muatDashboard();
+}
+
+function setHariIniRekap() {
+  setTanggalHariIni('inpTglRekap');
+  muatRekapTingkat();
 }
 
 // ============================================================
@@ -561,6 +759,113 @@ function getStatusSiswa(s, tglPilih) {
   }
 
   return { bdgCls, bdgTeks, jamTeks, kategori };
+}
+
+// ============================================================
+// REKAP KEDATANGAN SEMUA KELAS — halaman Pilih Tingkat
+// ============================================================
+async function muatRekapTingkat() {
+  const tglInput = document.getElementById('inpTglRekap').value;
+  if (!tglInput) return;
+
+  const [thn, bln, tgl] = tglInput.split('-').map(Number);
+  const tglPilih = new Date(thn, bln-1, tgl);
+  setText('rekapTanggalTeks', formatTanggalIndo(tglPilih));
+
+  const tbl = document.getElementById('tblRekapTingkat');
+  tbl.innerHTML = '<tbody><tr><td class="kosong-row">⏳ Memuat...</td></tr></tbody>';
+
+  const tblAbsen = await bacaSheet('Sheet2');
+  if (!tblAbsen) {
+    tbl.innerHTML = '<tbody><tr><td class="kosong-row">❌ Gagal memuat data.</td></tr></tbody>';
+    return;
+  }
+
+  const keyTglPilih = `${thn}-${bln-1}-${tgl}`;
+  const absenMap = {}; // nisn -> {datang, ket}
+
+  for (let i = 0; i < tblAbsen.rows.length; i++) {
+    const row = tblAbsen.rows[i];
+    if (!row || !row.c) continue;
+    const g = (col) => {
+      const c = row.c[col];
+      return (c && c.v!==null && c.v!==undefined) ? String(c.v).trim() : '';
+    };
+    const nisn = g(1);
+    if (!nisn) continue;
+
+    const waktu = parseDate(tblAbsen, i, 0);
+    if (!waktu) continue;
+
+    const k = `${waktu.getFullYear()}-${waktu.getMonth()}-${waktu.getDate()}`;
+    if (k !== keyTglPilih) continue;
+
+    const ket    = g(4).toUpperCase();
+    const status = g(5).toUpperCase();
+
+    if (!absenMap[nisn]) absenMap[nisn] = { datang:null, ket:'' };
+    if (status === 'DATANG' || status === 'MASUK') {
+      absenMap[nisn].datang = waktu;
+      if (!absenMap[nisn].ket) absenMap[nisn].ket = ket;
+    }
+    if (ket==='S' || ket==='I' || ket==='A') absenMap[nisn].ket = ket;
+  }
+
+  // Hitung jumlah yang "Masuk" (hadir) per kelas
+  const hadirPerKelas = {};
+  D.siswa.forEach(s => {
+    const a = absenMap[s.nisn];
+    const ket = a ? (a.ket||'').toUpperCase() : '';
+    const hadir = a && a.datang && ket!=='S' && ket!=='I' && ket!=='A';
+    if (hadir) hadirPerKelas[s.kelas] = (hadirPerKelas[s.kelas] || 0) + 1;
+  });
+
+  renderTabelRekapTingkat(hadirPerKelas);
+}
+
+function renderTabelRekapTingkat(hadirPerKelas) {
+  const tingkatList = ['7','8','9'];
+
+  // Kumpulkan semua huruf kelas (A,B,C,...) yang ada di seluruh tingkat
+  const hurufSet = new Set();
+  tingkatList.forEach(t => {
+    const set = D.kelasList[t];
+    if (set) set.forEach(k => hurufSet.add(k.replace(/^[0-9]+/, '')));
+  });
+  const hurufArr = Array.from(hurufSet).sort();
+
+  if (hurufArr.length === 0) {
+    document.getElementById('tblRekapTingkat').innerHTML =
+      '<tbody><tr><td class="kosong-row">Data kelas belum tersedia</td></tr></tbody>';
+    return;
+  }
+
+  const thead = `<thead><tr><th>Kelas</th>${tingkatList.map(t => `<th>Kls ${t}</th>`).join('')}</tr></thead>`;
+
+  const bodyRows = hurufArr.map(h => {
+    const cells = tingkatList.map(t => {
+      const namaKelas = t + h;
+      const set = D.kelasList[t];
+      const ada = set && set.has(namaKelas);
+      if (!ada) return `<td style="color:var(--abu2)">—</td>`;
+      const jml = hadirPerKelas[namaKelas] || 0;
+      return `<td>${jml}</td>`;
+    }).join('');
+    return `<tr><td class="rt-huruf">${h}</td>${cells}</tr>`;
+  }).join('');
+
+  const jumlahPerTingkat = tingkatList.map(t => {
+    let total = 0;
+    const set = D.kelasList[t];
+    if (set) set.forEach(k => { total += hadirPerKelas[k] || 0; });
+    return total;
+  });
+  const rowJumlah = `<tr class="rt-jumlah"><td>Jumlah</td>${jumlahPerTingkat.map(j => `<td>${j}</td>`).join('')}</tr>`;
+
+  const grandTotal = jumlahPerTingkat.reduce((a,b) => a+b, 0);
+  const rowTotal = `<tr class="rt-total"><td colspan="${1+tingkatList.length}">Total Keseluruhan Masuk: ${grandTotal} siswa</td></tr>`;
+
+  document.getElementById('tblRekapTingkat').innerHTML = thead + `<tbody>${bodyRows}${rowJumlah}${rowTotal}</tbody>`;
 }
 
 function renderTabelSiswa() {

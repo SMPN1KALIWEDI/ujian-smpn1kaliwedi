@@ -430,8 +430,10 @@ function kembaliKelas() {
 
 function setHariIni() {
   const today = new Date();
-  const iso = today.toISOString().split('T')[0];
-  document.getElementById('inpTanggal').value = iso;
+  const yyyy = today.getFullYear();
+  const mm   = String(today.getMonth() + 1).padStart(2, '0');
+  const dd   = String(today.getDate()).padStart(2, '0');
+  document.getElementById('inpTanggal').value = `${yyyy}-${mm}-${dd}`;
   muatDashboard();
 }
 
@@ -523,8 +525,10 @@ async function muatDashboard() {
 // ============================================================
 // Menentukan status Ket & Waktu untuk 1 siswa pada tanggal terpilih
 // Aturan:
-// - Belum datang & belum lewat jam 07:30 pada tanggal tsb -> Ket kosong, Waktu "Belum Datang"
-// - Belum datang & sudah lewat jam 07:30 pada tanggal tsb -> Ket "A", Waktu "Tidak datang"
+// - Sudah absen (waktu datang tercatat) -> Ket "H"
+// - Belum absen (tidak ada waktu datang) -> Ket dikosongkan
+//   Waktu tetap dibedakan: "Belum Datang" (belum lewat 07:30) / "Tidak datang" (sudah lewat 07:30)
+// - Jika ada keterangan eksplisit S/I/A dari data absensi, itu tetap dipakai
 // ============================================================
 function getStatusSiswa(s, tglPilih) {
   const a = D.absenHari[s.nisn];
@@ -533,16 +537,13 @@ function getStatusSiswa(s, tglPilih) {
 
   let bdgCls = '', bdgTeks = '', jamTeks = '', kategori = '';
 
-  const belumDatang = () => {
-    if (lewatCutoff) {
-      bdgCls='a'; bdgTeks='A'; kategori='A'; jamTeks='Tidak datang';
-    } else {
-      bdgCls=''; bdgTeks=''; kategori='belum'; jamTeks='Belum Datang';
-    }
+  const belumAbsen = () => {
+    bdgCls = ''; bdgTeks = ''; kategori = 'belum';
+    jamTeks = lewatCutoff ? 'Tidak datang' : 'Belum Datang';
   };
 
   if (!a) {
-    belumDatang();
+    belumAbsen();
   } else {
     const ket = (a.ket||'').toUpperCase();
     if (ket === 'S') { bdgCls='s'; bdgTeks='S'; kategori='S'; }
@@ -552,10 +553,10 @@ function getStatusSiswa(s, tglPilih) {
       bdgCls='h'; bdgTeks='H'; kategori='H';
       jamTeks = `${fmtJam(a.datang)} - ${fmtJam(a.pulang)}`;
     } else if (a.datang && !a.pulang) {
-      bdgCls='b'; bdgTeks='B'; kategori='H';
+      bdgCls='h'; bdgTeks='H'; kategori='H';
       jamTeks = `${fmtJam(a.datang)} - belum pulang`;
     } else {
-      belumDatang();
+      belumAbsen();
     }
   }
 

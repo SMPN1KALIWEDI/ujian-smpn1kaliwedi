@@ -488,7 +488,7 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
       <div id="kartuQR">
         <div class="kartu-qr-wrap" id="kartuUnduhQR">
           <div class="kartu-qr-header">
-            <img class="kartu-qr-logo" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo">
+            <img class="kartu-qr-logo" crossorigin="anonymous" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo">
             <p>SMP NEGERI 1 KALIWEDI</p>
           </div>
           <div class="kartu-qr-title">
@@ -753,11 +753,14 @@ function unduhKartuQR() {
   const nama = document.getElementById('kartuNamaQR').textContent || 'kartu';
   const target = document.getElementById('kartuUnduhQR');
 
-  html2canvas(target, { scale: 5, backgroundColor: '#ffffff' }).then(canvas => {
+  html2canvas(target, { scale: 5, backgroundColor: '#ffffff', useCORS: true, allowTaint: false }).then(canvas => {
     const link = document.createElement('a');
     link.download = `KartuSiswa_${nisn}_${nama.replace(/\s+/g,'_')}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
+  }).catch(err => {
+    console.error('Gagal membuat gambar kartu:', err);
+    alert('Gagal mengunduh kartu. Coba lagi, atau screenshot manual sebagai alternatif.');
   });
 }
 

@@ -636,9 +636,14 @@ async function muatRekapBulanan() {
 
   const siswaKelas = D.siswa.filter(s => s.kelas === D.kelasAktif);
 
-  let theadHtml = '<thead><tr><th width="26">No</th><th>NISN</th><th style="text-align:left">Nama</th>';
-  for (let d = 1; d <= jumlahHari; d++) theadHtml += `<th>${d}</th>`;
-  theadHtml += '</tr></thead>';
+  let theadHtml = '<thead><tr>'
+    + '<th rowspan="2" width="26">No</th>'
+    + '<th rowspan="2">NISN</th>'
+    + '<th rowspan="2" style="text-align:left">Nama</th>';
+  for (let d = 1; d <= jumlahHari; d++) theadHtml += `<th rowspan="2">${d}</th>`;
+  theadHtml += '<th colspan="4">Jumlah</th></tr><tr>'
+    + '<th>H</th><th>S</th><th>I</th><th>A</th>'
+    + '</tr></thead>';
 
   const now = new Date();
   const hariIniSerial = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
@@ -648,6 +653,7 @@ async function muatRekapBulanan() {
   const bodyHtml = siswaKelas.map((s, i) => {
     let cells = '';
     const cellsExport = [];
+    const jumlah = { H:0, S:0, I:0, A:0 };
 
     for (let d = 1; d <= jumlahHari; d++) {
       const dateObj = new Date(thn, bln-1, d);
@@ -679,6 +685,8 @@ async function muatRekapBulanan() {
         }
       }
 
+      if (jumlah.hasOwnProperty(teks)) jumlah[teks]++;
+
       cellsExport.push(teks);
       const styleTeks = warna ? `;color:${warna};font-weight:800` : '';
       const styleBg = bg ? `;background:${bg}` : '';
@@ -686,13 +694,20 @@ async function muatRekapBulanan() {
       cells += `<td style="text-align:center${styleTeks}${styleBg}"${titleAttr}>${teks}</td>`;
     }
 
-    siswaRowsExport.push({ nisn: s.nisn, nama: s.nama, cells: cellsExport });
+    const cellsJumlah =
+      `<td style="text-align:center;font-weight:800;color:var(--hijau);border-left:2px solid #eef2f6">${jumlah.H}</td>`
+      + `<td style="text-align:center;font-weight:800;color:var(--b2)">${jumlah.S}</td>`
+      + `<td style="text-align:center;font-weight:800;color:var(--kuning)">${jumlah.I}</td>`
+      + `<td style="text-align:center;font-weight:800;color:var(--merah)">${jumlah.A}</td>`;
+
+    siswaRowsExport.push({ nisn: s.nisn, nama: s.nama, cells: cellsExport, jumlah });
 
     return `<tr>
       <td class="no-urut">${i+1}</td>
       <td class="nisn-kecil">${s.nisn}</td>
       <td class="nama-siswa" style="white-space:nowrap">${s.nama}</td>
       ${cells}
+      ${cellsJumlah}
     </tr>`;
   }).join('');
 
@@ -716,8 +731,13 @@ function unduhRekapBulanan() {
 
   const header = ['No', 'NISN', 'Nama'];
   for (let d = 1; d <= jumlahHari; d++) header.push(d);
+  header.push('H', 'S', 'I', 'A');
 
-  const dataRows = siswaRows.map((r, i) => [i+1, r.nisn, r.nama, ...r.cells]);
+  const dataRows = siswaRows.map((r, i) => [
+    i+1, r.nisn, r.nama, ...r.cells, r.jumlah.H, r.jumlah.S, r.jumlah.I, r.jumlah.A
+  ]);
+
+  const totalKolom = 2 + jumlahHari + 4; // index kolom terakhir (0-based)
 
   const aoa = [
     [`Rekap Kehadiran Siswa Kelas ${kelas}`],
@@ -728,10 +748,10 @@ function unduhRekapBulanan() {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:5},{wch:14},{wch:24}, ...Array(jumlahHari).fill({wch:4})];
+  ws['!cols'] = [{wch:5},{wch:14},{wch:24}, ...Array(jumlahHari).fill({wch:4}), ...Array(4).fill({wch:5})];
   ws['!merges'] = [
-    { s:{r:0,c:0}, e:{r:0,c:2+jumlahHari} },
-    { s:{r:1,c:0}, e:{r:1,c:2+jumlahHari} },
+    { s:{r:0,c:0}, e:{r:0,c:totalKolom} },
+    { s:{r:1,c:0}, e:{r:1,c:totalKolom} },
   ];
 
   const wb = XLSX.utils.book_new();

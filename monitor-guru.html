@@ -76,6 +76,13 @@ body{
 .logo-ring img{width:100%;height:100%;object-fit:contain}
 .topbar h1{font-family:'Poppins',sans-serif;font-size:1.25rem;font-weight:800;margin-bottom:2px}
 .topbar p{font-size:.78rem;opacity:.88}
+.btn-refresh-data{
+  position:relative;z-index:1;margin-top:10px;padding:8px 16px;border:1.5px solid rgba(255,255,255,.55);
+  border-radius:20px;background:rgba(255,255,255,.14);color:#fff;font-family:'Nunito',sans-serif;
+  font-size:.76rem;font-weight:800;cursor:pointer;
+}
+.btn-refresh-data:active{background:rgba(255,255,255,.28)}
+.btn-refresh-data:disabled{opacity:.6;cursor:wait}
 
 /* CONTAINER */
 .container{max-width:720px;margin:-24px auto 0;padding:0 14px 30px;position:relative;z-index:1}
@@ -111,6 +118,8 @@ table.trekap tbody tr:nth-child(odd){background:var(--b6)}
 .rt-jumlah{background:var(--b6)}
 .rt-jumlah td{font-weight:800;color:var(--b2)}
 .rt-total td{background:var(--hijau2);color:var(--hijau);font-weight:800;padding:11px 6px}
+.rt-pct{font-size:.72em;font-weight:700;color:var(--abu2)}
+.rt-jumlah .rt-pct{color:var(--b2);opacity:.75}
 
 .btn-rekap-bulanan{
   margin:0 18px 14px;padding:11px;background:var(--b6);color:var(--b2);
@@ -319,6 +328,7 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
   </div>
   <h1>Monitor Absensi</h1>
   <p>SMP Negeri 1 Kaliwedi — Khusus Guru</p>
+  <button class="btn-refresh-data" onclick="muatUlangData()" title="Muat ulang data dari spreadsheet">🔄 Refresh Data</button>
 </div>
 
 <div class="container">
@@ -598,6 +608,8 @@ async function init() {
   const tbl = await bacaSheet('Sheet1');
   if (tbl) {
     D.siswa = [];
+    D.kelasList = {}; // reset supaya tidak menumpuk data lama saat refresh
+
     for (let i = 0; i < tbl.rows.length; i++) {
       const row = tbl.rows[i];
       if (!row || !row.c) continue;
@@ -618,13 +630,42 @@ async function init() {
         D.kelasList[tingkat].add(kelas);
       }
     }
-    console.log('✅ Siswa dimuat:', D.siswa.length);
+    console.log('✅ Siswa dimuat:', D.siswa.length, '| Kelas terdeteksi:', Object.fromEntries(Object.entries(D.kelasList).map(([t,s])=>[t,Array.from(s)])));
   }
 
   // Muat rekap kedatangan semua kelas untuk hari ini
   setHariIniRekap();
 
   hide('loading');
+}
+
+// ============================================================
+// TOMBOL REFRESH DATA — muat ulang semua data dari spreadsheet
+// ============================================================
+async function muatUlangData() {
+  const btn = document.querySelector('.btn-refresh-data');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Memuat...'; }
+
+  // Reset semua cache supaya benar-benar diambil ulang dari sheet
+  D.siswa = [];
+  D.kelasList = {};
+  D.hariLibur = null;
+  D.rekapBulananData = null;
+
+  // Kembali ke halaman utama supaya tidak menampilkan grid kelas yang sudah usang
+  ['stepKelas','stepDashboard','stepRekapBulanan','stepKartuQR'].forEach(hide);
+  show('stepTingkat');
+
+  const selKelasQR = document.getElementById('selKelasQR');
+  if (selKelasQR) selKelasQR.innerHTML = '<option value="">— Pilih Kelas —</option>';
+  const selNamaQR = document.getElementById('selNamaQR');
+  if (selNamaQR) { selNamaQR.innerHTML = '<option value="">— Pilih kelas dulu —</option>'; selNamaQR.disabled = true; }
+  sembunyikanKartuQR();
+
+  show('loading');
+  await init();
+
+  if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Data'; }
 }
 
 // ============================================================
@@ -1227,6 +1268,18 @@ function renderTabelRekapTingkat(hadirPerKelas) {
     return;
   }
 
+  // Total siswa per kelas (untuk hitung persentase)
+  const totalSiswaPerKelas = {};
+  D.siswa.forEach(s => {
+    totalSiswaPerKelas[s.kelas] = (totalSiswaPerKelas[s.kelas] || 0) + 1;
+  });
+
+  const fmtSel = (hadir, total) => {
+    if (!total) return `${hadir}`;
+    const pct = Math.round((hadir / total) * 100);
+    return `${hadir} <span class="rt-pct">[${pct}%]</span>`;
+  };
+
   const thead = `<thead><tr><th>Kelas</th>${tingkatList.map(t => `<th>Kls ${t}</th>`).join('')}</tr></thead>`;
 
   const bodyRows = hurufArr.map(h => {
@@ -1236,21 +1289,27 @@ function renderTabelRekapTingkat(hadirPerKelas) {
       const ada = set && set.has(namaKelas);
       if (!ada) return `<td style="color:var(--abu2)">—</td>`;
       const jml = hadirPerKelas[namaKelas] || 0;
-      return `<td>${jml}</td>`;
+      const total = totalSiswaPerKelas[namaKelas] || 0;
+      return `<td>${fmtSel(jml, total)}</td>`;
     }).join('');
     return `<tr><td class="rt-huruf">${h}</td>${cells}</tr>`;
   }).join('');
 
   const jumlahPerTingkat = tingkatList.map(t => {
-    let total = 0;
+    let hadir = 0, total = 0;
     const set = D.kelasList[t];
-    if (set) set.forEach(k => { total += hadirPerKelas[k] || 0; });
-    return total;
+    if (set) set.forEach(k => {
+      hadir += hadirPerKelas[k] || 0;
+      total += totalSiswaPerKelas[k] || 0;
+    });
+    return { hadir, total };
   });
-  const rowJumlah = `<tr class="rt-jumlah"><td>Jumlah</td>${jumlahPerTingkat.map(j => `<td>${j}</td>`).join('')}</tr>`;
+  const rowJumlah = `<tr class="rt-jumlah"><td>Jumlah</td>${jumlahPerTingkat.map(j => `<td>${fmtSel(j.hadir, j.total)}</td>`).join('')}</tr>`;
 
-  const grandTotal = jumlahPerTingkat.reduce((a,b) => a+b, 0);
-  const rowTotal = `<tr class="rt-total"><td colspan="${1+tingkatList.length}">Total Keseluruhan Masuk: ${grandTotal} siswa</td></tr>`;
+  const grandHadir = jumlahPerTingkat.reduce((a,j) => a+j.hadir, 0);
+  const grandTotal = jumlahPerTingkat.reduce((a,j) => a+j.total, 0);
+  const grandPct = grandTotal ? Math.round((grandHadir / grandTotal) * 100) : 0;
+  const rowTotal = `<tr class="rt-total"><td colspan="${1+tingkatList.length}">Total Keseluruhan Masuk: ${grandHadir} siswa [${grandPct}%]</td></tr>`;
 
   document.getElementById('tblRekapTingkat').innerHTML = thead + `<tbody>${bodyRows}${rowJumlah}${rowTotal}</tbody>`;
 }

@@ -785,11 +785,17 @@ async function muatAbsen() {
 
   // ────────────────────────────────────────────
   // STEP 1: Baca tanggal libur dari Sheet7
-  // Tabel kiri : A(0)=Tanggal, C(2)=Keterangan  (libur nasional)
-  // Tabel kanan: E(4)=Tanggal, G(6)=Keterangan  (kegiatan/cuti)
+  // Tabel kiri : A(0)=Tanggal, C(2)=Keterangan  → berlaku untuk SEMUA kelas
+  // Tabel kanan: E(4)=Tanggal, G(6)=Keterangan, H(7)=Target Tingkat (prioritas)
+  //              - Kolom H kosong        → berlaku untuk semua kelas
+  //              - Kolom H isi "7"       → hanya berlaku untuk kelas 7
+  //              - Kolom H isi "7,8"     → berlaku untuk kelas 7 dan 8
   // Data mulai baris index 4 (baris ke-5 di sheet, header di baris 4)
   // ────────────────────────────────────────────
   const mapLibur = {}; // "YYYY-M-D" → nama libur
+
+  // Tingkat kelas siswa yang sedang login, misal "7A" → "7"
+  const tingkatUser = (String(user.kelas || '').match(/^\d+/) || [])[0] || '';
 
   if (tblLibur) {
     for (let i = 0; i < tblLibur.rows.length; i++) {
@@ -801,18 +807,30 @@ async function muatAbsen() {
         return (c && c.v !== null && c.v !== undefined) ? c.v : null;
       };
 
-      // Tabel kiri — kolom A & C
+      // Tabel kiri — kolom A & C — berlaku untuk semua kelas
       const tglA = parseDate(tblLibur, i, 0);
       const ketA = ambil(2);
       if (tglA && ketA && String(ketA).trim()) {
         mapLibur[keyTgl(tglA)] = String(ketA).trim();
       }
 
-      // Tabel kanan — kolom E & G
+      // Tabel kanan — kolom E, G, H — H adalah prioritas target kelas
       const tglE = parseDate(tblLibur, i, 4);
       const ketG = ambil(6);
+      const targetH = ambil(7);
+
       if (tglE && ketG && String(ketG).trim()) {
-        mapLibur[keyTgl(tglE)] = String(ketG).trim();
+        const targetStr = (targetH !== null && targetH !== undefined) ? String(targetH).trim() : '';
+        let berlakuUntukku = true; // default: kosong = berlaku untuk semua
+
+        if (targetStr) {
+          const daftarTingkat = targetStr.split(',').map(x => x.trim()).filter(Boolean);
+          berlakuUntukku = daftarTingkat.includes(tingkatUser);
+        }
+
+        if (berlakuUntukku) {
+          mapLibur[keyTgl(tglE)] = String(ketG).trim();
+        }
       }
     }
   }

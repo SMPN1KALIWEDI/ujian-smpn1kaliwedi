@@ -180,6 +180,8 @@ table.tab tbody tr:hover{background:var(--b5)}
 .bdg.weekend{background:#f5f5f5;color:#bdbdbd}
 .bdg.future{background:#f5f5f5;color:#e0e0e0}
 .bdg.tk{background:var(--ungu2);color:var(--ungu)}
+.bdg.blmdtg{background:#eceff1;color:#546e7a;font-size:.66rem;padding:3px 7px;white-space:nowrap}
+.bdg.blmplg{background:#fff3e0;color:#e65100;font-size:.66rem;padding:3px 7px;white-space:nowrap}
 tr.row-libur td{background:#fff5f5!important}
 tr.row-weekend td{background:#fafafa!important;opacity:.7}
 tr.row-future td{background:#fafafa!important;opacity:.5}
@@ -453,6 +455,7 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
       <div class="sec-title" style="margin-top:10px">📋 Detail Kehadiran</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;font-size:.7rem">
         <span style="display:flex;align-items:center;gap:3px"><span class="bdg h">H</span> Hadir</span>
+        <span style="display:flex;align-items:center;gap:3px"><span class="bdg blmdtg">Blm Dtg</span> Belum Datang</span>
         <span style="display:flex;align-items:center;gap:3px"><span class="bdg b">B</span> Blm Pulang</span>
         <span style="display:flex;align-items:center;gap:3px"><span class="bdg s">S</span> Sakit</span>
         <span style="display:flex;align-items:center;gap:3px"><span class="bdg i">I</span> Izin</span>
@@ -878,6 +881,28 @@ async function muatAbsen() {
   }
 
   // ────────────────────────────────────────────
+  // Aturan Ket berbasis waktu (dipakai di rekap & tabel):
+  // - Belum ada DATANG & belum jam 08:00       -> 'BLM_DTG' (Blm Dtg)
+  // - Belum ada DATANG & sudah lewat jam 08:00  -> 'A'
+  // - Ada DATANG, belum PULANG & belum jam 18:00 -> 'BLM_PLG' (Blm Plg)
+  // - Ada DATANG, belum PULANG & sudah lewat 18:00 -> 'B'
+  // - Ada DATANG & PULANG                       -> 'H'
+  // ────────────────────────────────────────────
+  function statusHariIni(d, h) {
+    const now = new Date();
+    const cutoffPagi = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 8, 0, 0);
+    const cutoffSore = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 18, 0, 0);
+
+    if (!h || !h.datang) {
+      return (now < cutoffPagi) ? 'BLM_DTG' : 'A';
+    }
+    if (!h.pulang) {
+      return (now < cutoffSore) ? 'BLM_PLG' : 'B';
+    }
+    return 'H';
+  }
+
+  // ────────────────────────────────────────────
   // STEP 4: Hitung rekap
   // ────────────────────────────────────────────
   let rH = 0, rS = 0, rI = 0, rA = 0;
@@ -889,13 +914,16 @@ async function muatAbsen() {
     if (d > today) return;                  // skip hari depan
 
     const h = perHari[k];
-    if (!h) { rA++; return; }              // tidak ada data = Alfa
+    const ket = h ? (h.ket || '').toUpperCase() : '';
 
-    const ket = (h.ket || '').toUpperCase();
-    if      (ket === 'S') rS++;
-    else if (ket === 'I') rI++;
-    else if (ket === 'A') rA++;
-    else rH++;                              // H atau B tetap dihitung hadir
+    if (ket === 'S') { rS++; return; }
+    if (ket === 'I') { rI++; return; }
+    if (ket === 'A') { rA++; return; }
+
+    const status = statusHariIni(d, h);
+    if (status === 'BLM_DTG') return;       // masih pagi, belum dihitung ke box manapun
+    if (status === 'A') { rA++; return; }
+    rH++;                                    // H, BLM_PLG, atau B tetap dihitung hadir
   });
 
   setText('rkH', rH); setText('rkS', rS);
@@ -938,12 +966,8 @@ async function muatAbsen() {
     } else if (isFuture) {
       ketCell  = `<span class="bdg future">—</span>`;
 
-    } else if (!h) {
-      // Tidak ada data sama sekali = ALFA
-      ketCell  = `<span class="bdg a">A</span>`;
-
     } else {
-      const ket = (h.ket || '').toUpperCase();
+      const ket = h ? (h.ket || '').toUpperCase() : '';
 
       if (ket === 'S') {
         // Sakit — tanpa jam
@@ -957,21 +981,35 @@ async function muatAbsen() {
         // Alfa eksplisit
         ketCell  = `<span class="bdg a">A</span>`;
 
-      } else if (h.datang && h.pulang) {
-        // Ada DATANG dan PULANG = HADIR
-        ketCell   = `<span class="bdg h">H</span>`;
-        jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
-        jamPulang = `<span class="jam">${fmtJam(h.pulang)}</span>`;
-
-      } else if (h.datang && !h.pulang) {
-        // Ada DATANG saja = BELUM PULANG
-        ketCell   = `<span class="bdg b">B</span>`;
-        jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
-        jamPulang = `<span class="jam kosong">—</span>`;
-
       } else {
-        // Tidak ada data yang valid = Alfa
-        ketCell  = `<span class="bdg a">A</span>`;
+        const status = statusHariIni(d, h);
+
+        if (status === 'BLM_DTG') {
+          // Belum jam 08:00 & belum ada DATANG
+          ketCell = `<span class="bdg blmdtg">Blm Dtg</span>`;
+
+        } else if (status === 'A') {
+          // Sudah lewat jam 08:00, tetap tidak ada DATANG
+          ketCell = `<span class="bdg a">A</span>`;
+
+        } else if (status === 'BLM_PLG') {
+          // Sudah DATANG, belum PULANG, & belum jam 18:00
+          ketCell   = `<span class="bdg blmplg">Blm Plg</span>`;
+          jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
+          jamPulang = `<span class="jam kosong">—</span>`;
+
+        } else if (status === 'B') {
+          // Sudah DATANG, belum PULANG, & sudah lewat jam 18:00
+          ketCell   = `<span class="bdg b">B</span>`;
+          jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
+          jamPulang = `<span class="jam kosong">—</span>`;
+
+        } else {
+          // status === 'H' — ada DATANG dan PULANG
+          ketCell   = `<span class="bdg h">H</span>`;
+          jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
+          jamPulang = `<span class="jam">${fmtJam(h.pulang)}</span>`;
+        }
       }
     }
 

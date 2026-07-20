@@ -463,11 +463,12 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
 
       <div class="rb-legenda">
         <span><b style="color:var(--hijau)">H</b> Hadir</span>
+        <span><b style="color:#e65100">B</b> Blm Pulang (lewat tanggal)</span>
         <span><b style="color:var(--b2)">S</b> Sakit</span>
         <span><b style="color:var(--kuning)">I</b> Izin</span>
         <span><b style="color:var(--merah)">A</b> Alfa</span>
         <span><b style="color:var(--merah);background:var(--merah2);padding:1px 6px;border-radius:4px">-</b> Minggu / Libur (Sheet7 kol. A)</span>
-        <span><b style="color:var(--hijau);background:var(--hijau2);padding:1px 6px;border-radius:4px">-</b> Libur (Sheet7 kol. E)</span>
+        <span><b style="color:var(--hijau);background:var(--hijau2);padding:1px 6px;border-radius:4px">-</b> Libur (Sheet7 kol. E, sesuai kolom H)</span>
       </div>
     </div>
   </div>
@@ -537,7 +538,7 @@ let D = {
   tingkatAktif: null,
   kelasAktif: null,
   absenHari: {},  // hasil parsing absensi tanggal terpilih
-  hariLibur: null,       // { merah:Set, hijau:Set } dari Sheet7 kol.A & kol.E (cache)
+  hariLiburRaw: null,    // { kiri:[{key,ket}], kanan:[{key,ket,target}] } dari Sheet7 (cache mentah)
   rekapBulananData: null, // data terakhir rekap bulanan (untuk unduh excel)
 };
 
@@ -649,7 +650,7 @@ async function muatUlangData() {
   // Reset semua cache supaya benar-benar diambil ulang dari sheet
   D.siswa = [];
   D.kelasList = {};
-  D.hariLibur = null;
+  D.hariLiburRaw = null;
   D.rekapBulananData = null;
 
   // Kembali ke halaman utama supaya tidak menampilkan grid kelas yang sudah usang
@@ -841,32 +842,74 @@ function tutupRekapBulanan() {
 }
 
 // ============================================================
-// HARI LIBUR — baca Sheet7!A4:A (nasional/merah) dan Sheet7!E4:E (libur sekolah/hijau), di-cache
+// HARI LIBUR — baca Sheet7 (di-cache sebagai data mentah)
+// Tabel kiri : A(0)=Tanggal, C(2)=Keterangan   → berlaku untuk SEMUA kelas
+// Tabel kanan: E(4)=Tanggal, G(6)=Keterangan, H(7)=Target Tingkat (prioritas)
+//              - Kolom H kosong    → berlaku untuk semua kelas
+//              - Kolom H isi "7"   → hanya berlaku untuk kelas 7
+//              - Kolom H isi "7,8" → berlaku untuk kelas 7 dan 8
 // ============================================================
 async function muatHariLibur() {
-  if (D.hariLibur) return D.hariLibur;
+  if (D.hariLiburRaw) return D.hariLiburRaw;
 
-  const merah = new Set(); // Sheet7!A4:A — hari libur nasional
-  const hijau = new Set(); // Sheet7!E4:E — hari libur sekolah
+  const kiri = [];  // { key, ket }        — berlaku semua kelas
+  const kanan = []; // { key, ket, target } — target: '' = semua kelas
+
   const tbl = await bacaSheet('Sheet7');
   if (tbl) {
-    // Periksa SEMUA baris (bukan asumsi index tertentu) — baris yang bukan
-    // tanggal valid (misalnya judul/header) otomatis diabaikan oleh parseDate.
     for (let i = 0; i < tbl.rows.length; i++) {
       const row = tbl.rows[i];
       if (!row || !row.c) continue;
+      const ambil = (col) => {
+        const c = row.c[col];
+        return (c && c.v!==null && c.v!==undefined) ? c.v : null;
+      };
 
       const dA = parseDate(tbl, i, 0); // kolom A
-      if (dA) merah.add(`${dA.getFullYear()}-${dA.getMonth()}-${dA.getDate()}`);
+      if (dA) {
+        const ketA = ambil(2); // kolom C
+        kiri.push({ key: `${dA.getFullYear()}-${dA.getMonth()}-${dA.getDate()}`, ket: ketA ? String(ketA).trim() : '' });
+      }
 
       const dE = parseDate(tbl, i, 4); // kolom E
-      if (dE) hijau.add(`${dE.getFullYear()}-${dE.getMonth()}-${dE.getDate()}`);
+      if (dE) {
+        const ketG   = ambil(6); // kolom G
+        const targetH = ambil(7); // kolom H
+        kanan.push({
+          key: `${dE.getFullYear()}-${dE.getMonth()}-${dE.getDate()}`,
+          ket: ketG ? String(ketG).trim() : '',
+          target: (targetH !== null && targetH !== undefined) ? String(targetH).trim() : '',
+        });
+      }
     }
   }
-  D.hariLibur = { merah, hijau };
-  console.log('📅 Hari libur nasional (Sheet7!A):', Array.from(merah));
-  console.log('📅 Hari libur sekolah (Sheet7!E):', Array.from(hijau));
-  return D.hariLibur;
+
+  D.hariLiburRaw = { kiri, kanan };
+  console.log('📅 Libur (semua kelas, Sheet7!A:C):', kiri);
+  console.log('📅 Libur (target kelas, Sheet7!E:H):', kanan);
+  return D.hariLiburRaw;
+}
+
+// Hitung set tanggal libur (merah & hijau) khusus untuk satu kelas,
+// berdasarkan tingkat kelas tsb (angka depan, misal "7A" → "7")
+function hariLiburUntukKelas(kelas) {
+  const tingkat = (String(kelas || '').match(/^\d+/) || [])[0] || '';
+  const merah = new Set();
+  const hijau = new Set();
+  const raw = D.hariLiburRaw || { kiri: [], kanan: [] };
+
+  raw.kiri.forEach(item => merah.add(item.key)); // selalu berlaku untuk semua kelas
+
+  raw.kanan.forEach(item => {
+    let berlaku = true;
+    if (item.target) {
+      const daftarTingkat = item.target.split(',').map(x => x.trim()).filter(Boolean);
+      berlaku = daftarTingkat.includes(tingkat);
+    }
+    if (berlaku) hijau.add(item.key);
+  });
+
+  return { merah, hijau };
 }
 
 async function muatRekapBulanan() {
@@ -884,7 +927,8 @@ async function muatRekapBulanan() {
     return;
   }
 
-  const hariLibur = await muatHariLibur();
+  await muatHariLibur(); // pastikan data mentah Sheet7 sudah ter-cache
+  const hariLibur = hariLiburUntukKelas(D.kelasAktif);
 
   const jumlahHari = new Date(thn, bln, 0).getDate(); // hari terakhir bulan tsb
 
@@ -909,11 +953,13 @@ async function muatRekapBulanan() {
     const status = g(5).toUpperCase();
 
     if (!absenBulan[nisn]) absenBulan[nisn] = {};
-    if (!absenBulan[nisn][tglHari]) absenBulan[nisn][tglHari] = { datang:null, ket:'' };
+    if (!absenBulan[nisn][tglHari]) absenBulan[nisn][tglHari] = { datang:null, pulang:null, ket:'' };
 
     if (status === 'DATANG' || status === 'MASUK') {
       absenBulan[nisn][tglHari].datang = waktu;
       if (!absenBulan[nisn][tglHari].ket) absenBulan[nisn][tglHari].ket = ket;
+    } else if (status === 'PULANG' || status === 'KELUAR') {
+      absenBulan[nisn][tglHari].pulang = waktu;
     }
     if (ket==='S' || ket==='I' || ket==='A') absenBulan[nisn][tglHari].ket = ket;
   }
@@ -925,8 +971,8 @@ async function muatRekapBulanan() {
     + '<th rowspan="2">NISN</th>'
     + '<th rowspan="2" style="text-align:left">Nama</th>';
   for (let d = 1; d <= jumlahHari; d++) theadHtml += `<th rowspan="2">${d}</th>`;
-  theadHtml += '<th colspan="4">Jumlah</th></tr><tr>'
-    + '<th>H</th><th>S</th><th>I</th><th>A</th>'
+  theadHtml += '<th colspan="5">Jumlah</th></tr><tr>'
+    + '<th>H</th><th>B</th><th>S</th><th>I</th><th>A</th>'
     + '</tr></thead>';
 
   const now = new Date();
@@ -937,7 +983,7 @@ async function muatRekapBulanan() {
   const bodyHtml = siswaKelas.map((s, i) => {
     let cells = '';
     const cellsExport = [];
-    const jumlah = { H:0, S:0, I:0, A:0 };
+    const jumlah = { H:0, B:0, S:0, I:0, A:0 };
 
     for (let d = 1; d <= jumlahHari; d++) {
       const dateObj = new Date(thn, bln-1, d);
@@ -959,7 +1005,17 @@ async function muatRekapBulanan() {
         if (ket === 'S') { teks='S'; warna='var(--b2)'; }
         else if (ket === 'I') { teks='I'; warna='var(--kuning)'; }
         else if (ket === 'A') { teks='A'; warna='var(--merah)'; }
-        else if (a && a.datang) { teks='H'; warna='var(--hijau)'; }
+        else if (a && a.datang && a.pulang) { teks='H'; warna='var(--hijau)'; }
+        else if (a && a.datang && !a.pulang) {
+          const serialHari = thn*10000 + bln*100 + d;
+          if (serialHari === hariIniSerial) {
+            // Masih hari yang sama — datang sudah tercatat, pulang belum, tetap dianggap Hadir
+            teks='H'; warna='var(--hijau)';
+          } else {
+            // Sudah berganti tanggal & pulang tetap tidak tercatat
+            teks='B'; warna='#e65100';
+          }
+        }
         else {
           // Belum ada catatan datang & tidak ada keterangan eksplisit
           const serialHari = thn*10000 + bln*100 + d;
@@ -980,6 +1036,7 @@ async function muatRekapBulanan() {
 
     const cellsJumlah =
       `<td style="text-align:center;font-weight:800;color:var(--hijau);border-left:2px solid #eef2f6">${jumlah.H}</td>`
+      + `<td style="text-align:center;font-weight:800;color:#e65100">${jumlah.B}</td>`
       + `<td style="text-align:center;font-weight:800;color:var(--b2)">${jumlah.S}</td>`
       + `<td style="text-align:center;font-weight:800;color:var(--kuning)">${jumlah.I}</td>`
       + `<td style="text-align:center;font-weight:800;color:var(--merah)">${jumlah.A}</td>`;
@@ -1015,13 +1072,13 @@ function unduhRekapBulanan() {
 
   const header = ['No', 'NISN', 'Nama'];
   for (let d = 1; d <= jumlahHari; d++) header.push(d);
-  header.push('H', 'S', 'I', 'A');
+  header.push('H', 'B', 'S', 'I', 'A');
 
   const dataRows = siswaRows.map((r, i) => [
-    i+1, r.nisn, r.nama, ...r.cells, r.jumlah.H, r.jumlah.S, r.jumlah.I, r.jumlah.A
+    i+1, r.nisn, r.nama, ...r.cells, r.jumlah.H, r.jumlah.B, r.jumlah.S, r.jumlah.I, r.jumlah.A
   ]);
 
-  const totalKolom = 2 + jumlahHari + 4; // index kolom terakhir (0-based)
+  const totalKolom = 2 + jumlahHari + 5; // index kolom terakhir (0-based)
 
   const aoa = [
     [`Rekap Kehadiran Siswa Kelas ${kelas}`],
@@ -1032,7 +1089,7 @@ function unduhRekapBulanan() {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:5},{wch:14},{wch:24}, ...Array(jumlahHari).fill({wch:4}), ...Array(4).fill({wch:5})];
+  ws['!cols'] = [{wch:5},{wch:14},{wch:24}, ...Array(jumlahHari).fill({wch:4}), ...Array(5).fill({wch:5})];
   ws['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:totalKolom} },
     { s:{r:1,c:0}, e:{r:1,c:totalKolom} },

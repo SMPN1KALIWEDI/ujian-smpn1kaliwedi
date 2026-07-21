@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1565c0">
+<title>Cetak Kartu Siswa — SMP Negeri 1 Kaliwedi</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+:root{
+  --b1:#1e88e5; --b2:#1565c0; --b3:#0d47a1;
+  --b5:#bbdefb; --b6:#e3f2fd;
+  --hijau:#2e7d32;
+  --merah:#c62828;
+  --teks:#1a2332; --abu:#f4f6f9; --abu2:#8a94a6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Nunito',sans-serif;background:linear-gradient(160deg,#eef4fb,#f7f9fc 40%);
+  min-height:100vh;color:var(--teks);
+}
+
+/* ===================== LAYAR APLIKASI (bukan area cetak) ===================== */
+.app-wrap{max-width:760px;margin:0 auto;padding:22px 16px 60px}
+
+.topbar{text-align:center;margin-bottom:22px}
+.topbar h1{font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:800;color:var(--b3)}
+.topbar p{font-size:.82rem;color:var(--abu2);font-weight:700;margin-top:2px}
+
+.card{background:#fff;border-radius:18px;box-shadow:0 6px 24px rgba(20,60,120,.08);padding:24px;margin-bottom:18px}
+
+/* --- Layar Awal --- */
+#screenAwal{text-align:center;padding:50px 20px}
+#screenAwal .ikon{font-size:3rem;margin-bottom:14px}
+#screenAwal h2{font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:800;color:var(--teks);margin-bottom:8px}
+#screenAwal p{font-size:.88rem;color:var(--abu2);margin-bottom:22px;line-height:1.5}
+
+.btn-utama{
+  padding:15px 32px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--b1),var(--b3));
+  color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;cursor:pointer;
+  box-shadow:0 6px 18px rgba(13,71,161,.28);
+}
+.btn-utama:active{transform:scale(.97)}
+.btn-utama:disabled{opacity:.5;cursor:wait}
+
+.status-kecil{font-size:.78rem;color:var(--abu2);font-weight:700;margin-top:14px}
+
+/* --- Layar Pilih --- */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.78rem;font-weight:800;color:var(--abu2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+select{
+  width:100%;padding:12px 14px;border:2px solid var(--b5);border-radius:12px;
+  font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:700;color:var(--teks);
+  background:var(--b6);appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' stroke='%231565c0' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 14px center;
+}
+select:disabled{opacity:.5;cursor:not-allowed}
+select:focus{outline:none;border-color:var(--b1)}
+
+.baris-tombol{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
+.btn-tambah{
+  flex:1;min-width:160px;padding:13px;border:none;border-radius:12px;background:var(--b2);color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;
+}
+.btn-tambah:disabled{opacity:.45;cursor:not-allowed}
+.btn-tambah-semua{
+  padding:13px 16px;border:2px solid var(--b5);border-radius:12px;background:#fff;color:var(--b2);
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;white-space:nowrap;
+}
+.btn-tambah-semua:disabled{opacity:.45;cursor:not-allowed}
+
+.sec-title{font-size:.8rem;font-weight:700;color:var(--abu2);text-transform:uppercase;letter-spacing:.5px;margin:20px 0 10px;display:flex;align-items:center;justify-content:space-between}
+.sec-title .jumlah{background:var(--b6);color:var(--b2);padding:2px 10px;border-radius:20px;font-size:.72rem}
+
+.daftar-terpilih{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto}
+.item-siswa{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--abu);border-radius:10px;padding:10px 12px;
+}
+.item-siswa .info b{display:block;font-size:.88rem;color:var(--teks)}
+.item-siswa .info span{font-size:.74rem;color:var(--abu2);font-weight:700}
+.btn-hapus{
+  border:none;background:#ffebee;color:var(--merah);width:28px;height:28px;border-radius:8px;
+  font-weight:800;cursor:pointer;font-size:.9rem;flex-shrink:0;
+}
+.kosong-daftar{text-align:center;color:var(--abu2);font-size:.82rem;font-weight:700;padding:24px 10px}
+
+.baris-aksi-bawah{display:flex;gap:10px;margin-top:18px}
+.btn-selesai{
+  flex:1;padding:15px;border:none;border-radius:12px;background:var(--hijau);color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.95rem;cursor:pointer;
+}
+.btn-selesai:disabled{opacity:.45;cursor:not-allowed}
+.btn-kembali-teks{
+  padding:15px 18px;border:2px solid var(--b5);border-radius:12px;background:#fff;color:var(--b2);
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;
+}
+
+/* --- Layar Cetak (preview) --- */
+.toolbar-cetak{display:flex;gap:10px;justify-content:center;margin-bottom:22px;flex-wrap:wrap}
+.btn-cetak{
+  padding:14px 30px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--b1),var(--b3));color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 6px 18px rgba(13,71,161,.28);
+}
+.btn-kembali2{
+  padding:14px 22px;border:2px solid var(--b5);border-radius:12px;background:#fff;color:var(--b2);
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;
+}
+
+/* ===================== KARTU (hitam putih, ukuran KTP) ===================== */
+.lembar-preview-wrap{
+  background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.14);margin:0 auto 24px;
+  width:297mm;overflow:hidden;
+}
+.lembar{
+  width:297mm;min-height:210mm;padding:8mm;box-sizing:border-box;
+  display:grid;grid-template-columns:repeat(5,53.98mm);grid-template-rows:repeat(2,85.6mm);
+  gap:4mm 3mm;justify-content:center;align-content:center;
+}
+
+.kartu{
+  width:53.98mm;height:85.6mm;border:0.35mm solid #000;box-sizing:border-box;
+  padding:3mm 2.4mm 2mm;display:flex;flex-direction:column;align-items:center;text-align:center;
+  color:#000;background:#fff;overflow:hidden;
+}
+.k-judul{font-family:'Poppins',sans-serif;font-weight:800;font-size:3.3mm;letter-spacing:.4px;line-height:1.15}
+.k-sub{font-family:'Poppins',sans-serif;font-weight:700;font-size:2mm;margin-top:.6mm;letter-spacing:.3px}
+.k-garis{width:72%;border:none;border-top:0.35mm solid #000;margin:1.7mm 0}
+.k-qr{width:43.2mm;height:43.2mm;display:flex;align-items:center;justify-content:center}
+.k-qr img,.k-qr canvas{width:100% !important;height:100% !important;display:block}
+.k-nama{font-family:'Nunito',sans-serif;font-weight:800;font-size:3.2mm;margin-top:1.8mm;line-height:1.18;word-break:break-word}
+.k-kelas{font-size:2.2mm;margin-top:1mm;font-weight:700}
+.k-nisn{font-size:2mm;margin-top:.7mm;letter-spacing:.4px}
+.k-footer{font-size:1.5mm;margin-top:auto;padding-top:1.6mm;line-height:1.25;font-weight:500}
+
+/* ===================== PRINT ===================== */
+@media print{
+  body{background:#fff}
+  .no-print{display:none !important}
+  .lembar-preview-wrap{box-shadow:none;margin:0}
+  #areaCetak{position:absolute;top:0;left:0}
+  .lembar{page-break-after:always}
+  .lembar:last-child{page-break-after:auto}
+  @page{size:A4 landscape;margin:0}
+}
+</style>
+</head>
+<body>
+
+<div class="app-wrap no-print" id="appWrap">
+
+  <div class="topbar">
+    <h1>🪪 Cetak Kartu Siswa</h1>
+    <p>SMP Negeri 1 Kaliwedi</p>
+  </div>
+
+  <!-- ===== LAYAR 1: AWAL ===== -->
+  <div class="card" id="screenAwal">
+    <div class="ikon">🎫</div>
+    <h2>Buat Kartu Siswa</h2>
+    <p>Pilih siswa dari kelas manapun, lalu cetak kartu QR<br>berukuran KTP siap tempel/laminating.</p>
+    <button class="btn-utama" id="btnMulai" onclick="mulai()" disabled>⏳ Memuat data...</button>
+    <div class="status-kecil" id="statusAwal"></div>
+  </div>
+
+  <!-- ===== LAYAR 2: PILIH KELAS & NAMA ===== -->
+  <div class="card" id="screenPilih" style="display:none">
+    <div class="field">
+      <label>🏫 Pilih Kelas</label>
+      <select id="selKelas" onchange="onKelasChange()">
+        <option value="">— Pilih Kelas —</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>👤 Pilih Nama</label>
+      <select id="selNama" disabled>
+        <option value="">— Pilih kelas dulu —</option>
+      </select>
+    </div>
+
+    <div class="baris-tombol">
+      <button class="btn-tambah" id="btnTambah" onclick="tambahKeDaftar()" disabled>➕ Buat Kartu</button>
+      <button class="btn-tambah-semua" id="btnTambahSemua" onclick="tambahSemuaSekelas()" disabled>➕ Tambah Semua di Kelas Ini</button>
+    </div>
+
+    <div class="sec-title">
+      <span>📋 Daftar Kartu yang Akan Dicetak</span>
+      <span class="jumlah" id="jumlahTerpilih">0</span>
+    </div>
+    <div class="daftar-terpilih" id="daftarTerpilih">
+      <div class="kosong-daftar">Belum ada siswa dipilih.</div>
+    </div>
+
+    <div class="baris-aksi-bawah">
+      <button class="btn-kembali-teks" onclick="kembaliAwal()">⬅ Kembali</button>
+      <button class="btn-selesai" id="btnSelesai" onclick="selesaiPilih()" disabled>✅ Selesai — Buat Kartu</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== LAYAR 3: PREVIEW & CETAK ===== -->
+<div id="screenCetak" style="display:none">
+  <div class="toolbar-cetak no-print">
+    <button class="btn-kembali2" onclick="kembaliPilih()">⬅ Ubah Daftar</button>
+    <button class="btn-cetak" onclick="window.print()">🖨️ Cetak Kartu</button>
+  </div>
+  <div id="areaCetak"></div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const SPREADSHEET_ID = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
+
+let D = {
+  siswa: [],        // { nisn, nama, kelas }
+  kelasList: [],    // daftar kelas unik terurut
+  daftarCetak: [],  // siswa yang dipilih untuk dicetak
+};
+
+async function bacaSheet(nama) {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(nama)}&t=${Date.now()}`;
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    }
+
+    const teks = await res.text();
+    const awal = teks.indexOf('{');
+    const akhir = teks.lastIndexOf('}');
+    if (awal === -1 || akhir === -1) {
+      console.error('Respons tidak dikenali dari Google Sheets:', teks.substring(0, 300));
+      throw new Error('Format respons tidak dikenali (bukan JSON gviz). Kemungkinan sheet tidak "Published to web" / tidak publik.');
+    }
+
+    const json = JSON.parse(teks.substring(awal, akhir + 1));
+
+    if (json.status === 'error') {
+      const pesan = (json.errors && json.errors[0] && json.errors[0].detailed_message) || 'Sheet/range tidak ditemukan.';
+      throw new Error(pesan);
+    }
+
+    return json.table;
+  } catch (e) {
+    console.error('Gagal membaca sheet', nama, e);
+    window.__errorTerakhir = e.message || String(e);
+    return null;
+  }
+}
+
+function urutKelas(a, b) {
+  const na = parseInt(a) || 0, nb = parseInt(b) || 0;
+  if (na !== nb) return na - nb;
+  return a.localeCompare(b);
+}
+
+// ============================================================
+// INIT — muat Sheet1!A:C (NISN, Nama, Kelas)
+// ============================================================
+async function init() {
+  const btn = document.getElementById('btnMulai');
+  const status = document.getElementById('statusAwal');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Memuat data...';
+  status.innerHTML = '';
+
+  const tbl = await bacaSheet('Sheet1');
+
+  if (!tbl) {
+    const detail = window.__errorTerakhir || 'Penyebab tidak diketahui.';
+    status.innerHTML = `
+      ❌ Gagal memuat data.<br>
+      <span style="color:var(--merah);font-size:.74rem">Detail: ${detail}</span><br>
+      <button onclick="init()" style="margin-top:10px;padding:8px 18px;border:none;border-radius:10px;background:var(--b2);color:#fff;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer">🔄 Coba Lagi</button>
+    `;
+    btn.textContent = '🎫 Buat Kartu';
+    return;
+  }
+
+  D.siswa = [];
+  const kelasSet = new Set();
+
+  for (let i = 0; i < tbl.rows.length; i++) {
+    const row = tbl.rows[i];
+    if (!row || !row.c) continue;
+    const g = (col) => {
+      const c = row.c[col];
+      return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
+    };
+    const nisn = g(0);
+    if (!nisn || nisn.toLowerCase() === 'nisn') continue;
+
+    const nama = g(1);
+    const kelas = g(2);
+    D.siswa.push({ nisn, nama, kelas });
+    if (kelas) kelasSet.add(kelas);
+  }
+
+  D.kelasList = Array.from(kelasSet).sort(urutKelas);
+
+  const selKelas = document.getElementById('selKelas');
+  D.kelasList.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = k;
+    selKelas.appendChild(opt);
+  });
+
+  status.textContent = D.siswa.length
+    ? `✅ ${D.siswa.length} siswa siap dari ${D.kelasList.length} kelas.`
+    : '⚠️ Data siswa kosong.';
+
+  btn.disabled = false;
+  btn.textContent = '🎫 Buat Kartu';
+}
+
+// ============================================================
+// NAVIGASI ANTAR LAYAR
+// ============================================================
+function mulai() {
+  document.getElementById('screenAwal').style.display = 'none';
+  document.getElementById('screenPilih').style.display = 'block';
+}
+function kembaliAwal() {
+  document.getElementById('screenPilih').style.display = 'none';
+  document.getElementById('screenAwal').style.display = 'block';
+}
+function kembaliPilih() {
+  document.getElementById('screenCetak').style.display = 'none';
+  document.getElementById('appWrap').style.display = 'block';
+  document.getElementById('screenPilih').style.display = 'block';
+}
+
+// ============================================================
+// PILIH KELAS → FILTER NAMA
+// ============================================================
+function onKelasChange() {
+  const kelas = document.getElementById('selKelas').value;
+  const selNama = document.getElementById('selNama');
+  const btnTambah = document.getElementById('btnTambah');
+  const btnTambahSemua = document.getElementById('btnTambahSemua');
+
+  selNama.innerHTML = '';
+
+  if (!kelas) {
+    selNama.disabled = true;
+    selNama.innerHTML = '<option value="">— Pilih kelas dulu —</option>';
+    btnTambah.disabled = true;
+    btnTambahSemua.disabled = true;
+    return;
+  }
+
+  const siswaKelas = D.siswa
+    .filter(s => s.kelas === kelas)
+    .sort((a, b) => a.nama.localeCompare(b.nama));
+
+  selNama.disabled = false;
+  selNama.innerHTML = `<option value="">— Pilih Nama (${siswaKelas.length} siswa) —</option>`;
+  siswaKelas.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.nisn;
+    opt.textContent = s.nama;
+    selNama.appendChild(opt);
+  });
+
+  btnTambah.disabled = false;
+  btnTambahSemua.disabled = siswaKelas.length === 0;
+}
+
+// ============================================================
+// TAMBAH KE DAFTAR CETAK
+// ============================================================
+function tambahKeDaftar() {
+  const nisn = document.getElementById('selNama').value;
+  if (!nisn) { alert('Pilih nama siswa terlebih dahulu.'); return; }
+
+  const sudahAda = D.daftarCetak.some(s => s.nisn === nisn);
+  if (sudahAda) { alert('Siswa ini sudah ada di daftar cetak.'); return; }
+
+  const siswa = D.siswa.find(s => s.nisn === nisn);
+  if (!siswa) return;
+
+  D.daftarCetak.push(siswa);
+  renderDaftarTerpilih();
+}
+
+function tambahSemuaSekelas() {
+  const kelas = document.getElementById('selKelas').value;
+  if (!kelas) return;
+
+  const siswaKelas = D.siswa.filter(s => s.kelas === kelas);
+  let ditambah = 0;
+  siswaKelas.forEach(s => {
+    if (!D.daftarCetak.some(x => x.nisn === s.nisn)) {
+      D.daftarCetak.push(s);
+      ditambah++;
+    }
+  });
+  renderDaftarTerpilih();
+  if (ditambah === 0) alert('Semua siswa di kelas ini sudah ada di daftar cetak.');
+}
+
+function hapusDariDaftar(nisn) {
+  D.daftarCetak = D.daftarCetak.filter(s => s.nisn !== nisn);
+  renderDaftarTerpilih();
+}
+
+function renderDaftarTerpilih() {
+  const wrap = document.getElementById('daftarTerpilih');
+  setText('jumlahTerpilih', D.daftarCetak.length);
+  document.getElementById('btnSelesai').disabled = D.daftarCetak.length === 0;
+
+  if (D.daftarCetak.length === 0) {
+    wrap.innerHTML = '<div class="kosong-daftar">Belum ada siswa dipilih.</div>';
+    return;
+  }
+
+  wrap.innerHTML = D.daftarCetak.map(s => `
+    <div class="item-siswa">
+      <div class="info">
+        <b>${s.nama}</b>
+        <span>${s.kelas} · ${s.nisn}</span>
+      </div>
+      <button class="btn-hapus" onclick="hapusDariDaftar('${s.nisn}')" title="Hapus">✕</button>
+    </div>
+  `).join('');
+}
+
+function setText(id, teks) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = teks;
+}
+
+// ============================================================
+// SELESAI → BANGUN HALAMAN CETAK (2 baris x 5 kartu per lembar A4)
+// ============================================================
+function selesaiPilih() {
+  if (D.daftarCetak.length === 0) return;
+
+  document.getElementById('appWrap').style.display = 'none';
+  document.getElementById('screenCetak').style.display = 'block';
+
+  const KARTU_PER_LEMBAR = 10; // 2 baris x 5 kartu
+  const area = document.getElementById('areaCetak');
+  area.innerHTML = '';
+
+  const jumlahLembar = Math.ceil(D.daftarCetak.length / KARTU_PER_LEMBAR);
+
+  for (let p = 0; p < jumlahLembar; p++) {
+    const potongan = D.daftarCetak.slice(p * KARTU_PER_LEMBAR, (p + 1) * KARTU_PER_LEMBAR);
+
+    const wrapLembar = document.createElement('div');
+    wrapLembar.className = 'lembar-preview-wrap';
+
+    const lembar = document.createElement('div');
+    lembar.className = 'lembar';
+
+    potongan.forEach(s => {
+      const nisnTampil = String(s.nisn).padStart(10, '0');
+      const qrId = `qr_${p}_${s.nisn}`;
+
+      const kartu = document.createElement('div');
+      kartu.className = 'kartu';
+      kartu.innerHTML = `
+        <div class="k-judul">KARTU SISWA</div>
+        <div class="k-sub">SMP NEGERI 1 KALIWEDI</div>
+        <div class="k-garis"></div>
+        <div class="k-qr" id="${qrId}"></div>
+        <div class="k-nama">${s.nama}</div>
+        <div class="k-kelas">Kelas ${s.kelas}</div>
+        <div class="k-nisn">NISN: ${nisnTampil}</div>
+        <div class="k-footer">Gunakan kartu ini untuk absensi datang dan pulang</div>
+      `;
+      lembar.appendChild(kartu);
+    });
+
+    wrapLembar.appendChild(lembar);
+    area.appendChild(wrapLembar);
+  }
+
+  // Render QR setelah elemen ada di DOM (hitam-putih murni, tanpa warna)
+  D.daftarCetak.forEach((s, idx) => {
+    const p = Math.floor(idx / KARTU_PER_LEMBAR);
+    const qrId = `qr_${p}_${s.nisn}`;
+    const el = document.getElementById(qrId);
+    if (!el) return;
+    new QRCode(el, {
+      text: s.nisn, // QR memakai NISN asli sesuai data di kolom A
+      width: 400,
+      height: 400,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+  });
+}
+
+init();
+</script>
+</body>
+</html>

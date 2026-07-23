@@ -698,11 +698,18 @@ async function startCamera(opts){
     return;
   }
 
+  // Batasi resolusi ke ~1280x720: resolusi lebih tinggi (default di banyak HP)
+  // membuat setiap frame terlalu berat diproses jsQR sehingga QR sulit terbaca otomatis.
+  const RES_CONSTRAINT = { width: { ideal: 1280 }, height: { ideal: 720 } };
+
   const attempts = [];
   if(opts.deviceId){
+    attempts.push({ video: { deviceId: { exact: opts.deviceId }, ...RES_CONSTRAINT } });
     attempts.push({ video: { deviceId: { exact: opts.deviceId } } });
   } else {
     const facing = opts.facing || activeFacing;
+    attempts.push({ video: { facingMode: { exact: facing }, ...RES_CONSTRAINT } });
+    attempts.push({ video: { facingMode: facing, ...RES_CONSTRAINT } });
     attempts.push({ video: { facingMode: { exact: facing } } });
     attempts.push({ video: { facingMode: facing } });
     attempts.push({ video: true }); // fallback kamera apa saja
@@ -733,6 +740,16 @@ async function startCamera(opts){
   const videoEl = $('video');
   videoEl.srcObject = stream;
   try{ await videoEl.play(); }catch(playErr){ console.warn('video.play() gagal:', playErr); }
+
+  // Aktifkan fokus kontinu bila didukung — banyak kamera belakang HP defaultnya
+  // fokus jauh, sehingga QR yang didekatkan ke kamera jadi buram dan tidak terbaca.
+  try{
+    const focusTrack = stream.getVideoTracks()[0];
+    const caps = focusTrack.getCapabilities ? focusTrack.getCapabilities() : {};
+    if(caps.focusMode && caps.focusMode.includes('continuous')){
+      await focusTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+    }
+  }catch(focusErr){ console.warn('Tidak dapat mengatur fokus kontinu:', focusErr); }
 
   await listCameras();
   const track = stream.getVideoTracks()[0];
@@ -778,6 +795,9 @@ let lastScanTime = 0;
 let jsQRWarned = false;
 let frameCount = 0;
 let lastDiagUpdate = 0;
+let lastProcessTime = 0;
+const SCAN_MAX_DIM = 900;     // batasi sisi terpanjang gambar yang diproses jsQR (px) agar decode cepat
+const SCAN_INTERVAL_MS = 120; // jeda minimum antar proses decode (~8x/detik) agar tidak membebani CPU
 function tickScan(){
   if(!scanning) return;
   try{
@@ -790,24 +810,30 @@ function tickScan(){
       }
     } else {
       const video = $('video');
-      const canvas = $('canvas');
       if(video.readyState >= 2 && video.videoWidth > 0){
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
-        frameCount++;
         const now = Date.now();
-        if(now - lastDiagUpdate > 700){
-          lastDiagUpdate = now;
-          $('scan-diag').textContent = `Diagnostik: memindai aktif • video ${video.videoWidth}x${video.videoHeight} • frame diproses ${frameCount} • ${code ? 'QR terdeteksi ✓' : 'belum ada QR terlihat'}`;
-        }
-        if(code && code.data){
-          if(now - lastScanTime > 2500){
-            lastScanTime = now;
-            handleScanResult(code.data.trim());
+        if(now - lastProcessTime >= SCAN_INTERVAL_MS){
+          lastProcessTime = now;
+          const canvas = $('canvas');
+          // Perkecil gambar sebelum di-decode: gambar resolusi penuh (kadang >3000px di HP)
+          // membuat jsQR terlalu lambat sehingga QR tidak pernah sempat terbaca otomatis.
+          const scale = Math.min(1, SCAN_MAX_DIM / Math.max(video.videoWidth, video.videoHeight));
+          canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+          canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+          frameCount++;
+          if(now - lastDiagUpdate > 700){
+            lastDiagUpdate = now;
+            $('scan-diag').textContent = `Diagnostik: memindai aktif • video ${video.videoWidth}x${video.videoHeight} (diproses ${canvas.width}x${canvas.height}) • frame diproses ${frameCount} • ${code ? 'QR terdeteksi ✓' : 'belum ada QR terlihat'}`;
+          }
+          if(code && code.data){
+            if(now - lastScanTime > 2500){
+              lastScanTime = now;
+              handleScanResult(code.data.trim());
+            }
           }
         }
       } else {

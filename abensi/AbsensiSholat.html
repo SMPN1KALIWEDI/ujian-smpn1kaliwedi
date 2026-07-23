@@ -759,33 +759,56 @@ $('btn-toggle-scan').addEventListener('click', ()=>{
 });
 
 let lastScanTime = 0;
+let jsQRWarned = false;
 function tickScan(){
   if(!scanning) return;
-  const video = $('video');
-  const canvas = $('canvas');
-  if(video.readyState === video.HAVE_ENOUGH_DATA){
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-    if(code && code.data){
-      const now = Date.now();
-      if(now - lastScanTime > 2500){
-        lastScanTime = now;
-        handleScanResult(code.data.trim());
+  try{
+    if(typeof jsQR === 'undefined'){
+      if(!jsQRWarned){
+        jsQRWarned = true;
+        $('cam-status').style.display = 'block';
+        $('cam-status').textContent = 'Pustaka pemindai QR gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.';
+      }
+    } else {
+      const video = $('video');
+      const canvas = $('canvas');
+      if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        if(code && code.data){
+          const now = Date.now();
+          if(now - lastScanTime > 2500){
+            lastScanTime = now;
+            handleScanResult(code.data.trim());
+          }
+        }
       }
     }
+  }catch(err){
+    console.error('Scan error:', err);
   }
   rafId = requestAnimationFrame(tickScan);
 }
 
-async function handleScanResult(nisn){
-  const siswa = siswaList.find(s => s.nisn === nisn);
+function normalizeNisn(v){
+  return String(v == null ? '' : v).trim().replace(/^0+(?=\d)/, '');
+}
+
+async function handleScanResult(rawValue){
+  const nisn = String(rawValue).trim();
+  let siswa = siswaList.find(s => s.nisn === nisn);
+  if(!siswa){
+    // fallback: cocokkan tanpa memandang angka nol di depan (kasus umum saat NISN tersimpan sebagai angka di Sheets)
+    const norm = normalizeNisn(nisn);
+    siswa = siswaList.find(s => normalizeNisn(s.nisn) === norm);
+  }
   const wrap = $('scan-result-wrap');
   if(!siswa){
-    wrap.innerHTML = `<div class="error-msg">NISN "${nisn}" tidak ditemukan di data siswa.</div>`;
+    wrap.innerHTML = `<div class="error-msg">NISN "${nisn}" tidak ditemukan di data siswa. Pastikan isi QR persis sama dengan kolom NISN di sheet Siswa.</div>`;
     return;
   }
   wrap.innerHTML = `

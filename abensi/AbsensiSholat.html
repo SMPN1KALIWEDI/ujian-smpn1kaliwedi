@@ -741,16 +741,6 @@ async function startCamera(opts){
   videoEl.srcObject = stream;
   try{ await videoEl.play(); }catch(playErr){ console.warn('video.play() gagal:', playErr); }
 
-  // Aktifkan fokus kontinu bila didukung — banyak kamera belakang HP defaultnya
-  // fokus jauh, sehingga QR yang didekatkan ke kamera jadi buram dan tidak terbaca.
-  try{
-    const focusTrack = stream.getVideoTracks()[0];
-    const caps = focusTrack.getCapabilities ? focusTrack.getCapabilities() : {};
-    if(caps.focusMode && caps.focusMode.includes('continuous')){
-      await focusTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
-    }
-  }catch(focusErr){ console.warn('Tidak dapat mengatur fokus kontinu:', focusErr); }
-
   await listCameras();
   const track = stream.getVideoTracks()[0];
   const settings = track.getSettings ? track.getSettings() : {};

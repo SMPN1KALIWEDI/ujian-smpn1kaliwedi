@@ -346,6 +346,7 @@
           <summary style="font-size:11.5px; color:var(--ink-soft); cursor:pointer;">Pilih kamera lain (jika ada beberapa)</summary>
           <select id="camera-select" style="margin-top:8px;"></select>
         </details>
+        <p class="note-small" id="scan-diag">Diagnostik: menunggu kamera…</p>
 
         <div id="scan-result-wrap"></div>
         <div id="scan-toast-area"></div>
@@ -729,7 +730,10 @@ async function startCamera(opts){
     return;
   }
 
-  $('video').srcObject = stream;
+  const videoEl = $('video');
+  videoEl.srcObject = stream;
+  try{ await videoEl.play(); }catch(playErr){ console.warn('video.play() gagal:', playErr); }
+
   await listCameras();
   const track = stream.getVideoTracks()[0];
   const settings = track.getSettings ? track.getSettings() : {};
@@ -738,7 +742,19 @@ async function startCamera(opts){
   setCamButtonState();
   $('cam-status').textContent = 'Arahkan kamera ke QR siswa';
   setTimeout(()=>{ $('cam-status').style.display = 'none'; }, 1800);
+
+  $('scan-diag').textContent = 'Diagnostik: menunggu video siap…';
+  const metaTimeout = setTimeout(()=>{
+    if(videoEl.videoWidth === 0){
+      $('scan-diag').textContent = 'Diagnostik: video belum mengirim data setelah 5 detik. Coba tombol kamera lain, atau periksa izin kamera di pengaturan browser/situs.';
+    }
+  }, 5000);
+  videoEl.addEventListener('loadedmetadata', ()=>{
+    clearTimeout(metaTimeout);
+  }, { once: true });
+
   scanning = true;
+  frameCount = 0;
   tickScan();
 }
 
@@ -760,6 +776,8 @@ $('btn-toggle-scan').addEventListener('click', ()=>{
 
 let lastScanTime = 0;
 let jsQRWarned = false;
+let frameCount = 0;
+let lastDiagUpdate = 0;
 function tickScan(){
   if(!scanning) return;
   try{
@@ -768,28 +786,41 @@ function tickScan(){
         jsQRWarned = true;
         $('cam-status').style.display = 'block';
         $('cam-status').textContent = 'Pustaka pemindai QR gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.';
+        $('scan-diag').textContent = 'Diagnostik: pustaka jsQR tidak termuat (typeof jsQR === "undefined").';
       }
     } else {
       const video = $('video');
       const canvas = $('canvas');
-      if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
+      if(video.readyState >= 2 && video.videoWidth > 0){
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        frameCount++;
+        const now = Date.now();
+        if(now - lastDiagUpdate > 700){
+          lastDiagUpdate = now;
+          $('scan-diag').textContent = `Diagnostik: memindai aktif • video ${video.videoWidth}x${video.videoHeight} • frame diproses ${frameCount} • ${code ? 'QR terdeteksi ✓' : 'belum ada QR terlihat'}`;
+        }
         if(code && code.data){
-          const now = Date.now();
           if(now - lastScanTime > 2500){
             lastScanTime = now;
             handleScanResult(code.data.trim());
           }
         }
+      } else {
+        const now = Date.now();
+        if(now - lastDiagUpdate > 700){
+          lastDiagUpdate = now;
+          $('scan-diag').textContent = `Diagnostik: video belum siap (readyState=${video.readyState}, lebar=${video.videoWidth}).`;
+        }
       }
     }
   }catch(err){
     console.error('Scan error:', err);
+    $('scan-diag').textContent = 'Diagnostik: terjadi error saat memproses frame — ' + err.message;
   }
   rafId = requestAnimationFrame(tickScan);
 }

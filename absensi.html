@@ -600,6 +600,22 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
   </div>
 </div>
 
+<!-- MODAL PERINGATAN PASSWORD DEFAULT -->
+<div class="modal-bg" id="mPeringatanPw">
+  <div class="modal" style="max-width:340px;text-align:center">
+    <div style="font-size:2.6rem;margin-bottom:6px">🔐</div>
+    <h3 style="margin-bottom:8px">Amankan Akun Anda</h3>
+    <p style="font-size:.86rem;color:var(--abu2);line-height:1.55;margin-bottom:18px">
+      Anda masih menggunakan <b>password default</b> (<code>user123</code>).
+      Demi keamanan data Anda, sebaiknya segera ganti dengan password lain yang hanya Anda ketahui.
+    </p>
+    <div class="btn-row">
+      <button class="btn-batal" onclick="tutup('mPeringatanPw')">Nanti Saja</button>
+      <button class="btn-simpan" onclick="lanjutGantiPwDariPeringatan()">Ganti Sekarang</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ============================================================
 // KONFIGURASI
@@ -743,6 +759,20 @@ async function login() {
 
   D.aktif = user;
   await tampilAbsen(user);
+
+  // Kalau masih pakai password default → ingatkan untuk menggantinya
+  if (String(user.password).trim() === 'user123') {
+    setTimeout(() => buka('mPeringatanPw'), 600);
+  }
+}
+
+function lanjutGantiPwDariPeringatan() {
+  tutup('mPeringatanPw');
+  bukaUbahPw();
+  if (D.aktif) {
+    document.getElementById('uNISN').value = D.aktif.nisn;
+    document.getElementById('uLama').value = D.aktif.password;
+  }
 }
 
 // ============================================================

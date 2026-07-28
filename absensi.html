@@ -621,7 +621,7 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
 // KONFIGURASI
 // ============================================================
 const SPREADSHEET_ID = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
-const APPS_SCRIPT_URL = 'GANTI_DENGAN_URL_APPS_SCRIPT';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
 
 // Data runtime
 let D = { users:[], aktif:null, absenAll:[] };
@@ -1152,28 +1152,46 @@ function bukaUbahPw() {
   buka('mUbah');
 }
 async function ubahPw() {
-  const nisn=val('uNISN'), lama=val('uLama'), baru=val('uBaru'), konfirm=val('uKonfirm');
-  const el=document.getElementById('msgUbah'); el.className='msg';
-  if(!nisn||!lama||!baru||!konfirm){pesan(el,'err','⚠️ Semua kolom wajib diisi.');return}
-  const user=D.users.find(u=>u.nisn===nisn);
-  if(!user)              {pesan(el,'err','❌ NISN tidak ditemukan.');return}
-  if(user.password!==lama){pesan(el,'err','❌ Password lama salah.');return}
-  if(baru.length<4)      {pesan(el,'err','⚠️ Password baru min. 4 karakter.');return}
-  if(baru!==konfirm)     {pesan(el,'err','❌ Konfirmasi tidak cocok.');return}
+  const btn = document.querySelector('#mUbah .btn-simpan');
+  const el  = document.getElementById('msgUbah');
 
-  // Kirim ke Apps Script
-  if (!APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec')) {
-    const r = await apiFetch({ action:'ubahPassword', nisn, pwBaru: baru });
-    if (r && r.status==='ok') {
-      user.password = baru;
-      pesan(el,'ok','✅ Password berhasil diubah!');
-      setTimeout(()=>tutup('mUbah'),2000); return;
+  try {
+    const nisn=val('uNISN'), lama=val('uLama'), baru=val('uBaru'), konfirm=val('uKonfirm');
+    el.className='msg';
+    if(!nisn||!lama||!baru||!konfirm){pesan(el,'err','⚠️ Semua kolom wajib diisi.');return}
+    const user=D.users.find(u=>u.nisn===nisn);
+    if(!user)              {pesan(el,'err','❌ NISN tidak ditemukan.');return}
+    if(user.password!==lama){pesan(el,'err','❌ Password lama salah.');return}
+    if(baru.length<4)      {pesan(el,'err','⚠️ Password baru min. 4 karakter.');return}
+    if(baru!==konfirm)     {pesan(el,'err','❌ Konfirmasi tidak cocok.');return}
+
+    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('GANTI_DENGAN')) {
+      pesan(el,'err','⚠️ APPS_SCRIPT_URL belum diatur — password tidak bisa disimpan permanen. Hubungi admin aplikasi.');
+      return;
     }
+
+    // Nonaktifkan tombol + tampilkan indikator proses yang JELAS,
+    // supaya tidak terlihat seperti "tidak merespon" saat menunggu server.
+    btn.disabled = true;
+    btn.textContent = '⏳ Menyimpan...';
+    pesan(el,'ok','⏳ Menghubungi server, mohon tunggu (bisa sampai ±20 detik)...');
+
+    const r = await apiFetch({ action:'ubahPassword', nisn, pwBaru: baru });
+
+    if (r && r.status === 'ok') {
+      user.password = baru; // sinkronkan data lokal supaya sesi ini tetap konsisten
+      pesan(el,'ok','✅ Password berhasil diubah & tersimpan di spreadsheet!');
+      setTimeout(()=>tutup('mUbah'),2000);
+    } else {
+      const detail = (r && (r.pesan || r.message)) ? (r.pesan || r.message) : 'Server tidak merespons / gagal terhubung.';
+      pesan(el,'err','❌ Gagal menyimpan password: ' + detail + ' Coba lagi.');
+    }
+  } catch (err) {
+    console.error('ubahPw error:', err);
+    pesan(el, 'err', '⚠️ Terjadi kesalahan tak terduga: ' + (err && err.message ? err.message : String(err)));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Simpan'; }
   }
-  // Fallback update lokal
-  user.password = baru;
-  pesan(el,'ok','✅ Password diubah untuk sesi ini.');
-  setTimeout(()=>tutup('mUbah'),2000);
 }
 
 async function apiFetch(params, retry=0) {

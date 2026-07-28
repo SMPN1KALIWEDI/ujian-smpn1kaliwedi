@@ -140,6 +140,26 @@ input:focus{border-color:var(--b3);box-shadow:0 0 0 3px rgba(25,118,210,.12);bac
 .khi-nilai.pulang{color:var(--kuning)}
 .khi-pemisah{width:1.5px;align-self:stretch;background:var(--b5);border-radius:2px}
 
+/* KEGIATAN SHOLAT BERJAMAAH */
+.kartu-sholat{
+  margin:10px 18px 2px;padding:14px 16px;border-radius:16px;
+  background:linear-gradient(135deg,#0b3d1f,#0f5c2e);
+  box-shadow:0 4px 14px rgba(11,61,31,.35);
+}
+.ks-judul{
+  font-size:.72rem;font-weight:800;color:#ffd54f;text-align:center;
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;
+}
+.ks-teks{
+  font-size:.86rem;font-weight:700;line-height:1.55;text-align:center;
+  color:#fffde7;
+}
+.ks-teks b{color:#ffee58}
+.ks-teks.hadir{color:#e8f5e9}
+.ks-teks.hadir b{color:#69f0ae}
+.ks-teks.pernah b{color:#ffd740}
+.ks-teks.tidak-pernah b{color:#ff8a80}
+
 /* REKAP */
 .rekap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 18px}
 .rbox{background:var(--abu);border-radius:12px;padding:10px 6px;text-align:center}
@@ -431,6 +451,12 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
       </div>
     </div>
 
+    <!-- Kegiatan Sholat Berjamaah -->
+    <div class="kartu-sholat" id="kartuSholat">
+      <div class="ks-judul">🕌 SHOLAT BERJAMAAH</div>
+      <div class="ks-teks" id="ksTeks">⏳ Memuat data sholat...</div>
+    </div>
+
     <!-- Rekap -->
     <div class="rekap-grid">
       <div class="rbox h"><div class="rn" id="rkH">0</div><div class="rl">Hadir</div></div>
@@ -623,6 +649,9 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
 const SPREADSHEET_ID = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
 
+// Spreadsheet terpisah untuk data Sholat Berjamaah (Sheet3: Timestamp|NISN|Keterangan)
+const SPREADSHEET_ID_SHOLAT = '1dxNxE46xBmSjTDC5kJExdAE63HcAPuuCBgpzI1qTcto';
+
 // Data runtime
 let D = { users:[], aktif:null, absenAll:[] };
 
@@ -630,8 +659,9 @@ let D = { users:[], aktif:null, absenAll:[] };
 // BACA SHEET via gviz — langsung dari Google Sheets (publik)
 // Tidak ada limit concurrent — cocok untuk 1000 user
 // ============================================================
-async function bacaSheet(namaSheet) {
-  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&t=${Date.now()}`;
+async function bacaSheet(namaSheet, spreadsheetId) {
+  const ssId = spreadsheetId || SPREADSHEET_ID;
+  const url = `https://docs.google.com/spreadsheets/d/${ssId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&t=${Date.now()}`;
   try {
     const ctrl = new AbortController();
     const tid  = setTimeout(() => ctrl.abort(), 12000);
@@ -685,6 +715,13 @@ function parseDate(tbl, row, col) {
 
 const HARI  = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 const BLN   = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+const HARI_PANJANG = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BLN_PANJANG  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+function fmtTglLengkap(d) {
+  if (!d) return '-';
+  return `${HARI_PANJANG[d.getDay()]}, ${d.getDate()} ${BLN_PANJANG[d.getMonth()]} ${d.getFullYear()}`;
+}
 
 function fmtTgl(d) {
   if (!d) return '-';
@@ -793,6 +830,57 @@ async function tampilAbsen(user) {
   hide('loading');
 
   await muatAbsen();
+  muatKartuSholat(user); // tidak perlu ditunggu (await) — biar tidak menghambat tampilan lain
+}
+
+// ============================================================
+// KARTU SHOLAT BERJAMAAH — dari spreadsheet terpisah, Sheet3!A:C
+// (A=Timestamp, B=NISN, C=Keterangan)
+// ============================================================
+async function muatKartuSholat(user) {
+  const el = document.getElementById('ksTeks');
+  const kartu = document.getElementById('kartuSholat');
+
+  const tbl = await bacaSheet('Sheet3', SPREADSHEET_ID_SHOLAT);
+  if (!tbl) {
+    el.textContent = '⚠️ Data sholat belum bisa dimuat.';
+    return;
+  }
+
+  const todayKey = keyTgl(new Date());
+  let cocokHariIni = false;
+  let tglTerakhir = null; // Date objek tanggal sholat terakhir (selain hari ini)
+
+  for (let i = 0; i < tbl.rows.length; i++) {
+    const row = tbl.rows[i];
+    if (!row || !row.c) continue;
+
+    const nisnBaris = cel(tbl, i, 1); // kolom B = NISN
+    if (nisnBaris !== user.nisn) continue;
+
+    const tgl = parseDate(tbl, i, 0); // kolom A = Timestamp
+    if (!tgl) continue;
+
+    if (keyTgl(tgl) === todayKey) {
+      cocokHariIni = true;
+    }
+    if (!tglTerakhir || tgl > tglTerakhir) {
+      tglTerakhir = tgl;
+    }
+  }
+
+  const nama = user.nama;
+
+  if (cocokHariIni) {
+    el.className = 'ks-teks hadir';
+    el.innerHTML = `Alhamdulillah ananda <b>${nama}</b> telah sholat berjamaah di musholah Sekolah`;
+  } else if (tglTerakhir) {
+    el.className = 'ks-teks pernah';
+    el.innerHTML = `Ananda <b>${nama}</b> mengikuti sholat berjamaah di musholah sekolah terakhir pada <b>${fmtTglLengkap(tglTerakhir)}</b>, mohon bantuan orang tua agar siswa selalu melaksanakan kewajiban sholat terutama berjamaah`;
+  } else {
+    el.className = 'ks-teks tidak-pernah';
+    el.innerHTML = `Ananda <b>${nama}</b> tidak pernah mengikuti kegiatan sholat berjamaah di mushollah sekolah, mohon kiranya orang tua ikut serta mendorong siswa agar ananda tidak melalaikan ibadah sholat`;
+  }
 }
 
 // ============================================================

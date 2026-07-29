@@ -26,7 +26,7 @@
     .header-default{background:linear-gradient(135deg,#4299e1,#2b6cb0)}
     .card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
     label{display:block;font-size:.8rem;font-weight:600;color:#4a5568;margin-bottom:4px}
-    select,input[type=text],input[type=password],input[type=datetime-local]{width:100%;padding:11px 12px;border:1.5px solid #cbd5e0;border-radius:9px;font-size:1rem;margin-bottom:12px;background:#fff}
+    select,input[type=text],input[type=password],input[type=datetime-local],input[type=date]{width:100%;padding:11px 12px;border:1.5px solid #cbd5e0;border-radius:9px;font-size:1rem;margin-bottom:12px;background:#fff}
     .pass-wrap{position:relative}
     .pass-wrap input{padding-right:42px}
     .pass-wrap .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:1.2rem;user-select:none;margin-top:-6px}
@@ -40,7 +40,7 @@
     .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(130px);background:#2f855a;color:#fff;padding:16px 24px;border-radius:14px;font-weight:600;font-size:1.1rem;box-shadow:0 10px 30px rgba(0,0,0,.28);z-index:9999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);text-align:center;max-width:90%;white-space:pre-line;line-height:1.35}
     .toast.show{transform:translateX(-50%) translateY(0)}
     .toast.error{background:#c53030}
-    .list-hadir{max-height:280px;overflow-y:auto}
+    .list-hadir{max-height:300px;overflow-y:auto}
     .item-hadir{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #edf2f7;font-size:.92rem}
     .item-hadir .nama{font-weight:600}
     .item-hadir .meta{color:#718096;font-size:.8rem}
@@ -100,19 +100,26 @@
     <div id="absenArea" class="hidden">
       <div class="card">
         <div class="status-bar" id="statusKegiatan"></div>
+        
+        <label>Tanggal Absensi</label>
+        <input type="date" id="tanggalAbsen" onchange="gantiTanggal()">
+
         <div class="cam-toggle">
           <button class="btn btn-outline btn-sm" id="btnCamFront" onclick="setCamera('user')">Kamera Depan</button>
           <button class="btn btn-outline btn-sm" id="btnCamBack" onclick="setCamera('environment')">Kamera Belakang</button>
         </div>
+
         <div class="tabs">
           <div class="tab active" id="tabScan" onclick="switchTab('scan')">📷 Scan QR</div>
           <div class="tab" id="tabManual" onclick="switchTab('manual')">✍️ Manual</div>
         </div>
+
         <div id="panelScan">
           <div id="reader"></div>
           <button class="btn btn-danger" id="btnStop" onclick="stopScanner()" style="display:none">Stop Kamera</button>
           <button class="btn btn-outline" id="btnStart" onclick="startScanner()">Nyalakan Kamera</button>
         </div>
+
         <div id="panelManual" class="hidden">
           <label>Kelas</label>
           <select id="selKelas" onchange="filterNama()"><option value="">-- Pilih Kelas --</option></select>
@@ -121,18 +128,19 @@
           <button class="btn btn-success" onclick="absenManual()">Catat Hadir</button>
         </div>
       </div>
+
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <strong>Hadir Hari Ini (<span id="jumlahHadir">0</span>)</strong>
+          <strong>Hadir (<span id="jumlahHadir">0</span>)</strong>
           <button class="btn btn-outline btn-sm" onclick="refreshList()">🔄</button>
         </div>
         <div class="list-hadir" id="listHadir"><div class="loading">Belum ada data</div></div>
       </div>
+
       <button class="btn btn-outline" onclick="selesaiAbsen()">SELESAI</button>
     </div>
   </div>
-
-  <div id="sectionRekap" class="hidden">
+    <div id="sectionRekap" class="hidden">
     <div class="card">
       <div class="row">
         <div><label>Bulan</label><select id="selBulan"></select></div>
@@ -239,7 +247,6 @@ function setHeaderColor() {
     document.getElementById('headerMeta').textContent = currentUser.nama + ' • Petugas';
   }
 }
-
 async function doLogin() {
   const username = document.getElementById('loginUser').value.trim();
   const password = document.getElementById('loginPass').value.trim();
@@ -300,6 +307,7 @@ async function loadInitialData() {
   const d = String(today.getDate()).padStart(2, '0');
   document.getElementById('waktuMulai').value = y + '-' + m + '-' + d + 'T14:00';
   document.getElementById('waktuSelesai').value = y + '-' + m + '-' + d + 'T17:00';
+  document.getElementById('tanggalAbsen').value = y + '-' + m + '-' + d;
 
   const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const selB = document.getElementById('selBulan');
@@ -402,6 +410,10 @@ function absenManual() {
   prosesAbsen(nisn);
 }
 
+function gantiTanggal() {
+  scannedToday.clear();
+  refreshList();
+}
 async function prosesAbsen(nisn) {
   if (!currentKode || isProcessing) return;
   if (scannedToday.has(nisn)) { showToast('Absensi sudah dilakukan', true); return; }
@@ -410,8 +422,9 @@ async function prosesAbsen(nisn) {
   isProcessing = true;
   lastScannedNisn = nisn;
   lastScanTime = now;
+  const tanggal = document.getElementById('tanggalAbsen').value;
   try {
-    const res = await api('catatAbsen', { nisn, kode: currentKode, mulai: currentMulai, selesai: currentSelesai });
+    const res = await api('catatAbsen', { nisn, kode: currentKode, mulai: currentMulai, selesai: currentSelesai, tanggal: tanggal });
     if (res.success) {
       scannedToday.add(nisn);
       showToast(res.nama + '\n' + res.kelas);
@@ -426,13 +439,44 @@ async function prosesAbsen(nisn) {
 
 async function refreshList() {
   if (!currentKode) return;
+  const tanggal = document.getElementById('tanggalAbsen').value;
   try {
-    const data = await api('getAbsenHariIni', { kode: currentKode });
+    const data = await api('getAbsenByDate', { kode: currentKode, tanggal: tanggal });
     document.getElementById('jumlahHadir').textContent = data ? data.length : 0;
     const el = document.getElementById('listHadir');
     if (!data || !data.length) { el.innerHTML = '<div class="loading">Belum ada data</div>'; return; }
-    el.innerHTML = data.map(d => '<div class="item-hadir"><div><div class="nama">' + d.nama + '</div><div class="meta">' + d.kelas + ' • ' + d.nisn + '</div></div><div class="meta">' + d.waktu + '</div></div>').join('');
+    el.innerHTML = data.map(d => `
+      <div class="item-hadir">
+        <div>
+          <div class="nama">${d.nama}</div>
+          <div class="meta">${d.kelas} • ${d.nisn} • ${d.waktu}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="editAbsen(${d.row},'${d.nisn}','${d.kode}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="hapusAbsenRow(${d.row})">Hapus</button>
+        </div>
+      </div>
+    `).join('');
   } catch (e) { document.getElementById('listHadir').innerHTML = '<div class="loading">Gagal memuat</div>'; }
+}
+
+async function hapusAbsenRow(row) {
+  if (!confirm('Hapus data absensi ini?')) return;
+  try {
+    const res = await api('hapusAbsen', { row: row });
+    showToast(res.message, !res.success);
+    if (res.success) refreshList();
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function editAbsen(row, nisnLama, kode) {
+  const nisnBaru = prompt('Ubah NISN:', nisnLama);
+  if (!nisnBaru) return;
+  try {
+    const res = await api('updateAbsen', { row: row, nisn: nisnBaru, kode: kode, hadir: 'HADIR' });
+    showToast(res.message + (res.nama ? '\n' + res.nama : ''), !res.success);
+    if (res.success) refreshList();
+  } catch (e) { showToast(e.message, true); }
 }
 
 function setCamera(mode) {

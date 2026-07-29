@@ -16,8 +16,6 @@
       margin: 0 auto;
       min-height: 100vh;
     }
-
-    /* ===== HEADER ===== */
     .app-header {
       display: flex;
       align-items: center;
@@ -29,20 +27,17 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.07);
     }
     .app-header img {
-      width: 62px;
-      height: 62px;
+      width: 64px;
+      height: 64px;
       object-fit: contain;
       flex-shrink: 0;
+      border-radius: 8px;
     }
-    .app-header .text {
-      flex: 1;
-      line-height: 1.25;
-    }
+    .app-header .text { flex: 1; line-height: 1.25; }
     .app-header .title {
       font-size: 1.15rem;
       font-weight: 800;
       color: #2b6cb0;
-      letter-spacing: 0.3px;
     }
     .app-header .school {
       font-size: 0.88rem;
@@ -56,7 +51,6 @@
       margin-top: 2px;
       font-weight: 500;
     }
-
     .card {
       background: white;
       border-radius: 14px;
@@ -80,11 +74,6 @@
       margin-bottom: 12px;
       background: #fff;
     }
-    select:focus, input:focus {
-      outline: none;
-      border-color: #3182ce;
-      box-shadow: 0 0 0 3px rgba(49,130,206,0.15);
-    }
     .btn {
       display: block;
       width: 100%;
@@ -95,10 +84,8 @@
       font-weight: 600;
       cursor: pointer;
       margin-bottom: 8px;
-      transition: 0.15s;
     }
     .btn-primary { background: #3182ce; color: white; }
-    .btn-primary:active { background: #2c5282; }
     .btn-success { background: #38a169; color: white; }
     .btn-danger { background: #e53e3e; color: white; }
     .btn-outline {
@@ -106,8 +93,6 @@
       border: 1.5px solid #3182ce;
       color: #3182ce;
     }
-    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-    
     #reader {
       width: 100%;
       border-radius: 12px;
@@ -115,13 +100,11 @@
       margin-bottom: 12px;
       background: #000;
     }
-    
-    /* Toast di bawah */
     .toast {
       position: fixed;
-      bottom: 24px;
+      bottom: 28px;
       left: 50%;
-      transform: translateX(-50%) translateY(120px);
+      transform: translateX(-50%) translateY(130px);
       background: #2f855a;
       color: white;
       padding: 16px 24px;
@@ -138,11 +121,7 @@
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
     .toast.error { background: #c53030; }
-    
-    .list-hadir {
-      max-height: 300px;
-      overflow-y: auto;
-    }
+    .list-hadir { max-height: 320px; overflow-y: auto; }
     .item-hadir {
       display: flex;
       justify-content: space-between;
@@ -154,12 +133,7 @@
     .item-hadir:last-child { border-bottom: none; }
     .item-hadir .nama { font-weight: 600; }
     .item-hadir .meta { color: #718096; font-size: 0.8rem; }
-    
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
     .tab {
       flex: 1;
       padding: 11px;
@@ -171,24 +145,10 @@
       color: #4a5568;
       font-size: 0.95rem;
     }
-    .tab.active {
-      background: #3182ce;
-      color: white;
-    }
-    
+    .tab.active { background: #3182ce; color: white; }
     .hidden { display: none !important; }
-    
-    .nav {
-      text-align: center;
-      margin: 18px 0 10px;
-    }
-    .nav span {
-      color: #3182ce;
-      font-weight: 600;
-      cursor: pointer;
-      margin: 0 8px;
-    }
-    
+    .nav { text-align: center; margin: 18px 0 10px; }
+    .nav span { color: #3182ce; font-weight: 600; cursor: pointer; }
     .status-bar {
       font-size: 0.88rem;
       color: #4a5568;
@@ -198,47 +158,25 @@
       padding: 8px 12px;
       border-radius: 8px;
     }
-    
     .row { display: flex; gap: 10px; }
     .row > div { flex: 1; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-    }
-    th, td {
-      padding: 10px 7px;
-      text-align: left;
-      border-bottom: 1px solid #edf2f7;
-    }
-    th {
-      background: #edf2f7;
-      font-weight: 600;
-      font-size: 0.78rem;
-      color: #4a5568;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 10px 7px; text-align: left; border-bottom: 1px solid #edf2f7; }
+    th { background: #edf2f7; font-weight: 600; font-size: 0.78rem; color: #4a5568; }
     .persen { font-weight: 700; }
     .baik { color: #38a169; }
     .sedang { color: #d69e2e; }
     .buruk { color: #e53e3e; }
-    .info {
-      font-size: 0.85rem;
-      color: #718096;
-      margin-bottom: 12px;
-      text-align: center;
-    }
-    .loading {
-      text-align: center;
-      color: #a0aec0;
-      padding: 20px;
-    }
+    .info { font-size: 0.85rem; color: #718096; margin-bottom: 12px; text-align: center; }
+    .loading { text-align: center; color: #a0aec0; padding: 20px; }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
   <div class="app-header">
-    <img src="https://i.postimg.cc/hjcHXkXJ/logo-smp.png" alt="Logo SMPN 1 Kaliwedi">
+    <img src="https://i.postimg.cc/hjcHXkXJ/logo-smp.png" 
+         alt="Logo" 
+         onerror="this.src='https://via.placeholder.com/64?text=Logo'">
     <div class="text">
       <div class="title">EKSTRAKURIKULER</div>
       <div class="school">SMP NEGERI 1 KALIWEDI</div>
@@ -246,260 +184,166 @@
     </div>
   </div>
 
-  <!-- ==================== HALAMAN ABSENSI ==================== -->
   <div id="pageAbsen">
-    
-    <!-- Setup -->
     <div class="card" id="setupCard">
       <label>Jenis Kegiatan</label>
-      <select id="selKegiatan">
-        <option value="">-- Pilih Kegiatan --</option>
-      </select>
-      
+      <select id="selKegiatan"><option value="">-- Pilih Kegiatan --</option></select>
       <label>Waktu Mulai</label>
       <input type="datetime-local" id="waktuMulai">
-      
       <label>Waktu Selesai</label>
       <input type="datetime-local" id="waktuSelesai">
-      
       <button class="btn btn-primary" onclick="mulaiAbsen()">Mulai Absensi</button>
     </div>
     
-    <!-- Area Absen -->
     <div id="absenArea" class="hidden">
       <div class="card">
         <div class="status-bar" id="statusKegiatan"></div>
-        
         <div class="tabs">
           <div class="tab active" id="tabScan" onclick="switchTab('scan')">📷 Scan QR</div>
           <div class="tab" id="tabManual" onclick="switchTab('manual')">✍️ Manual</div>
         </div>
-        
-        <!-- Scan -->
         <div id="panelScan">
           <div id="reader"></div>
           <button class="btn btn-danger" id="btnStop" onclick="stopScanner()" style="display:none">Stop Kamera</button>
           <button class="btn btn-outline" id="btnStart" onclick="startScanner()">Nyalakan Kamera</button>
         </div>
-        
-        <!-- Manual -->
         <div id="panelManual" class="hidden">
           <label>Kelas</label>
-          <select id="selKelas" onchange="filterNama()">
-            <option value="">-- Pilih Kelas --</option>
-          </select>
-          
+          <select id="selKelas" onchange="filterNama()"><option value="">-- Pilih Kelas --</option></select>
           <label>Nama Siswa</label>
-          <select id="selNama">
-            <option value="">-- Pilih Nama --</option>
-          </select>
-          
+          <select id="selNama"><option value="">-- Pilih Nama --</option></select>
           <button class="btn btn-success" onclick="absenManual()">Catat Hadir</button>
         </div>
       </div>
       
-      <!-- Daftar Hadir -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <strong>Hadir Hari Ini</strong>
+          <strong>Hadir Hari Ini (<span id="jumlahHadir">0</span>)</strong>
           <button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.85rem" onclick="refreshList()">🔄</button>
         </div>
-        <div class="list-hadir" id="listHadir">
-          <div class="loading">Belum ada data</div>
-        </div>
+        <div class="list-hadir" id="listHadir"><div class="loading">Belum ada data</div></div>
       </div>
-      
       <button class="btn btn-outline" onclick="selesaiAbsen()">Selesai / Ganti Kegiatan</button>
     </div>
-    
-    <div class="nav">
-      <span onclick="showPage('rekap')">📊 Lihat Rekap →</span>
-    </div>
+    <div class="nav"><span onclick="showPage('rekap')">📊 Lihat Rekap →</span></div>
   </div>
 
-  <!-- ==================== HALAMAN REKAP ==================== -->
   <div id="pageRekap" class="hidden">
     <div class="card">
       <div class="row">
-        <div>
-          <label>Bulan</label>
-          <select id="selBulan"></select>
-        </div>
-        <div>
-          <label>Tahun</label>
-          <select id="selTahun"></select>
-        </div>
+        <div><label>Bulan</label><select id="selBulan"></select></div>
+        <div><label>Tahun</label><select id="selTahun"></select></div>
       </div>
-      
       <label>Kelas</label>
-      <select id="selKelasRekap">
-        <option value="">-- Semua Kelas --</option>
-      </select>
-      
+      <select id="selKelasRekap"><option value="">-- Semua Kelas --</option></select>
       <label>Kegiatan</label>
-      <select id="selKegiatanRekap">
-        <option value="">-- Semua Kegiatan --</option>
-      </select>
-      
+      <select id="selKegiatanRekap"><option value="">-- Semua Kegiatan --</option></select>
       <button class="btn btn-primary" onclick="loadRekap()">Tampilkan Rekap</button>
     </div>
-    
     <div class="card" id="hasilCard" style="display:none">
       <div class="info" id="infoRekap"></div>
       <div style="overflow-x:auto">
         <table>
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>Nama</th>
-              <th>Kelas</th>
-              <th>Hadir</th>
-              <th>%</th>
-            </tr>
-          </thead>
+          <thead><tr><th>No</th><th>Nama</th><th>Kelas</th><th>Hadir</th><th>%</th></tr></thead>
           <tbody id="tbody"></tbody>
         </table>
       </div>
     </div>
-    
-    <div class="nav">
-      <span onclick="showPage('absen')">← Kembali ke Absensi</span>
-    </div>
+    <div class="nav"><span onclick="showPage('absen')">← Kembali ke Absensi</span></div>
   </div>
 
   <div class="toast" id="toast"></div>
 
 <script>
-  // ========== KONFIGURASI ==========
   const API_URL = 'https://script.google.com/macros/s/AKfycbye7N8cp8LLKBGhN1PdkUpz-wK0iFtEXJiVsTUVlYROQ520GIrX68jTor04HkmxAdWu/exec';
   
-  // ========== STATE ==========
-  let kegiatanList = [];
-  let siswaList = [];
-  let currentKode = '';
-  let currentMulai = '';
-  let currentSelesai = '';
-  let html5QrCode = null;
-  let isScanning = false;
-  let isProcessing = false;          // kunci agar tidak double scan
-  let lastScannedNisn = '';
-  let lastScanTime = 0;
+  let kegiatanList = [], siswaList = [];
+  let currentKode = '', currentMulai = '', currentSelesai = '';
+  let html5QrCode = null, isScanning = false, isProcessing = false;
+  let lastScannedNisn = '', lastScanTime = 0;
 
-  // ========== HELPER API ==========
   async function api(action, params = {}) {
     const url = new URL(API_URL);
     url.searchParams.set('action', action);
-    for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== null && v !== '') {
-        url.searchParams.set(k, v);
-      }
-    }
-    
+    Object.entries(params).forEach(([k,v]) => {
+      if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
+    });
     const res = await fetch(url.toString());
     if (!res.ok) throw new Error('Network error');
     return await res.json();
   }
 
-  // ========== INIT ==========
   document.addEventListener('DOMContentLoaded', async () => {
-    // Set default waktu
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('waktuMulai').value = now.toISOString().slice(0, 16);
-    
-    const end = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const end = new Date(now.getTime() + 2*60*60*1000);
     document.getElementById('waktuSelesai').value = end.toISOString().slice(0, 16);
-    
-    // Isi bulan & tahun rekap
-    const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni',
-                       'Juli','Agustus','September','Oktober','November','Desember'];
+
+    const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const selB = document.getElementById('selBulan');
-    const nowDate = new Date();
-    bulanNama.forEach((b, i) => {
+    bulanNama.forEach((b,i) => {
       const opt = document.createElement('option');
-      opt.value = i + 1;
-      opt.textContent = b;
-      if (i === nowDate.getMonth()) opt.selected = true;
+      opt.value = i+1; opt.textContent = b;
+      if (i === now.getMonth()) opt.selected = true;
       selB.appendChild(opt);
     });
-    
     const selT = document.getElementById('selTahun');
-    for (let y = nowDate.getFullYear(); y >= nowDate.getFullYear() - 2; y--) {
+    for (let y = now.getFullYear(); y >= now.getFullYear()-2; y--) {
       const opt = document.createElement('option');
-      opt.value = y;
-      opt.textContent = y;
+      opt.value = y; opt.textContent = y;
       selT.appendChild(opt);
     }
-    
-    // Load data
+
     try {
       kegiatanList = await api('getKegiatan');
       const sel = document.getElementById('selKegiatan');
       const selR = document.getElementById('selKegiatanRekap');
       kegiatanList.forEach(k => {
-        const opt = document.createElement('option');
-        opt.value = k.kode;
-        opt.textContent = k.nama + ' (' + k.kode + ')';
-        sel.appendChild(opt);
-        
-        const opt2 = document.createElement('option');
-        opt2.value = k.kode;
-        opt2.textContent = k.nama;
-        selR.appendChild(opt2);
+        sel.innerHTML += `<option value="${k.kode}">${k.nama} (${k.kode})</option>`;
+        selR.innerHTML += `<option value="${k.kode}">${k.nama}</option>`;
       });
-      
+
       siswaList = await api('getSiswa');
       const kelas = [...new Set(siswaList.map(s => s.kelas))].filter(Boolean).sort();
-      
       const selK = document.getElementById('selKelas');
       const selKR = document.getElementById('selKelasRekap');
       kelas.forEach(k => {
-        const opt = document.createElement('option');
-        opt.value = k;
-        opt.textContent = k;
-        selK.appendChild(opt);
-        
-        const opt2 = document.createElement('option');
-        opt2.value = k;
-        opt2.textContent = k;
-        selKR.appendChild(opt2);
+        selK.innerHTML += `<option value="${k}">${k}</option>`;
+        selKR.innerHTML += `<option value="${k}">${k}</option>`;
       });
-    } catch (err) {
+    } catch(err) {
       showToast('Gagal memuat data:\n' + err.message, true);
     }
   });
 
-  // ========== NAVIGASI ==========
   function showPage(page) {
     document.getElementById('pageAbsen').classList.toggle('hidden', page !== 'absen');
     document.getElementById('pageRekap').classList.toggle('hidden', page !== 'rekap');
     if (page === 'absen') stopScanner();
   }
 
-  // ========== ABSENSI ==========
   function mulaiAbsen() {
     const kode = document.getElementById('selKegiatan').value;
     const mulai = document.getElementById('waktuMulai').value;
     const selesai = document.getElementById('waktuSelesai').value;
-    
     if (!kode) return showToast('Pilih kegiatan dulu', true);
     if (!mulai || !selesai) return showToast('Isi waktu mulai & selesai', true);
-    
+
     currentKode = kode;
     currentMulai = mulai;
     currentSelesai = selesai;
-    
+
     const namaKeg = kegiatanList.find(k => k.kode === kode)?.nama || kode;
-    document.getElementById('statusKegiatan').textContent = 
-      namaKeg + ' • ' + mulai.replace('T', ' ').slice(0, 16) + ' s/d ' + selesai.slice(11, 16);
-    
+    document.getElementById('statusKegiatan').textContent =
+      namaKeg + ' • ' + mulai.replace('T',' ').slice(0,16) + ' s/d ' + selesai.slice(11,16);
+
     document.getElementById('setupCard').classList.add('hidden');
     document.getElementById('absenArea').classList.remove('hidden');
-    
     refreshList();
     startScanner();
   }
-  
+
   function selesaiAbsen() {
     stopScanner();
     document.getElementById('absenArea').classList.add('hidden');
@@ -507,90 +351,71 @@
     currentKode = '';
     isProcessing = false;
   }
-  
+
   function switchTab(tab) {
     document.getElementById('tabScan').classList.toggle('active', tab === 'scan');
     document.getElementById('tabManual').classList.toggle('active', tab === 'manual');
     document.getElementById('panelScan').classList.toggle('hidden', tab !== 'scan');
     document.getElementById('panelManual').classList.toggle('hidden', tab !== 'manual');
-    
-    if (tab === 'scan') startScanner();
-    else stopScanner();
+    if (tab === 'scan') startScanner(); else stopScanner();
   }
-  
+
   function filterNama() {
     const kelas = document.getElementById('selKelas').value;
     const sel = document.getElementById('selNama');
     sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
-    
-    siswaList
-      .filter(s => !kelas || s.kelas === kelas)
-      .sort((a, b) => a.nama.localeCompare(b.nama))
+    siswaList.filter(s => !kelas || s.kelas === kelas)
+      .sort((a,b) => a.nama.localeCompare(b.nama))
       .forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.nisn;
-        opt.textContent = s.nama;
-        sel.appendChild(opt);
+        sel.innerHTML += `<option value="${s.nisn}">${s.nama}</option>`;
       });
   }
-  
+
   function absenManual() {
     const nisn = document.getElementById('selNama').value;
     if (!nisn) return showToast('Pilih nama siswa', true);
     prosesAbsen(nisn);
   }
-  
+
   async function prosesAbsen(nisn) {
-    if (!currentKode) return;
-    
-    // Cegah double proses
-    if (isProcessing) return;
-    
-    // Cegah scan NISN yang sama dalam 4 detik
+    if (!currentKode || isProcessing) return;
+
     const now = Date.now();
-    if (nisn === lastScannedNisn && (now - lastScanTime) < 4000) {
-      return;
-    }
-    
+    if (nisn === lastScannedNisn && (now - lastScanTime) < 5000) return;
+
     isProcessing = true;
     lastScannedNisn = nisn;
     lastScanTime = now;
-    
+
     try {
       const res = await api('catatAbsen', {
-        nisn: nisn,
-        kode: currentKode,
-        mulai: currentMulai,
-        selesai: currentSelesai
+        nisn, kode: currentKode, mulai: currentMulai, selesai: currentSelesai
       });
-      
+
       if (res.success) {
         showToast(res.nama + '\n' + res.kelas);
         refreshList();
       } else {
         showToast(res.message + (res.nama ? '\n' + res.nama : ''), true);
       }
-    } catch (err) {
+    } catch(err) {
       showToast('Error: ' + err.message, true);
     } finally {
-      // Lepas kunci setelah 2.8 detik
-      setTimeout(() => {
-        isProcessing = false;
-      }, 2800);
+      setTimeout(() => { isProcessing = false; }, 3500);
     }
   }
-  
+
   async function refreshList() {
     if (!currentKode) return;
     try {
       const data = await api('getAbsenHariIni', { kode: currentKode });
       const el = document.getElementById('listHadir');
-      
+      document.getElementById('jumlahHadir').textContent = data ? data.length : 0;
+
       if (!data || !data.length) {
         el.innerHTML = '<div class="loading">Belum ada data</div>';
         return;
       }
-      
       el.innerHTML = data.map(d => `
         <div class="item-hadir">
           <div>
@@ -600,64 +425,50 @@
           <div class="meta">${d.waktu}</div>
         </div>
       `).join('');
-    } catch (err) {
+    } catch(err) {
       console.error(err);
+      document.getElementById('listHadir').innerHTML = '<div class="loading">Gagal memuat daftar</div>';
     }
   }
 
-  // ========== QR SCANNER ==========
   function startScanner() {
     if (isScanning) return;
-    
     const reader = document.getElementById('reader');
     reader.innerHTML = '';
-    
     html5QrCode = new Html5Qrcode('reader');
-    
+
     html5QrCode.start(
       { facingMode: 'environment' },
-      { fps: 8, qrbox: { width: 250, height: 250 } },
+      { 
+        fps: 15,                    // lebih cepat
+        qrbox: { width: 220, height: 220 },
+        aspectRatio: 1.0
+      },
       (decodedText) => {
-        // Abaikan jika sedang proses
         if (isProcessing || !isScanning) return;
-        
         const nisn = decodedText.trim().replace(/\D/g, '') || decodedText.trim();
-        
-        // Pause kamera segera
         try { html5QrCode.pause(true); } catch(e) {}
-        
         prosesAbsen(nisn);
-        
-        // Resume setelah 3 detik
         setTimeout(() => {
           if (html5QrCode && isScanning) {
-            try {
-              html5QrCode.resume();
-            } catch(e) {}
+            try { html5QrCode.resume(); } catch(e) {}
           }
-        }, 3000);
+        }, 3500);
       },
       () => {}
-    )
-    .then(() => {
+    ).then(() => {
       isScanning = true;
       document.getElementById('btnStart').style.display = 'none';
       document.getElementById('btnStop').style.display = 'block';
-    })
-    .catch((err) => {
-      console.error(err);
-      let pesan = 'Kamera gagal dinyalakan';
-      if (err.name === 'NotAllowedError') {
-        pesan = 'Akses kamera ditolak.\nIzinkan kamera di pengaturan browser, lalu refresh.';
-      } else if (err.name === 'NotFoundError') {
-        pesan = 'Kamera tidak ditemukan';
-      }
+    }).catch(err => {
+      let pesan = 'Kamera gagal';
+      if (err.name === 'NotAllowedError') pesan = 'Akses kamera ditolak. Izinkan di pengaturan browser.';
       showToast(pesan, true);
       document.getElementById('btnStart').style.display = 'block';
       document.getElementById('btnStop').style.display = 'none';
     });
   }
-  
+
   function stopScanner() {
     if (html5QrCode) {
       html5QrCode.stop().then(() => {
@@ -669,60 +480,47 @@
       }).catch(() => {
         isScanning = false;
         isProcessing = false;
-        document.getElementById('btnStart').style.display = 'block';
-        document.getElementById('btnStop').style.display = 'none';
       });
     }
   }
 
-  // ========== REKAP ==========
   async function loadRekap() {
     const bulan = document.getElementById('selBulan').value;
     const tahun = document.getElementById('selTahun').value;
     const kelas = document.getElementById('selKelasRekap').value;
     const kode = document.getElementById('selKegiatanRekap').value;
-    
+
     try {
       const res = await api('getRekap', { bulan, tahun, kelas, kode });
-      
       document.getElementById('hasilCard').style.display = 'block';
-      const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni',
-                         'Juli','Agustus','September','Oktober','November','Desember'];
-      document.getElementById('infoRekap').textContent = 
-        res.namaKegiatan + ' • ' + bulanNama[bulan-1] + ' ' + tahun + 
-        ' • Total pertemuan: ' + res.totalPertemuan;
-      
+      const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      document.getElementById('infoRekap').textContent =
+        res.namaKegiatan + ' • ' + bulanNama[bulan-1] + ' ' + tahun + ' • Total pertemuan: ' + res.totalPertemuan;
+
       const tbody = document.getElementById('tbody');
       if (!res.data || !res.data.length) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#a0aec0">Tidak ada data</td></tr>';
         return;
       }
-      
-      tbody.innerHTML = res.data.map((d, i) => {
-        let cls = 'baik';
-        if (d.persen < 50) cls = 'buruk';
-        else if (d.persen < 75) cls = 'sedang';
-        
+      tbody.innerHTML = res.data.map((d,i) => {
+        let cls = d.persen < 50 ? 'buruk' : (d.persen < 75 ? 'sedang' : 'baik');
         return `<tr>
-          <td>${i+1}</td>
-          <td>${d.nama}</td>
-          <td>${d.kelas}</td>
+          <td>${i+1}</td><td>${d.nama}</td><td>${d.kelas}</td>
           <td>${d.hadir}/${d.total}</td>
           <td class="persen ${cls}">${d.persen}%</td>
         </tr>`;
       }).join('');
-    } catch (err) {
+    } catch(err) {
       showToast('Gagal memuat rekap: ' + err.message, true);
     }
   }
 
-  // ========== TOAST ==========
   function showToast(msg, isError = false) {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.className = 'toast' + (isError ? ' error' : '');
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3200);
+    setTimeout(() => t.classList.remove('show'), 3500);
   }
 </script>
 </body>

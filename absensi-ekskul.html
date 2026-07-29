@@ -327,26 +327,49 @@ async function loadInitialData() {
   }
 
   try {
-    kegiatanList = await api('getKegiatan');
+    // Ambil dari localStorage dulu (lebih cepat)
+    let cachedKegiatan = localStorage.getItem('ekskul_kegiatan');
+    let cachedSiswa = localStorage.getItem('ekskul_siswa');
+
+    if (cachedKegiatan && cachedSiswa) {
+      kegiatanList = JSON.parse(cachedKegiatan);
+      siswaList = JSON.parse(cachedSiswa);
+    } else {
+      // Ambil dari server jika belum ada cache
+      [kegiatanList, siswaList] = await Promise.all([
+        api('getKegiatan'),
+        api('getSiswa')
+      ]);
+      localStorage.setItem('ekskul_kegiatan', JSON.stringify(kegiatanList));
+      localStorage.setItem('ekskul_siswa', JSON.stringify(siswaList));
+    }
+
     const sel = document.getElementById('selKegiatan');
     const selR = document.getElementById('selKegiatanRekap');
     sel.innerHTML = '<option value="">-- Pilih Kegiatan --</option>';
     selR.innerHTML = '<option value="">-- Semua Kegiatan --</option>';
+    
     let list = kegiatanList;
     if (currentUser.status === 'Pembina' || currentUser.status === 'Petugas') {
       const kegUser = (currentUser.kegiatan || '').toUpperCase();
-      list = kegiatanList.filter(k => k.nama.toUpperCase() === kegUser || k.nama.toUpperCase().includes(kegUser) || kegUser.includes(k.nama.toUpperCase()));
+      list = kegiatanList.filter(k => 
+        k.nama.toUpperCase() === kegUser || 
+        k.nama.toUpperCase().includes(kegUser) || 
+        kegUser.includes(k.nama.toUpperCase())
+      );
       if (list.length === 0) list = kegiatanList;
     }
+    
     list.forEach(k => {
       sel.innerHTML += '<option value="' + k.kode + '">' + k.nama + '</option>';
       selR.innerHTML += '<option value="' + k.kode + '">' + k.nama + '</option>';
     });
+    
     if (list.length === 1) {
       sel.value = list[0].kode;
       if (currentUser.status === 'Petugas') mulaiAbsen(true);
     }
-    siswaList = await api('getSiswa');
+
     const kelas = [...new Set(siswaList.map(s => s.kelas))].filter(Boolean).sort();
     const selK = document.getElementById('selKelas');
     const selKR = document.getElementById('selKelasRekap');
@@ -356,7 +379,9 @@ async function loadInitialData() {
       selK.innerHTML += '<option value="' + k + '">' + k + '</option>';
       selKR.innerHTML += '<option value="' + k + '">' + k + '</option>';
     });
-  } catch (e) { showToast('Gagal memuat data: ' + e.message, true); }
+  } catch (e) { 
+    showToast('Gagal memuat data: ' + e.message, true); 
+  }
 }
 
 function mulaiAbsen(skipCheck) {

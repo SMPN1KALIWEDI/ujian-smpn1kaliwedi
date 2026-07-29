@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Absensi Ekstrakurikuler</title>
+  <title>Absensi Ekstrakurikuler - SMPN 1 Kaliwedi</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,12 +16,47 @@
       margin: 0 auto;
       min-height: 100vh;
     }
-    h1 {
-      font-size: 1.4rem;
-      text-align: center;
+
+    /* ===== HEADER ===== */
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: white;
+      border-radius: 14px;
+      padding: 14px 16px;
       margin-bottom: 16px;
-      color: #2b6cb0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
     }
+    .app-header img {
+      width: 62px;
+      height: 62px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .app-header .text {
+      flex: 1;
+      line-height: 1.25;
+    }
+    .app-header .title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #2b6cb0;
+      letter-spacing: 0.3px;
+    }
+    .app-header .school {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin-top: 1px;
+    }
+    .app-header .subtitle {
+      font-size: 0.78rem;
+      color: #718096;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
     .card {
       background: white;
       border-radius: 14px;
@@ -81,23 +116,25 @@
       background: #000;
     }
     
+    /* Toast di bawah */
     .toast {
       position: fixed;
-      top: 18px;
+      bottom: 24px;
       left: 50%;
-      transform: translateX(-50%) translateY(-130px);
+      transform: translateX(-50%) translateY(120px);
       background: #2f855a;
       color: white;
-      padding: 14px 22px;
-      border-radius: 12px;
+      padding: 16px 24px;
+      border-radius: 14px;
       font-weight: 600;
-      font-size: 1.05rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      font-size: 1.1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.28);
       z-index: 9999;
       transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
       text-align: center;
-      max-width: 92%;
+      max-width: 90%;
       white-space: pre-line;
+      line-height: 1.35;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
     .toast.error { background: #c53030; }
@@ -145,10 +182,9 @@
       text-align: center;
       margin: 18px 0 10px;
     }
-    .nav a, .nav span {
+    .nav span {
       color: #3182ce;
       font-weight: 600;
-      text-decoration: none;
       cursor: pointer;
       margin: 0 8px;
     }
@@ -163,7 +199,6 @@
       border-radius: 8px;
     }
     
-    /* Rekap */
     .row { display: flex; gap: 10px; }
     .row > div { flex: 1; }
     table {
@@ -201,9 +236,18 @@
 </head>
 <body>
 
+  <!-- HEADER -->
+  <div class="app-header">
+    <img src="https://i.postimg.cc/hjcHXkXJ/logo-smp.png" alt="Logo SMPN 1 Kaliwedi">
+    <div class="text">
+      <div class="title">EKSTRAKURIKULER</div>
+      <div class="school">SMP NEGERI 1 KALIWEDI</div>
+      <div class="subtitle">SCAN ABSENSI</div>
+    </div>
+  </div>
+
   <!-- ==================== HALAMAN ABSENSI ==================== -->
   <div id="pageAbsen">
-    <h1>📋 Absensi Ekskul</h1>
     
     <!-- Setup -->
     <div class="card" id="setupCard">
@@ -275,8 +319,6 @@
 
   <!-- ==================== HALAMAN REKAP ==================== -->
   <div id="pageRekap" class="hidden">
-    <h1>📊 Rekap Kehadiran</h1>
-    
     <div class="card">
       <div class="row">
         <div>
@@ -339,6 +381,9 @@
   let currentSelesai = '';
   let html5QrCode = null;
   let isScanning = false;
+  let isProcessing = false;          // kunci agar tidak double scan
+  let lastScannedNisn = '';
+  let lastScanTime = 0;
 
   // ========== HELPER API ==========
   async function api(action, params = {}) {
@@ -460,6 +505,7 @@
     document.getElementById('absenArea').classList.add('hidden');
     document.getElementById('setupCard').classList.remove('hidden');
     currentKode = '';
+    isProcessing = false;
   }
   
   function switchTab(tab) {
@@ -497,6 +543,19 @@
   async function prosesAbsen(nisn) {
     if (!currentKode) return;
     
+    // Cegah double proses
+    if (isProcessing) return;
+    
+    // Cegah scan NISN yang sama dalam 4 detik
+    const now = Date.now();
+    if (nisn === lastScannedNisn && (now - lastScanTime) < 4000) {
+      return;
+    }
+    
+    isProcessing = true;
+    lastScannedNisn = nisn;
+    lastScanTime = now;
+    
     try {
       const res = await api('catatAbsen', {
         nisn: nisn,
@@ -513,6 +572,11 @@
       }
     } catch (err) {
       showToast('Error: ' + err.message, true);
+    } finally {
+      // Lepas kunci setelah 2.8 detik
+      setTimeout(() => {
+        isProcessing = false;
+      }, 2800);
     }
   }
   
@@ -552,24 +616,26 @@
     
     html5QrCode.start(
       { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
+      { fps: 8, qrbox: { width: 250, height: 250 } },
       (decodedText) => {
-        if (!isScanning) return;
-        isScanning = false;
+        // Abaikan jika sedang proses
+        if (isProcessing || !isScanning) return;
         
         const nisn = decodedText.trim().replace(/\D/g, '') || decodedText.trim();
         
-        html5QrCode.pause(true);
+        // Pause kamera segera
+        try { html5QrCode.pause(true); } catch(e) {}
+        
         prosesAbsen(nisn);
         
+        // Resume setelah 3 detik
         setTimeout(() => {
-          if (html5QrCode) {
+          if (html5QrCode && isScanning) {
             try {
               html5QrCode.resume();
-              isScanning = true;
             } catch(e) {}
           }
-        }, 2500);
+        }, 3000);
       },
       () => {}
     )
@@ -597,10 +663,12 @@
       html5QrCode.stop().then(() => {
         html5QrCode.clear();
         isScanning = false;
+        isProcessing = false;
         document.getElementById('btnStart').style.display = 'block';
         document.getElementById('btnStop').style.display = 'none';
       }).catch(() => {
         isScanning = false;
+        isProcessing = false;
         document.getElementById('btnStart').style.display = 'block';
         document.getElementById('btnStop').style.display = 'none';
       });

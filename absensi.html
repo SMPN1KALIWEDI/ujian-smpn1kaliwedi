@@ -160,6 +160,42 @@ input:focus{border-color:var(--b3);box-shadow:0 0 0 3px rgba(25,118,210,.12);bac
 .ks-teks.pernah b{color:#ffd740}
 .ks-teks.tidak-pernah b{color:#ff8a80}
 
+.kartu-sholat{cursor:pointer}
+.ks-total{
+  margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.18);
+  text-align:center;font-size:.76rem;font-weight:800;color:#ffd54f;letter-spacing:.3px;
+}
+.ks-hint{
+  margin-top:6px;text-align:center;font-size:.68rem;font-style:italic;
+  color:rgba(255,255,255,.65);
+}
+.ks-daftar{
+  margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.25);
+  max-height:180px;overflow-y:auto;
+}
+.ks-daftar-item{
+  display:flex;justify-content:space-between;gap:8px;
+  font-size:.78rem;color:#fffde7;padding:5px 2px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.ks-daftar-item:last-child{border-bottom:none}
+.ks-daftar-kosong{text-align:center;font-size:.78rem;color:rgba(255,255,255,.7);padding:8px 0}
+
+/* KEGIATAN EKSTRAKURIKULER */
+.kartu-ekskul{
+  margin:10px 18px 2px;padding:14px 16px;border-radius:16px;
+  background:linear-gradient(135deg,#e65100,#f57c00);
+  box-shadow:0 4px 14px rgba(230,81,0,.35);
+}
+.ke-judul{
+  font-size:.72rem;font-weight:800;color:#fff9c4;text-align:center;
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;
+}
+.ke-teks{
+  font-size:.86rem;font-weight:700;line-height:1.55;text-align:center;color:#fff3e0;
+}
+.ke-teks b{color:#fff59d}
+
 /* REKAP */
 .rekap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 18px}
 .rbox{background:var(--abu);border-radius:12px;padding:10px 6px;text-align:center}
@@ -452,9 +488,18 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
     </div>
 
     <!-- Kegiatan Sholat Berjamaah -->
-    <div class="kartu-sholat" id="kartuSholat">
+    <div class="kartu-sholat" id="kartuSholat" onclick="toggleDaftarSholat()">
       <div class="ks-judul">🕌 SHOLAT BERJAMAAH</div>
       <div class="ks-teks" id="ksTeks">⏳ Memuat data sholat...</div>
+      <div class="ks-total" id="ksTotal" style="display:none"></div>
+      <div class="ks-hint" id="ksHint" style="display:none">🔽 Tap untuk lihat daftar kehadiran</div>
+      <div class="ks-daftar" id="ksDaftar" style="display:none"></div>
+    </div>
+
+    <!-- Ekstrakurikuler -->
+    <div class="kartu-ekskul" id="kartuEkskul" style="display:none">
+      <div class="ke-judul">🎯 EKSTRAKURIKULER</div>
+      <div class="ke-teks" id="keTeks">—</div>
     </div>
 
     <!-- Rekap -->
@@ -652,6 +697,11 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho1
 // Spreadsheet terpisah untuk data Sholat Berjamaah (Sheet3: Timestamp|NISN|Keterangan)
 const SPREADSHEET_ID_SHOLAT = '1dxNxE46xBmSjTDC5kJExdAE63HcAPuuCBgpzI1qTcto';
 
+// Spreadsheet terpisah untuk data Ekstrakurikuler
+// Sheet1: NAMA KEGIATAN | KODE
+// Sheet2: TIME STAMP | NISN | KODE | HADIR | MULAI | SELESAI
+const SPREADSHEET_ID_EKSKUL = '1mBCj7crwQejX5S3c8VxQluXyi39W9RgoR6D1Ktu9QCU';
+
 // Data runtime
 let D = { users:[], aktif:null, absenAll:[] };
 
@@ -831,6 +881,7 @@ async function tampilAbsen(user) {
 
   await muatAbsen();
   muatKartuSholat(user); // tidak perlu ditunggu (await) — biar tidak menghambat tampilan lain
+  muatKartuEkskul(user); // idem
 }
 
 // ============================================================
@@ -838,8 +889,10 @@ async function tampilAbsen(user) {
 // (A=Timestamp, B=NISN, C=Keterangan)
 // ============================================================
 async function muatKartuSholat(user) {
-  const el = document.getElementById('ksTeks');
-  const kartu = document.getElementById('kartuSholat');
+  const el       = document.getElementById('ksTeks');
+  const elTotal  = document.getElementById('ksTotal');
+  const elHint   = document.getElementById('ksHint');
+  const elDaftar = document.getElementById('ksDaftar');
 
   const tbl = await bacaSheet('Sheet3', SPREADSHEET_ID_SHOLAT);
   if (!tbl) {
@@ -847,9 +900,17 @@ async function muatKartuSholat(user) {
     return;
   }
 
-  const todayKey = keyTgl(new Date());
-  let cocokHariIni = false;
-  let tglTerakhir = null; // Date objek tanggal sholat terakhir (selain hari ini)
+  const now        = new Date();
+  const todayKey     = keyTgl(now);
+  const kemarin      = new Date(now); kemarin.setDate(kemarin.getDate() - 1);
+  const kemarinKey   = keyTgl(kemarin);
+  const bulanIni     = now.getMonth();
+  const tahunIni     = now.getFullYear();
+
+  let cocokHariIni  = false;
+  let cocokKemarin  = false;
+  let tglTerakhir   = null; // Date objek tanggal sholat terakhir (kapan pun)
+  const daftarBulanIni = []; // { tgl } — semua catatan di bulan berjalan
 
   for (let i = 0; i < tbl.rows.length; i++) {
     const row = tbl.rows[i];
@@ -861,11 +922,13 @@ async function muatKartuSholat(user) {
     const tgl = parseDate(tbl, i, 0); // kolom A = Timestamp
     if (!tgl) continue;
 
-    if (keyTgl(tgl) === todayKey) {
-      cocokHariIni = true;
-    }
-    if (!tglTerakhir || tgl > tglTerakhir) {
-      tglTerakhir = tgl;
+    const k = keyTgl(tgl);
+    if (k === todayKey)   cocokHariIni = true;
+    if (k === kemarinKey) cocokKemarin = true;
+    if (!tglTerakhir || tgl > tglTerakhir) tglTerakhir = tgl;
+
+    if (tgl.getMonth() === bulanIni && tgl.getFullYear() === tahunIni) {
+      daftarBulanIni.push(tgl);
     }
   }
 
@@ -874,12 +937,111 @@ async function muatKartuSholat(user) {
   if (cocokHariIni) {
     el.className = 'ks-teks hadir';
     el.innerHTML = `Alhamdulillah ananda <b>${nama}</b> telah sholat berjamaah di musholah Sekolah`;
+  } else if (cocokKemarin) {
+    el.className = 'ks-teks hadir';
+    el.innerHTML = `Alhamdulillah ananda <b>${nama}</b> kemarin sholat berjamaah dhuhur di Mushola Sekolah`;
   } else if (tglTerakhir) {
     el.className = 'ks-teks pernah';
     el.innerHTML = `Ananda <b>${nama}</b> mengikuti sholat berjamaah di musholah sekolah terakhir pada <b>${fmtTglLengkap(tglTerakhir)}</b>, mohon bantuan orang tua agar siswa selalu melaksanakan kewajiban sholat terutama berjamaah`;
   } else {
     el.className = 'ks-teks tidak-pernah';
     el.innerHTML = `Ananda <b>${nama}</b> tidak pernah mengikuti kegiatan sholat berjamaah di mushollah sekolah, mohon kiranya orang tua ikut serta mendorong siswa agar ananda tidak melalaikan ibadah sholat`;
+  }
+
+  // Total absensi bulan berjalan
+  elTotal.style.display = 'block';
+  elTotal.textContent = `📊 Total Absensi bulan ${BLN_PANJANG[bulanIni]}: ${daftarBulanIni.length} kali`;
+  elHint.style.display = 'block';
+
+  // Daftar kehadiran (diurutkan terbaru dulu), ditampilkan saat kartu di-tap
+  daftarBulanIni.sort((a,b) => b - a);
+  if (daftarBulanIni.length === 0) {
+    elDaftar.innerHTML = `<div class="ks-daftar-kosong">Belum ada catatan kehadiran bulan ${BLN_PANJANG[bulanIni]}.</div>`;
+  } else {
+    elDaftar.innerHTML = daftarBulanIni.map(tgl => `
+      <div class="ks-daftar-item">
+        <span>${HARI[tgl.getDay()]}, ${fmtTgl(tgl)}</span>
+        <span>${fmtJam(tgl)}</span>
+      </div>
+    `).join('');
+  }
+}
+
+// Tampil/sembunyikan daftar kehadiran saat kartu sholat di-tap
+function toggleDaftarSholat() {
+  const elDaftar = document.getElementById('ksDaftar');
+  const elHint   = document.getElementById('ksHint');
+  const terbuka  = elDaftar.style.display === 'block';
+  elDaftar.style.display = terbuka ? 'none' : 'block';
+  elHint.textContent = terbuka ? '🔽 Tap untuk lihat daftar kehadiran' : '🔼 Tap untuk tutup daftar';
+}
+
+// ============================================================
+// KARTU EKSTRAKURIKULER — dari spreadsheet terpisah
+// Sheet1: NAMA KEGIATAN | KODE  (kamus kode → nama kegiatan)
+// Sheet2: TIME STAMP | NISN | KODE | HADIR | MULAI | SELESAI
+// ============================================================
+async function muatKartuEkskul(user) {
+  const kartu = document.getElementById('kartuEkskul');
+  const el    = document.getElementById('keTeks');
+
+  const [tblKode, tblAbsen] = await Promise.all([
+    bacaSheet('Sheet1', SPREADSHEET_ID_EKSKUL),
+    bacaSheet('Sheet2', SPREADSHEET_ID_EKSKUL),
+  ]);
+
+  if (!tblKode || !tblAbsen) { kartu.style.display = 'none'; return; }
+
+  // Kamus KODE → NAMA KEGIATAN (Sheet1: A=NAMA KEGIATAN, B=KODE)
+  const petaKode = {};
+  for (let i = 0; i < tblKode.rows.length; i++) {
+    const nama = cel(tblKode, i, 0);
+    const kode = cel(tblKode, i, 1);
+    if (!nama || !kode) continue;
+    if (nama.toUpperCase() === 'NAMA KEGIATAN') continue; // lewati header
+    petaKode[kode.toUpperCase()] = nama;
+  }
+
+  const now         = new Date();
+  const todayKey    = keyTgl(now);
+  const kemarin     = new Date(now); kemarin.setDate(kemarin.getDate() - 1);
+  const kemarinKey  = keyTgl(kemarin);
+
+  let dataHariIni = null;
+  let dataKemarin = null;
+
+  for (let i = 0; i < tblAbsen.rows.length; i++) {
+    const row = tblAbsen.rows[i];
+    if (!row || !row.c) continue;
+
+    const nisnBaris = cel(tblAbsen, i, 1); // kolom B = NISN
+    if (nisnBaris !== user.nisn) continue;
+
+    const tgl = parseDate(tblAbsen, i, 0); // kolom A = TIME STAMP
+    if (!tgl) continue;
+
+    const k       = keyTgl(tgl);
+    const kode    = cel(tblAbsen, i, 2);        // kolom C = KODE
+    const mulai   = parseDate(tblAbsen, i, 4);  // kolom E = MULAI
+    const selesai = parseDate(tblAbsen, i, 5);  // kolom F = SELESAI
+
+    if (k === todayKey)   dataHariIni = { kode, mulai, selesai };
+    if (k === kemarinKey) dataKemarin = { kode, mulai, selesai };
+  }
+
+  if (dataHariIni) {
+    const nama = petaKode[(dataHariIni.kode||'').toUpperCase()] || dataHariIni.kode;
+    const jamSelesai = dataHariIni.selesai ? fmtJam(dataHariIni.selesai) : '-';
+    el.innerHTML = `Sedang Mengikuti Exkul <b>${nama}</b> sampai <b>${jamSelesai}</b>`;
+    kartu.style.display = 'block';
+  } else if (dataKemarin) {
+    const nama = petaKode[(dataKemarin.kode||'').toUpperCase()] || dataKemarin.kode;
+    const jamMulai   = dataKemarin.mulai   ? fmtJam(dataKemarin.mulai)   : '-';
+    const jamSelesai = dataKemarin.selesai ? fmtJam(dataKemarin.selesai) : '-';
+    el.innerHTML = `Kemarin Hadir exkul <b>${nama}</b> ${jamMulai}-${jamSelesai}`;
+    kartu.style.display = 'block';
+  } else {
+    kartu.style.display = 'none'; // tidak ada data hari ini/kemarin — kartu disembunyikan
   }
 }
 

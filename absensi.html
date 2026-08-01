@@ -65,6 +65,17 @@ body{
   box-shadow:0 4px 18px rgba(0,0,0,.25);overflow:hidden;
 }
 .logo-ring img{width:100%;height:100%;object-fit:contain}
+.logo-ring .bendera-kibar{font-size:2.6rem;line-height:1;display:inline-block;transform-origin:22% 50%}
+@keyframes kibarBendera{
+  0%,100%{transform:rotate(-8deg) skewY(-4deg)}
+  50%{transform:rotate(8deg) skewY(4deg)}
+}
+.bendera-kibar{animation:kibarBendera 1.6s ease-in-out infinite}
+.dirgahayu-banner{
+  color:#ff1744;font-weight:800;font-size:.76rem;text-align:center;
+  margin-top:6px;letter-spacing:.4px;text-transform:uppercase;
+  text-shadow:0 1px 3px rgba(0,0,0,.25);
+}
 .hdr-app{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:2px}
 .hdr-app span{color:#90caf9}
 .hdr-sekolah{font-size:.82rem;font-weight:600;opacity:.9;letter-spacing:.3px}
@@ -415,11 +426,15 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
 <div id="hLogin">
   <div class="card">
     <div class="hdr">
-      <div class="logo-ring">
-        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo" onerror="this.style.display='none'">
+      <div class="logo-ring" id="logoRing">
+        <img id="logoSekolah" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo" onerror="this.style.display='none'">
+        <span id="logoBendera" class="bendera-kibar" style="display:none">🇮🇩</span>
       </div>
       <div class="hdr-app">Absensi<span>Ku</span></div>
       <div class="hdr-sekolah">SMP NEGERI 1 KALIWEDI</div>
+      <div class="dirgahayu-banner" id="dirgahayuBanner" style="display:none">
+        DIRGAHAYU REPUBLIK INDONESIA KE-<span id="diNomor"></span> — MERDEKA
+      </div>
     </div>
     <div class="body">
       <div id="msgLogin" class="msg"></div>
@@ -503,6 +518,7 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
     </div>
 
     <!-- Rekap -->
+    <div class="sec-title" id="judulKehadiranBulan" style="margin:14px 18px 8px;text-align:center;font-size:.78rem">KEHADIRAN BULAN —</div>
     <div class="rekap-grid">
       <div class="rbox h"><div class="rn" id="rkH">0</div><div class="rl">Hadir</div></div>
       <div class="rbox s"><div class="rn" id="rkS">0</div><div class="rl">Sakit</div></div>
@@ -533,7 +549,11 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
 
     <!-- Tabel -->
     <div class="tbl-wrap">
-      <div class="sec-title" style="margin-top:10px">📋 Detail Kehadiran</div>
+      <div class="sec-title" id="toggleDetailKehadiran" onclick="toggleDetailKehadiran()" style="margin-top:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+        <span>📋 Detail Kehadiran</span>
+        <span id="hintDetailKehadiran" style="font-size:.68rem;font-weight:700;color:var(--b2);text-transform:none;letter-spacing:0">🔽 Tap untuk Lihat</span>
+      </div>
+      <div id="isiDetailKehadiran" style="display:none">
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;font-size:.7rem">
         <span style="display:flex;align-items:center;gap:3px"><span class="bdg h">H</span> Hadir</span>
         <span style="display:flex;align-items:center;gap:3px"><span class="bdg blmdtg">Blm Dtg</span> Belum Datang</span>
@@ -556,6 +576,7 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
           <tr><td colspan="4" class="kosong-row">⏳ Memuat...</td></tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <div style="padding:0 18px 18px">
@@ -936,10 +957,10 @@ async function muatKartuSholat(user) {
 
   if (cocokHariIni) {
     el.className = 'ks-teks hadir';
-    el.innerHTML = `Alhamdulillah ananda <b>${nama}</b> telah sholat berjamaah di musholah Sekolah`;
+    el.innerHTML = `<b>${fmtTglLengkap(now)}</b>, Sholat Dhuhur berjamaah di Mushola sekolah`;
   } else if (cocokKemarin) {
     el.className = 'ks-teks hadir';
-    el.innerHTML = `Alhamdulillah ananda <b>${nama}</b> kemarin sholat berjamaah dhuhur di Mushola Sekolah`;
+    el.innerHTML = `<b>${fmtTglLengkap(kemarin)}</b>, Sholat Dhuhur berjamaah di Mushola sekolah`;
   } else if (tglTerakhir) {
     el.className = 'ks-teks pernah';
     el.innerHTML = `Ananda <b>${nama}</b> mengikuti sholat berjamaah di musholah sekolah terakhir pada <b>${fmtTglLengkap(tglTerakhir)}</b>, mohon bantuan orang tua agar siswa selalu melaksanakan kewajiban sholat terutama berjamaah`;
@@ -974,6 +995,15 @@ function toggleDaftarSholat() {
   const terbuka  = elDaftar.style.display === 'block';
   elDaftar.style.display = terbuka ? 'none' : 'block';
   elHint.textContent = terbuka ? '🔽 Tap untuk lihat daftar kehadiran' : '🔼 Tap untuk tutup daftar';
+}
+
+// Tampil/sembunyikan tabel Detail Kehadiran saat judulnya di-tap
+function toggleDetailKehadiran() {
+  const isi  = document.getElementById('isiDetailKehadiran');
+  const hint = document.getElementById('hintDetailKehadiran');
+  const terbuka = isi.style.display === 'block';
+  isi.style.display = terbuka ? 'none' : 'block';
+  hint.textContent = terbuka ? '🔽 Tap untuk Lihat' : '🔼 Tap untuk Tutup';
 }
 
 // ============================================================
@@ -1032,13 +1062,13 @@ async function muatKartuEkskul(user) {
   if (dataHariIni) {
     const nama = petaKode[(dataHariIni.kode||'').toUpperCase()] || dataHariIni.kode;
     const jamSelesai = dataHariIni.selesai ? fmtJam(dataHariIni.selesai) : '-';
-    el.innerHTML = `Sedang Mengikuti Exkul <b>${nama}</b> sampai <b>${jamSelesai}</b>`;
+    el.innerHTML = `<b>${fmtTglLengkap(now)}</b> Mengikuti Exkul <b>${nama}</b> sampai <b>${jamSelesai}</b>`;
     kartu.style.display = 'block';
   } else if (dataKemarin) {
     const nama = petaKode[(dataKemarin.kode||'').toUpperCase()] || dataKemarin.kode;
     const jamMulai   = dataKemarin.mulai   ? fmtJam(dataKemarin.mulai)   : '-';
     const jamSelesai = dataKemarin.selesai ? fmtJam(dataKemarin.selesai) : '-';
-    el.innerHTML = `Kemarin Hadir exkul <b>${nama}</b> ${jamMulai}-${jamSelesai}`;
+    el.innerHTML = `<b>${fmtTglLengkap(kemarin)}</b> Mengikuti Exkul <b>${nama}</b> ${jamMulai}-${jamSelesai}`;
     kartu.style.display = 'block';
   } else {
     kartu.style.display = 'none'; // tidak ada data hari ini/kemarin — kartu disembunyikan
@@ -1209,7 +1239,7 @@ async function muatAbsen() {
   today.setHours(23, 59, 59, 999);
 
   const semuaHari = [];
-  for (let d = new Date(hari1); d <= hariN; d.setDate(d.getDate() + 1)) {
+  for (let d = new Date(hari1); d <= hariN && d <= today; d.setDate(d.getDate() + 1)) {
     semuaHari.push(new Date(d));
   }
 
@@ -1261,6 +1291,7 @@ async function muatAbsen() {
 
   setText('rkH', rH); setText('rkS', rS);
   setText('rkI', rI); setText('rkA', rA);
+  setText('judulKehadiranBulan', `KEHADIRAN BULAN ${BLN_PANJANG[bln-1].toUpperCase()} ${thn}`);
 
   // ────────────────────────────────────────────
   // STEP 5: Render tabel Ascending
@@ -1631,6 +1662,25 @@ function unduhCanvas(canvas, namaFile, mimeType, kualitas) {
   link.click();
   document.body.removeChild(link);
 }
+
+// ============================================================
+// TEMA KEMERDEKAAN — otomatis aktif sepanjang bulan Agustus
+// ============================================================
+function terapkanTemaAgustus() {
+  const now = new Date();
+  if (now.getMonth() !== 7) return; // 7 = Agustus (0-index), di luar Agustus: tema normal
+
+  const logoSekolah = document.getElementById('logoSekolah');
+  const logoBendera = document.getElementById('logoBendera');
+  const banner       = document.getElementById('dirgahayuBanner');
+  const nomor        = document.getElementById('diNomor');
+
+  if (logoSekolah) logoSekolah.style.display = 'none';
+  if (logoBendera) logoBendera.style.display = 'inline-block';
+  if (banner)       banner.style.display = 'block';
+  if (nomor)         nomor.textContent = now.getFullYear() - 1945;
+}
+terapkanTemaAgustus();
 
 init();
 </script>

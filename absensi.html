@@ -724,7 +724,7 @@ const SPREADSHEET_ID_SHOLAT = '1dxNxE46xBmSjTDC5kJExdAE63HcAPuuCBgpzI1qTcto';
 const SPREADSHEET_ID_EKSKUL = '1mBCj7crwQejX5S3c8VxQluXyi39W9RgoR6D1Ktu9QCU';
 
 // Data runtime
-let D = { users:[], aktif:null, absenAll:[] };
+let D = { users:[], aktif:null, absenAll:[], siswaSemua:[] };
 
 // ============================================================
 // BACA SHEET via gviz — langsung dari Google Sheets (publik)
@@ -813,7 +813,11 @@ function keyTgl(d) {
 async function init() {
   show('loading'); setText('loadSub','Mengambil data pengguna...');
 
-  const tbl = await bacaSheet('Sheet6');
+  const [tbl, tblSiswa] = await Promise.all([
+    bacaSheet('Sheet6'),
+    bacaSheet('Sheet1'), // roster utama: NISN|Nama|Kelas — untuk fallback login default
+  ]);
+
   if (tbl) {
     D.users = [];
     // Sheet6 struktur: A=NISN | B=NAMA | C=KLS | D=PASSWORD
@@ -847,6 +851,26 @@ async function init() {
     console.warn('⚠️ Sheet6 gagal dimuat — pastikan spreadsheet sudah dibagikan publik');
   }
 
+  // Roster utama (Sheet1) — dipakai untuk fallback login kalau NISN belum
+  // ada di Sheet6 (belum pernah bikin akun / belum pernah ganti password)
+  D.siswaSemua = [];
+  if (tblSiswa) {
+    for (let i = 0; i < tblSiswa.rows.length; i++) {
+      const row = tblSiswa.rows[i];
+      if (!row || !row.c) continue;
+      const getNilai = (col) => {
+        const c = row.c[col];
+        return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
+      };
+      const nisn = getNilai(0);
+      if (!nisn || nisn.toLowerCase() === 'nisn') continue;
+      D.siswaSemua.push({ nisn, nama: getNilai(1), kelas: getNilai(2) });
+    }
+    console.log('✅ Roster utama (Sheet1) dimuat:', D.siswaSemua.length);
+  } else {
+    console.warn('⚠️ Sheet1 (roster utama) gagal dimuat — fallback login default tidak akan bekerja.');
+  }
+
   hide('loading');
 }
 
@@ -861,9 +885,29 @@ async function login() {
 
   if (!nisn || !pw) { pesan(el,'err','⚠️ Isi NISN dan password.'); return; }
 
-  const user = D.users.find(u => u.nisn === nisn);
-  if (!user)             { pesan(el,'err','❌ NISN tidak ditemukan.'); return; }
-  if (user.password !== pw) { pesan(el,'err','❌ Password salah.'); return; }
+  let user = D.users.find(u => u.nisn === nisn);
+
+  if (!user) {
+    // NISN belum ada di Sheet6 (belum pernah bikin akun/ganti password) —
+    // izinkan login pakai NISN + password default "user123", asalkan NISN-nya
+    // memang terdaftar di roster utama (Sheet1).
+    const siswaRoster = D.siswaSemua.find(s => s.nisn === nisn);
+    if (!siswaRoster) { pesan(el,'err','❌ NISN tidak ditemukan.'); return; }
+    if (pw !== 'user123') { pesan(el,'err','❌ Password salah.'); return; }
+
+    // Buat entri user "virtual" di memori (belum tersimpan ke Sheet6 sampai
+    // siswa benar-benar ganti password lewat fitur Ubah Password)
+    user = {
+      nisn    : siswaRoster.nisn,
+      nama    : siswaRoster.nama,
+      kelas   : siswaRoster.kelas,
+      password: 'user123',
+      belumTersimpanDiSheet6: true,
+    };
+    D.users.push(user);
+  } else {
+    if (user.password !== pw) { pesan(el,'err','❌ Password salah.'); return; }
+  }
 
   D.aktif = user;
   await tampilAbsen(user);
@@ -1457,10 +1501,11 @@ async function ubahPw() {
     btn.textContent = '⏳ Menyimpan...';
     pesan(el,'ok','⏳ Menghubungi server, mohon tunggu (bisa sampai ±20 detik)...');
 
-    const r = await apiFetch({ action:'ubahPassword', nisn, pwBaru: baru });
+    const r = await apiFetch({ action:'ubahPassword', nisn, pwBaru: baru, nama: user.nama, kelas: user.kelas });
 
     if (r && r.status === 'ok') {
       user.password = baru; // sinkronkan data lokal supaya sesi ini tetap konsisten
+      user.belumTersimpanDiSheet6 = false;
       pesan(el,'ok','✅ Password berhasil diubah & tersimpan di spreadsheet!');
       setTimeout(()=>tutup('mUbah'),2000);
     } else {

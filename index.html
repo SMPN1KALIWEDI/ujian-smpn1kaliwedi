@@ -269,6 +269,38 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
   </div>
 </div>
 
+<!-- MODAL: NOTIFIKASI GANTI PASSWORD (muncul otomatis jika masih default) -->
+<div class="modal-bg" id="mGantiPw">
+  <div class="modal">
+    <div style="text-align:center;font-size:2.2rem;margin-bottom:8px">🔑</div>
+    <h3 style="text-align:center;color:var(--hijau)">Ganti Password</h3>
+    <p style="font-size:.85rem;color:var(--abu2);text-align:center;margin:8px 0 16px;line-height:1.5">
+      Anda masih menggunakan <strong>password default</strong>.<br>Silakan buat password baru untuk keamanan akun Anda.
+    </p>
+    <div id="msgGantiPw" class="msg"></div>
+    <div class="fg">
+      <label>Password Baru</label>
+      <div class="iw">
+        <span class="ic">✨</span>
+        <input type="password" id="gpBaru" placeholder="Min. 4 karakter">
+        <span class="eye" onclick="tglPw('gpBaru',this)">👁</span>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Konfirmasi Password Baru</label>
+      <div class="iw">
+        <span class="ic">✅</span>
+        <input type="password" id="gpKonfirm" placeholder="Ulangi password baru">
+        <span class="eye" onclick="tglPw('gpKonfirm',this)">👁</span>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-batal" onclick="lewatiGantiPw()">Nanti</button>
+      <button class="btn-simpan" onclick="simpanGantiPw()">Simpan →</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: UBAH PASSWORD -->
 <div class="modal-bg" id="mUbah">
   <div class="modal">
@@ -285,46 +317,32 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
   </div>
 </div>
 
-<!-- MODAL: TOKEN SUSULAN -->
+<!-- MODAL: TOKEN SUSULAN — SCAN QR SAJA -->
 <div class="modal-bg" id="mTokenSusulan">
-  <div class="modal">
-    <div class="token-ic">📋</div>
-    <h3 style="text-align:center">Token Ujian Susulan</h3>
-    <div class="token-sub">Masukkan token dari pengawas untuk<br><strong id="tkSusulanMapel" style="color:#e65100"></strong></div>
+  <div class="modal" style="max-width:340px">
+    <div class="token-ic">📷</div>
+    <h3 style="text-align:center">Scan QR Token Susulan</h3>
+    <div class="token-sub">Arahkan kamera ke QR Token pengawas untuk<br><strong id="tkSusulanMapel" style="color:#e65100"></strong></div>
     <div id="msgTokenSusulan" class="msg"></div>
-    <div class="fg"><label>Token</label>
-      <div class="iw">
-        <span class="ic">🗝️</span>
-        <input type="password" id="inpTokenSusulan" placeholder="Ketik token dari pengawas"
-               style="text-transform:uppercase;letter-spacing:2px;font-weight:700" autocomplete="off">
-        <span class="eye" onclick="tglPw('inpTokenSusulan',this)">👁</span>
-      </div>
-    </div>
-    <div class="btn-row">
-      <button class="btn-batal" onclick="tutup('mTokenSusulan')">Batal</button>
-      <button class="btn-simpan" style="background:#e65100" onclick="cekTokenSusulan()">Mulai Susulan →</button>
+    <div id="qr-susulan-reader" style="border-radius:12px;overflow:hidden;background:#000;width:100%"></div>
+    <div class="qr-status" id="qrSusulanStatus">Memulai kamera...</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn-batal" onclick="tutupSusulanQR()">Batal</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: TOKEN UJIAN -->
+<!-- MODAL: TOKEN UJIAN — SCAN QR SAJA -->
 <div class="modal-bg" id="mToken">
-  <div class="modal">
-    <div class="token-ic">🔐</div>
-    <h3 style="text-align:center">Token Ujian</h3>
-    <div class="token-sub">Masukkan token dari pengawas ujian<br><strong id="tkMapel"></strong></div>
+  <div class="modal" style="max-width:340px">
+    <div class="token-ic">📷</div>
+    <h3 style="text-align:center">Scan QR Token</h3>
+    <div class="token-sub">Arahkan kamera ke QR Token dari pengawas ujian<br><strong id="tkMapel"></strong></div>
     <div id="msgToken" class="msg"></div>
-    <div class="fg"><label>Token</label>
-      <div class="iw">
-        <span class="ic">🗝️</span>
-        <input type="password" id="inpToken" placeholder="Ketik token dari pengawas"
-               style="text-transform:uppercase;letter-spacing:2px;font-weight:700" autocomplete="off">
-        <span class="eye" onclick="tglPw('inpToken',this)">👁</span>
-      </div>
-    </div>
-    <div class="btn-row">
-      <button class="btn-batal" onclick="tutup('mToken')">Batal</button>
-      <button class="btn-simpan" onclick="cekToken()">Mulai Ujian →</button>
+    <div id="qr-token-reader" style="border-radius:12px;overflow:hidden;background:#000;width:100%"></div>
+    <div class="qr-status" id="qrTokenStatus">Memulai kamera...</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn-batal" onclick="tutupTokenQR()">Batal</button>
     </div>
   </div>
 </div>
@@ -501,6 +519,12 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
 // KONFIGURASI — sesuaikan dengan akun Anda
 // ============================================================
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIt_mQr0dNbEr5sa0mCL4BmuS7z4fnZX-FDyAvR2-tjvu13_nz9W9LuZ-M983fNBPmnA/exec';
+// Apps Script actions yang dibutuhkan:
+// login          → cek Sheet2 (id, pw); jika pw Sheet2 kosong → validasi dgn PW_DEFAULT; return {status, isDefault}
+// ubahPassword   → tulis Sheet7!A:B (NISN | PASSWORD)
+// catatWaktuToken→ tulis Sheet2!G[baris siswa] waktu scan token pertama
+// catatPelanggaran→ tulis Sheet6 (id, nama, kelas, jenis, ke, waktu)
+// setStatus      → update kolom status Sheet2
 
 // URL raw CSV di GitHub — diakses langsung, tanpa Apps Script
 // Setelah upload ke GitHub, format URL:
@@ -586,11 +610,25 @@ let D = {
 };
 
 // Status pengawasan ujian
-let sedangUjian   = false;
-let susulanAktif  = null;  // {mapel, linkSoal} susulan yang sedang dibuka
-let winUjian      = null;   // referensi tab soal
-let pengawasTimer = null;
-let alarmCtx      = null;   // AudioContext untuk alarm
+let sedangUjian      = false;
+let sudahPelanggaran = false;
+let susulanAktif     = null;   // {mapel, linkSoal} susulan yang sedang dibuka
+let winUjian         = null;
+let pengawasTimer    = null;
+let alarmCtx         = null;   // AudioContext untuk alarm
+
+// Pelanggaran — kembali ke halaman token setelah 5x
+const MAX_PELANGGARAN  = 5;
+let   jmlPelanggaran   = 0;    // counter pelanggaran per sesi token
+let   waktuScanToken   = 0;    // ms saat token pertama kali di-scan (untuk tulis Sheet2)
+const TOLERANSI_MS     = 2 * 60 * 1000; // 2 menit kelonggaran setelah scan token
+
+// QR Scanner instance
+let qrTokenScanner   = null;
+let qrSusulanScanner = null;
+
+// Password default
+const PW_DEFAULT = 'user123';
 
 // ============================================================
 // FETCH Apps Script
@@ -673,62 +711,115 @@ function isiHeader() {
 }
 
 // ============================================================
-// LOGIN — cek status kolom F
+// LOGIN — QR scan kartu siswa, verifikasi ke Sheet2 via Apps Script
 // ============================================================
 async function login() {
   const id = val('inpID'), pw = val('inpPw');
   const el = document.getElementById('msgLogin');
   el.className = 'msg';
 
-  if (!id || !pw) { pesan(el,'err','⚠️ Isi No. ID dan Password.'); return; }
+  if (!id) { pesan(el,'err','⚠️ Scan QR kartu siswa terlebih dahulu.'); return; }
+  if (!pw) { pesan(el,'err','⚠️ Isi Password.'); return; }
   if (!D.siswa.length) { pesan(el,'err','⚠️ Data belum termuat. Refresh halaman.'); return; }
 
-  // Cek ID dulu dari data CSV lokal (cepat, tanpa server)
+  // Cek ID dari CSV lokal
   const siswaLokal = D.siswa.find(s => s.id === id);
   if (!siswaLokal) { pesan(el,'err','❌ No. ID tidak ditemukan.'); return; }
 
-  // Cek status dari CSV (sudah diupdate oleh Apps Script ke GitHub)
   const status = (siswaLokal.status || '').toUpperCase();
   if (status === 'AKTIF') {
     pesan(el,'err','⛔ Akun sedang aktif digunakan. Hubungi pengawas.'); return;
   }
-  if (status === 'PELANGGARAN') {
-    pesan(el,'err','🚫 Akun diblokir karena pelanggaran. Hubungi pengawas.'); return;
-  }
 
-  // Verifikasi PASSWORD via Apps Script (password tidak ada di CSV)
-  // Ini satu-satunya request ke Apps Script saat login
   setText('loadTeks','Memverifikasi...');
-  setText('loadSub', 'Memeriksa password...');
+  setText('loadSub', 'Memeriksa data ke server...');
   show('loading');
 
+  // Kirim ke Apps Script — cek Sheet2 (id + password)
+  // Jika password di Sheet2 kosong → gunakan PW_DEFAULT
   const rLogin = await apiFetch({ action:'login', id, pw });
   hide('loading');
 
   if (!rLogin) {
-    pesan(el,'err','⚠️ Server tidak merespons. Coba lagi.'); return;
-  }
-  if (rLogin.status === 'salah') {
-    pesan(el,'err','❌ Password salah.'); return;
-  }
-  if (rLogin.status === 'aktif') {
-    pesan(el,'err','⛔ Akun sedang aktif digunakan. Hubungi pengawas.'); return;
-  }
-  if (rLogin.status === 'pelanggaran') {
-    pesan(el,'err','🚫 Akun diblokir karena pelanggaran. Hubungi pengawas.'); return;
-  }
-  if (rLogin.status !== 'ok') {
-    pesan(el,'err','❌ Login gagal: ' + (rLogin.status||'error')); return;
+    // Fallback: jika server tidak merespons, cek apakah pw === default
+    // (mode offline darurat)
+    const pwLokal = sessionStorage.getItem('pw_' + id) || PW_DEFAULT;
+    if (pw !== pwLokal) { pesan(el,'err','⚠️ Server tidak merespons & password salah.'); return; }
+  } else {
+    if (rLogin.status === 'salah') { pesan(el,'err','❌ Password salah.'); return; }
+    if (rLogin.status === 'aktif') { pesan(el,'err','⛔ Akun sedang aktif. Hubungi pengawas.'); return; }
+    if (rLogin.status === 'blokir') { pesan(el,'err','🚫 Akun diblokir. Hubungi pengawas.'); return; }
+    if (rLogin.status !== 'ok') { pesan(el,'err','❌ Login gagal: ' + (rLogin.status||'error')); return; }
   }
 
   // Login berhasil
   siswaLokal.status = 'AKTIF';
   D.aktif = siswaLokal;
-  // Simpan password (base64) di session untuk keperluan biometrik
   sessionStorage.setItem('pwc_' + id, btoa(pw));
+
+  // Reset counter pelanggaran untuk sesi baru
+  jmlPelanggaran = 0;
+
   tampilDashboard(siswaLokal);
-  // Tawarkan daftar sidik jari setelah 2 detik
-  setTimeout(() => tawarBiometrik(siswaLokal), 2000);
+
+  // Cek apakah masih pakai password default → tampilkan notifikasi ganti password
+  const masihDefault = rLogin ? rLogin.isDefault : (pw === PW_DEFAULT);
+  if (masihDefault) {
+    setTimeout(() => tampilNotifGantiPw(), 800);
+  } else {
+    setTimeout(() => tawarBiometrik(siswaLokal), 2000);
+  }
+}
+
+// ============================================================
+// NOTIFIKASI GANTI PASSWORD
+// ============================================================
+function tampilNotifGantiPw() {
+  document.getElementById('gpBaru').value    = '';
+  document.getElementById('gpKonfirm').value = '';
+  document.getElementById('msgGantiPw').className = 'msg';
+  buka('mGantiPw');
+}
+
+function lewatiGantiPw() {
+  tutup('mGantiPw');
+  // Tetap tawarkan biometrik walau skip
+  if (D.aktif) setTimeout(() => tawarBiometrik(D.aktif), 500);
+}
+
+async function simpanGantiPw() {
+  const baru    = val('gpBaru');
+  const konfirm = val('gpKonfirm');
+  const el      = document.getElementById('msgGantiPw');
+  el.className  = 'msg';
+
+  if (!baru || !konfirm)  { pesan(el,'err','⚠️ Kedua kolom wajib diisi.'); return; }
+  if (baru.length < 4)    { pesan(el,'err','⚠️ Password min. 4 karakter.'); return; }
+  if (baru !== konfirm)   { pesan(el,'err','❌ Konfirmasi tidak cocok.'); return; }
+  if (baru === PW_DEFAULT){ pesan(el,'err','⚠️ Pilih password yang berbeda dari default.'); return; }
+
+  pesan(el,'ok','⏳ Menyimpan...');
+
+  // Tulis password baru ke Sheet7 kolom A:B (NISN | PASSWORD)
+  const siswa = D.aktif;
+  const r = await apiFetch({
+    action  : 'ubahPassword',
+    id      : siswa.id,
+    pwBaru  : baru
+  });
+
+  if (r && r.status === 'ok') {
+    // Simpan sementara di session
+    sessionStorage.setItem('pw_' + siswa.id, baru);
+    sessionStorage.setItem('pwc_' + siswa.id, btoa(baru));
+    pesan(el,'ok','✅ Password berhasil diubah!');
+    setTimeout(() => {
+      tutup('mGantiPw');
+      if (D.aktif) tawarBiometrik(D.aktif);
+    }, 1500);
+  } else {
+    pesan(el,'err','⚠️ Gagal simpan ke server. Coba lagi.');
+  }
 }
 
 // ============================================================
@@ -859,64 +950,140 @@ async function muatSusulan(siswa) {
   D.susulanList = r.susulan;
 }
 
+let qrSusulanSudahScan = false;
+
 function bukaTokenSusulan(idx) {
   susulanAktif = D.susulanList[idx];
-  document.getElementById('inpTokenSusulan').value = '';
   document.getElementById('msgTokenSusulan').className = 'msg';
   setText('tkSusulanMapel', susulanAktif.mapel);
+  qrSusulanSudahScan = false;
   buka('mTokenSusulan');
+  setTimeout(() => mulaiScanSusulan(), 300);
 }
 
-function cekTokenSusulan() {
-  const masuk = val('inpTokenSusulan').toUpperCase();
-  const benar = (D.sekolah.token || '').toUpperCase();
-  const el    = document.getElementById('msgTokenSusulan');
-  el.className = 'msg';
-  if (!masuk)        { pesan(el,'err','⚠️ Token tidak boleh kosong.'); return; }
-  if (masuk!==benar) { pesan(el,'err','❌ Token salah. Tanya pengawas.'); return; }
+function mulaiScanSusulan() {
+  setText('qrSusulanStatus', 'Memulai kamera...');
+  try {
+    qrSusulanScanner = new Html5Qrcode('qr-susulan-reader');
+    qrSusulanScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 200, height: 200 }, aspectRatio: 1.0 },
+      (decodedText) => {
+        if (qrSusulanSudahScan) return;
+        qrSusulanSudahScan = true;
+        const masuk = decodedText.trim().toUpperCase();
+        const benar = (D.sekolah.token || '').toUpperCase();
+        if (masuk !== benar) {
+          qrSusulanSudahScan = false;
+          setText('qrSusulanStatus', '❌ Token tidak valid. Coba lagi.');
+          setTimeout(() => { qrSusulanSudahScan = false; setText('qrSusulanStatus','🔍 Arahkan ke QR Token...'); }, 2000);
+          return;
+        }
+        tutupSusulanQR();
+        const link = susulanAktif ? susulanAktif.linkSoal : '';
+        if (!link) { alert('⚠️ Link soal susulan tidak tersedia. Hubungi pengawas.'); return; }
+        mintaFullscreen();
+        mulaiUjian(link);
+      },
+      () => {}
+    ).then(() => {
+      setText('qrSusulanStatus', '🔍 Arahkan ke QR Token dari pengawas...');
+    }).catch(err => {
+      setText('qrSusulanStatus', '❌ Kamera tidak bisa diakses: ' + err);
+    });
+  } catch(e) {
+    setText('qrSusulanStatus', '❌ ' + e.message);
+  }
+}
+
+function tutupSusulanQR() {
+  if (qrSusulanScanner) {
+    qrSusulanScanner.stop().catch(() => {});
+    qrSusulanScanner.clear();
+    qrSusulanScanner = null;
+  }
   tutup('mTokenSusulan');
-  const link = susulanAktif ? susulanAktif.linkSoal : '';
-  if (!link) { alert('⚠️ Link soal susulan tidak tersedia. Hubungi pengawas.'); return; }
-  mintaFullscreen();
-  mulaiUjian(link);
 }
 
 function logout() {
   bersihkanPengawas();
   if (D.aktif) apiFetch({action:'setStatus', id:D.aktif.id, status:''});
-  D.aktif = null;
+  D.aktif        = null;
+  jmlPelanggaran = 0;
+  waktuScanToken = 0;
   hide('h2');
   document.getElementById('hSoal').style.display = 'none';
   show('h1');
   document.getElementById('inpID').value = '';
   document.getElementById('inpPw').value = '';
-  document.getElementById('msgLogin').className='msg';
+  document.getElementById('msgLogin').className = 'msg';
 }
 
 // ============================================================
-// TOKEN & BUKA SOAL
+// TOKEN & BUKA SOAL — hanya via QR scan, token tidak tampak
 // ============================================================
+let qrTokenSudahScan = false; // debounce agar tidak double-trigger
+
 function bukaToken() {
-  document.getElementById('inpToken').value='';
-  document.getElementById('msgToken').className='msg';
+  document.getElementById('msgToken').className = 'msg';
+  qrTokenSudahScan = false;
   buka('mToken');
+  setTimeout(() => mulaiScanToken(), 300);
 }
 
-function cekToken() {
-  const masuk = val('inpToken').toUpperCase();
-  const benar = (D.sekolah.token||'').toUpperCase();
-  const el    = document.getElementById('msgToken');
-  el.className='msg';
-  if (!masuk)        { pesan(el,'err','⚠️ Token tidak boleh kosong.'); return; }
-  if (masuk!==benar) { pesan(el,'err','❌ Token salah. Tanya pengawas.'); return; }
+function mulaiScanToken() {
+  setText('qrTokenStatus', 'Memulai kamera...');
+  try {
+    qrTokenScanner = new Html5Qrcode('qr-token-reader');
+    qrTokenScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 200, height: 200 }, aspectRatio: 1.0 },
+      (decodedText) => {
+        if (qrTokenSudahScan) return;
+        qrTokenSudahScan = true;
+        // Token dibaca tapi tidak ditampilkan ke layar
+        const masuk = decodedText.trim().toUpperCase();
+        const benar = (D.sekolah.token || '').toUpperCase();
+        if (masuk !== benar) {
+          qrTokenSudahScan = false;
+          setText('qrTokenStatus', '❌ Token tidak valid. Coba lagi.');
+          setTimeout(() => { qrTokenSudahScan = false; setText('qrTokenStatus','🔍 Arahkan ke QR Token...'); }, 2000);
+          return;
+        }
+        // Token benar — tutup scanner
+        tutupTokenQR();
+        const siswa  = D.aktif;
+        const link   = siswa.linkSoal || '';
+        if (!link) { alert('⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
+
+        // Catat waktu scan token ke Sheet2!G (hanya scan PERTAMA)
+        // Scan token ke-2 dst (setelah pelanggaran) tidak dicatat
+        if (jmlPelanggaran === 0) {
+          waktuScanToken = Date.now();
+          apiFetch({ action:'catatWaktuToken', id: siswa.id, waktu: new Date().toISOString() });
+        }
+
+        mintaFullscreen();
+        mulaiUjian(link);
+      },
+      () => {}
+    ).then(() => {
+      setText('qrTokenStatus', '🔍 Arahkan ke QR Token dari pengawas...');
+    }).catch(err => {
+      setText('qrTokenStatus', '❌ Kamera tidak bisa diakses: ' + err);
+    });
+  } catch(e) {
+    setText('qrTokenStatus', '❌ ' + e.message);
+  }
+}
+
+function tutupTokenQR() {
+  if (qrTokenScanner) {
+    qrTokenScanner.stop().catch(() => {});
+    qrTokenScanner.clear();
+    qrTokenScanner = null;
+  }
   tutup('mToken');
-  const siswa = D.aktif;
-  const link  = siswa.linkSoal || '';
-  if (!link) { alert('⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
-  // Fullscreen HARUS dipanggil langsung dari klik user (di sini)
-  // bukan dari dalam setTimeout atau fungsi lain
-  mintaFullscreen();
-  mulaiUjian(link);
 }
 
 // ============================================================
@@ -925,47 +1092,66 @@ function cekToken() {
 // Pengawas deteksi visibilitychange di halaman yang sama.
 // Soal hanya bisa diakses lewat portal — tidak ada tab terpisah.
 // ============================================================
+let timerKelonggaran = null;
+
 function mulaiUjian(link) {
   const siswa = D.aktif;
 
-  // Isi bar info
   setText('s3Nama2', siswa.nama);
-  setText('s3Info',  'Dilarang: pindah tab · layar belah · jendela lain · kursor di luar soal');
   setText('s3Ukuran', `${window.innerWidth}×${window.innerHeight}px`);
 
-  // Pasang Google Form ke iframe
   const iframe = document.getElementById('soalIframe');
   iframe.src = link;
 
-  // Tampilkan halaman soal fullscreen
   hide('h1'); hide('h2');
   document.getElementById('hSoal').style.display = 'flex';
 
-  // Cek apakah iframe berhasil load dalam 5 detik
-  // Google Forms umumnya BISA diembed — tapi jika diblokir, tampilkan pesan
+  // Reset state
+  sedangUjian      = false;
+  sudahPelanggaran = false;
+  if (timerKelonggaran) clearTimeout(timerKelonggaran);
+
+  // Hitung sisa kelonggaran dari waktu scan token
+  // (jika sudah ada waktu scan, kurangi waktu yang telah berlalu)
+  const sudahBerlalu  = waktuScanToken ? Date.now() - waktuScanToken : 0;
+  const sisaKelonggaran = Math.max(0, TOLERANSI_MS - sudahBerlalu);
+
   let iframeOk = false;
   iframe.onload = () => { iframeOk = true; };
 
+  // Tampilkan pesan kelonggaran di info bar
+  const mntSisa = Math.ceil(sisaKelonggaran / 60000);
+  setText('s3Info', sisaKelonggaran > 0
+    ? `⏳ Pengawas aktif dalam ±${mntSisa} menit — silakan menuju tempat duduk`
+    : 'Dilarang: pindah tab · layar belah · jendela lain · kursor di luar soal');
+
   setTimeout(() => {
     if (!iframeOk) {
-      // Iframe diblokir — fallback: tampilkan pesan dan link manual
       iframe.src = '';
       document.getElementById('hSoal').style.display = 'none';
-      hide('h1');
-      show('h2');
-      const tb = document.getElementById('tbNilai');
-      tb.innerHTML = `<tr><td colspan="4" style="padding:14px;text-align:center;color:var(--merah)">
-        ⚠️ Soal tidak dapat ditampilkan di sini.<br>
-        <a href="${link}" target="_blank" style="color:var(--biru);font-weight:700">
-          Klik di sini untuk membuka soal
-        </a>
-      </td></tr>`;
+      hide('h1'); show('h2');
+      document.getElementById('tbNilai').innerHTML =
+        `<tr><td colspan="4" style="padding:14px;text-align:center;color:var(--merah)">
+          ⚠️ Soal tidak dapat ditampilkan di sini.<br>
+          <a href="${link}" target="_blank" style="color:var(--biru);font-weight:700">
+            Klik di sini untuk membuka soal
+          </a>
+        </td></tr>`;
       return;
     }
-    // iframe OK — aktifkan pengawas
-    sedangUjian      = true;
-    sudahPelanggaran = false;
-    aktifkanPengawas();
+
+    // Setelah sisa kelonggaran habis → aktifkan pengawas
+    timerKelonggaran = setTimeout(() => {
+      if (document.getElementById('hSoal').style.display !== 'none') {
+        sedangUjian = true;
+        sudahPelanggaran = false;
+        aktifkanPengawas();
+        setText('s3Info', 'Dilarang: pindah tab · layar belah · jendela lain · kursor di luar soal');
+        console.log('✅ Pengawas aktif setelah kelonggaran');
+      }
+    }, sisaKelonggaran);
+
+    console.log(`⏳ Kelonggaran ${Math.round(sisaKelonggaran/1000)}d sebelum pengawas aktif`);
   }, 5000);
 }
 
@@ -1218,58 +1404,95 @@ function onKeyBlokir(e) {
 
 // ============================================================
 // TANGKAP & PROSES PELANGGARAN
+// Setelah 5x pelanggaran → kembali ke halaman token (tidak logout)
 // ============================================================
 async function tangkapPelanggaran(jenis) {
   if (!sedangUjian || sudahPelanggaran) return;
   sudahPelanggaran = true;
-  sedangUjian = false;
+  sedangUjian      = false;
   nonaktifkanPengawas();
+  if (timerKelonggaran) { clearTimeout(timerKelonggaran); timerKelonggaran = null; }
 
-  const siswa = D.aktif;
+  jmlPelanggaran++;
+  const siswa    = D.aktif;
+  const sisaIzin = MAX_PELANGGARAN - jmlPelanggaran;
 
   // Bunyikan alarm
   bunyikanAlarm();
 
-  // Matikan iframe soal (hapus src = form tidak bisa dilanjutkan)
+  // Matikan iframe soal
   const iframe = document.getElementById('soalIframe');
   if (iframe) iframe.src = '';
   document.getElementById('hSoal').style.display = 'none';
 
-  // Tampilkan overlay merah
+  // Pesan di overlay
+  const pesanTambahan = sisaIzin > 0
+    ? `Pelanggaran ke-${jmlPelanggaran} dari ${MAX_PELANGGARAN}. Sisa toleransi: ${sisaIzin}x.`
+    : `Pelanggaran ke-${jmlPelanggaran}. Batas pelanggaran habis — sesi ujian diakhiri!`;
+
   setText('ovJenis', '⚠️ ' + jenis);
-  document.getElementById('ovPelanggaran').style.display = 'flex';
+
+  // Update teks countdown overlay
+  const ovEl = document.getElementById('ovPelanggaran');
+  // Tambahkan info pelanggaran ke-N
+  let pEl = document.getElementById('ovPelanggaranInfo');
+  if (!pEl) {
+    pEl = document.createElement('p');
+    pEl.id = 'ovPelanggaranInfo';
+    pEl.style.cssText = 'color:#ffeb3b;font-size:1rem;font-weight:700;margin-top:4px';
+    ovEl.querySelector('p').after(pEl);
+  }
+  pEl.textContent = pesanTambahan;
+  ovEl.style.display = 'flex';
 
   // Countdown 10 detik
   let sisa = 10;
   setText('ovHitung', sisa);
-  const tim = setInterval(()=>{
+  const tim = setInterval(() => {
     sisa--;
     setText('ovHitung', sisa);
     if (sisa <= 0) clearInterval(tim);
   }, 1000);
 
-  // Catat ke Sheet6
+  // Catat pelanggaran ke Sheet6
   if (siswa && siswa.id) {
-    await apiFetch({
+    apiFetch({
       action : 'catatPelanggaran',
       id     : siswa.id,
       nama   : siswa.nama,
       kelas  : siswa.kelas,
-      jenis  : jenis
+      jenis  : jenis,
+      ke     : jmlPelanggaran
     });
   }
 
-  // Setelah 10 detik → kembali ke login
-  setTimeout(()=>{
+  setTimeout(() => {
     hentikanAlarm();
-    document.getElementById('ovPelanggaran').style.display = 'none';
-    sudahPelanggaran = false;
-    D.aktif = null;
-    hide('h2'); show('h1');
-    document.getElementById('inpID').value  = '';
-    document.getElementById('inpPw').value  = '';
-    pesan(document.getElementById('msgLogin'),'err',
-      '🚫 Sesi diakhiri karena pelanggaran. Hubungi pengawas.');
+    ovEl.style.display = 'none';
+    sudahPelanggaran   = false;
+
+    if (sisaIzin > 0) {
+      // Belum habis batas → kembali ke halaman token (scan QR token lagi)
+      // Siswa tetap login, tidak perlu input ID & password ulang
+      hide('h1'); hide('h2');
+      document.getElementById('hSoal').style.display = 'none';
+      show('h2'); // tampilkan dashboard dulu lalu buka modal token
+      const el = document.getElementById('msgToken');
+      el.className = 'msg';
+      pesan(document.getElementById('msgToken'), 'err',
+        `⚠️ Pelanggaran ke-${jmlPelanggaran}. Scan QR token lagi untuk lanjutkan ujian.`);
+      bukaToken();
+    } else {
+      // Batas pelanggaran habis → kembali ke login penuh
+      D.aktif        = null;
+      jmlPelanggaran = 0;
+      hide('h2');
+      show('h1');
+      document.getElementById('inpID').value = '';
+      document.getElementById('inpPw').value = '';
+      pesan(document.getElementById('msgLogin'), 'err',
+        '🚫 Sesi diakhiri. Pelanggaran melebihi batas. Hubungi pengawas.');
+    }
   }, 10000);
 }
 
@@ -1277,7 +1500,7 @@ function bersihkanPengawas() {
   sedangUjian = false;
   nonaktifkanPengawas();
   hentikanAlarm();
-  // Reset iframe soal
+  if (timerKelonggaran) { clearTimeout(timerKelonggaran); timerKelonggaran = null; }
   const iframe = document.getElementById('soalIframe');
   if (iframe) iframe.src = '';
   document.getElementById('hSoal').style.display = 'none';

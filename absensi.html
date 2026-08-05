@@ -5,6 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1565c0">
 <title>AbsensiKu — SMPN 1 Kaliwedi</title>
+
+<!-- ICON APLIKASI (Home Screen / PWA) — bertema absensi (papan klip + centang) -->
+<link id="iconFav" rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABR0lEQVR4nGNkwAJEUw/8xyZOKXg924ERXQxFgFYW43MIE70tR7eLid6WozuChRzNydp3cMrNvapCklmM+Hz/apY9hljlxLkM4R4OOA1cueMAQ3t+MoqYWNpBnOqZcElgs5xcgM8skqOgPT+ZoXLiXLzypACy0gCpluADOKOAXmDAHUAwCvbc/4NX3kWRrFiEgwEPgeHpAP06Ywb9OmOi1BKMQFLjGNli/TpjhotNZylzADkWkwKIjgJ8wYpLnJDvGRgYGFh+PHpIlOXIbGSDsVmOzWJc9pAVBfiCmxhfIwOiooBYQ0m1nIGBhBCAGU5skBMLSC4H0C2jxHIGBjLTAKWWIoPhWRQPLQd83hmP0V1iYGBg4PNYRDVLcJn1eWc8I95ESE1H4AJMMJfQ3CY0ALOTCV2AnpYzMKD1jmGA130hTfqK2DwJAFbaaZfg19KPAAAAAElFTkSuQmCC">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAFyUlEQVR4nO3cLY8kVRSH8TOTteDAk+AQCD7AriBhvwGOFROwo8cgMKPHLhkBbr7BbIIYPgACgSMhIBfHGgTJInprd6Zfqm/VfTnn/u/zkyO6b6qePnO7qrtPLIAPvr577b0G5Pv7+ycn3mtwWQABj8Ej8GZPSMRjaxV31SchYuxTM+4qD0zISFEj7NPSD0jMSFWjlWKvEEJGjlLTusiEJmbkKtVQ1quCkFFDzrRePaGJGbXktLUqaGJGbWsbWxw0MaOVNa0tCpqY0drS5pKDJmZ4WdJeUtDEDG+pDR4NmpgRRUqLxW99A55mg2Y6I5pjTR4MmpgR1Vybj1oupCdnn/zuvYSjrn/72HsJ4ey9Zz7ydJ5C/vLpE9+FJLi5vTOzccPe95mPnT+MHnMPIW+7ub0j6je4yvFGrzGbbf6b9LBFauFB0CNPZ/Rpu1kmtPU9nSdM6Q2ChpS3QbPdQK/ut8uEhpSubqy8fP64yuNeXOnsPWsdow+/+bnK45Z2ahZ/u/Hy+eNqJwppop+DqeHwW47IB3FE0c9H6KCjH7xRRT4vYYOOfNAQ9/ycRNw/exysi6vrrm+u3Nze2eX5WfPnjfZmMeyEBtYIF7TXv7LL87O3H8fsjdd0Nou39ejqOnRtl+dndnF1bWZ9fR7aK+aICHrLFMcUdmSEvIugDyCWPoXbQwM5CBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSCBpSpH4K7Kc//vNewkGffyR1qMOSmdCRYzaLvz4VMkEDZgQNMQQNKQQNKTJBR7+KEH19KqSOMtFAZkIDZgQNMQQNKQQNKQQNKVKXBSJ/XoIrMG3IHOXIMZtt1hct6k+//Wznb79+94vDSsphyzGofTHP/b0XBD2gY9H2HDVBDyY11l6jJuiBLI20x6hlgo72hmub9/p6jHON2BUs5B1NRKOEPJGZ0Ng1WsxmBC1rxJjNCFpSqZh7vMlC0GJGjtmMoKWMHrMZQcsg5g2CFkDM73DhtmOEvIsJ3Sli3o+gO0TMhxF0Z4h5HkF3hJiPI+hOEHMagu4AMad79O9ff3qvoZkevxTaQ8yRGhrmOvTcl0IjRt1DyBENseXo7UuhxLyefNBLvhQaIWxiziMd9Jo4PKMm5nzSQa/lMa2JuQyCntEqamIuh6CPqD2tibmsYS7b5Sp9eY+Q65Ce0KVPdqlpTcz1SAdtVuek5wRJzHXJB21WL2qv34oj5sOGCNqsXgStf82TmOcNE7TZJgaPaU3M7QwV9KTltCbmtoYM2qzNtCbm9oYNeuK9t55T60WnbPigzWKGE209vSDoe6JEFGUdPSLoLd7TmpjzEPQBHmERcz6CntFyWhNzGQSdoHZsxFwOQSeqNa2JuSyCXqhUgN5vPlUR9Aq5MRJyPQSdYU2YxFwXQWdaMq2JuT6CLuRYrMTcBkEXdChaYm6Hb30XRry+mNCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQcvrqxbMT70UAJbx68ewk3IR+/+mP3kvAAtHOV7iggRwhg472qsd+Ec/Tqdlm7+G9kG0RDxbeiXZ+poZDTuhJtIOGjcjnJXTQZrEP3oiin48HW433vvjhtddCUvxz+5X3EoYVOeT7W+aufmgm8kFFDOG3HMASD4KOeLUDmLPdLBMaUnaCZkqjF/ta3TuhiRrRHWqULQekHAyaKY2o5tqcndBEjWiONcmWA1KOBs2URhQpLSZNaKKGt9QGk7ccRA0vS9pbtIcmarS2tLnFbwqJGq2saW3VVQ6iRm1rG1t92Y6oUUtOW0WijP5NF/ShxJAscmOFaY1cpRoqHiLTGkuUHobFb30zrZGqRitV42NaY5+aQ6/ZNCXusbX6z+2yPSDuMXhsP0PsdwlcQ4T3T/8Dtkgc9GQfHmUAAAAASUVORK5CYII=">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AbsensiKu">
+<meta name="mobile-web-app-capable" content="yes">
+<link id="manifestLink" rel="manifest" href="">
+<script>
+// Membuat manifest PWA secara dinamis (satu file HTML tanpa file manifest terpisah)
+// supaya saat "Add to Home Screen" / diinstal sebagai aplikasi, muncul icon
+// bertema absensi (papan klip dengan tanda centang), bukan ikon generik.
+(function(){
+  const ICON192 = "data:image/png;base64,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";
+  const ICON512 = "data:image/png;base64,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";
+  const manifest = {
+    name: "AbsensiKu — SMP Negeri 1 Kaliwedi",
+    short_name: "AbsensiKu",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#1565c0",
+    theme_color: "#1565c0",
+    icons: [
+      { src: ICON192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: ICON512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+  document.getElementById('manifestLink').setAttribute('href', URL.createObjectURL(blob));
+})();
+</script>
+
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -967,15 +1000,10 @@ async function muatKartuSholat(user) {
 
   const now        = new Date();
   const todayKey     = keyTgl(now);
-  const kemarin      = new Date(now); kemarin.setDate(kemarin.getDate() - 1);
-  const kemarinKey   = keyTgl(kemarin);
-  const bulanIni     = now.getMonth();
-  const tahunIni     = now.getFullYear();
 
   let cocokHariIni  = false;
-  let cocokKemarin  = false;
-  let tglTerakhir   = null; // Date objek tanggal sholat terakhir (kapan pun)
-  const daftarBulanIni = []; // { tgl } — semua catatan di bulan berjalan
+  let tglTerakhir   = null; // Date objek tanggal sholat terakhir (kapan pun, selain hari ini)
+  const semuaTanggal = []; // SEMUA catatan kehadiran (tidak dibatasi bulan)
 
   for (let i = 0; i < tbl.rows.length; i++) {
     const row = tbl.rows[i];
@@ -988,42 +1016,39 @@ async function muatKartuSholat(user) {
     if (!tgl) continue;
 
     const k = keyTgl(tgl);
-    if (k === todayKey)   cocokHariIni = true;
-    if (k === kemarinKey) cocokKemarin = true;
-    if (!tglTerakhir || tgl > tglTerakhir) tglTerakhir = tgl;
-
-    if (tgl.getMonth() === bulanIni && tgl.getFullYear() === tahunIni) {
-      daftarBulanIni.push(tgl);
+    if (k === todayKey) {
+      cocokHariIni = true;
+    } else if (!tglTerakhir || tgl > tglTerakhir) {
+      tglTerakhir = tgl;
     }
+
+    semuaTanggal.push(tgl);
   }
 
   const nama = user.nama;
 
   if (cocokHariIni) {
     el.className = 'ks-teks hadir';
-    el.innerHTML = `<b>${fmtTglLengkap(now)}</b>, Sholat Dhuhur berjamaah di Mushola sekolah`;
-  } else if (cocokKemarin) {
-    el.className = 'ks-teks hadir';
-    el.innerHTML = `<b>${fmtTglLengkap(kemarin)}</b>, Sholat Dhuhur berjamaah di Mushola sekolah`;
+    el.innerHTML = `<b>${nama}</b> Sholat dhuhur berjamaah di mushola sekolah`;
   } else if (tglTerakhir) {
     el.className = 'ks-teks pernah';
-    el.innerHTML = `Ananda <b>${nama}</b> mengikuti sholat berjamaah di musholah sekolah terakhir pada <b>${fmtTglLengkap(tglTerakhir)}</b>, mohon bantuan orang tua agar siswa selalu melaksanakan kewajiban sholat terutama berjamaah`;
+    el.innerHTML = `<b>${nama}</b> sholat dhuhur berjamaah di sekolah pada <b>${fmtTglLengkap(tglTerakhir)}</b>`;
   } else {
     el.className = 'ks-teks tidak-pernah';
-    el.innerHTML = `Ananda <b>${nama}</b> tidak pernah mengikuti kegiatan sholat berjamaah di mushollah sekolah, mohon kiranya orang tua ikut serta mendorong siswa agar ananda tidak melalaikan ibadah sholat`;
+    el.innerHTML = `<b>${nama}</b> belum pernah sholat berjamaah di sekolah`;
   }
 
-  // Total absensi bulan berjalan
+  // Total absensi keseluruhan (semua tanggal, bukan hanya bulan berjalan)
   elTotal.style.display = 'block';
-  elTotal.textContent = `📊 Total Absensi bulan ${BLN_PANJANG[bulanIni]}: ${daftarBulanIni.length} kali`;
+  elTotal.textContent = `📊 Total Absensi: ${semuaTanggal.length} kali`;
   elHint.style.display = 'block';
 
-  // Daftar kehadiran (diurutkan terbaru dulu), ditampilkan saat kartu di-tap
-  daftarBulanIni.sort((a,b) => b - a);
-  if (daftarBulanIni.length === 0) {
-    elDaftar.innerHTML = `<div class="ks-daftar-kosong">Belum ada catatan kehadiran bulan ${BLN_PANJANG[bulanIni]}.</div>`;
+  // Daftar SEMUA tanggal kehadiran (diurutkan terbaru dulu), ditampilkan saat kartu di-tap
+  semuaTanggal.sort((a,b) => b - a);
+  if (semuaTanggal.length === 0) {
+    elDaftar.innerHTML = `<div class="ks-daftar-kosong">Belum ada catatan kehadiran sholat berjamaah.</div>`;
   } else {
-    elDaftar.innerHTML = daftarBulanIni.map(tgl => `
+    elDaftar.innerHTML = semuaTanggal.map(tgl => `
       <div class="ks-daftar-item">
         <span>${HARI[tgl.getDay()]}, ${fmtTgl(tgl)}</span>
         <span>${fmtJam(tgl)}</span>

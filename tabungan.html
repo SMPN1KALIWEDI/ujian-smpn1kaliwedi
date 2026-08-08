@@ -118,6 +118,8 @@ main{padding:18px 16px 10px 16px;}
 .chip{background:var(--cream);border:1.5px solid var(--gold);color:var(--green-deep);border-radius:12px;padding:12px 4px;font-weight:700;font-size:13px;font-family:var(--font-mono);}
 .chip:active{background:var(--gold);color:var(--cream);}
 .action-row{display:flex;justify-content:center;}
+.nav-row-top{display:flex;gap:10px;margin-top:14px;}
+.nav-row-top .btn{flex:1;}
 .nav-row{display:flex;gap:10px;margin-top:14px;}
 .nav-row .btn{flex:1;}
 
@@ -145,8 +147,9 @@ tbody tr:nth-child(even){background:rgba(183,145,43,0.05);}
 .siswa-cell strong{display:block;font-size:13.5px;color:var(--ink);}
 .siswa-cell span{display:block;font-size:11px;color:var(--ink-soft);margin-top:2px;}
 .amount-cell .amount-val{font-family:var(--font-mono);font-weight:700;color:var(--green-deep);font-size:14px;margin-bottom:6px;}
-.chip-row{display:flex;gap:5px;flex-wrap:wrap;}
-.chip-mini{background:var(--cream);border:1.2px solid var(--gold);color:var(--green-deep);border-radius:7px;padding:5px 7px;font-size:10.5px;font-weight:700;font-family:var(--font-mono);}
+.chip-row{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
+.chip-row::-webkit-scrollbar{height:3px;}
+.chip-mini{background:var(--cream);border:1.2px solid var(--gold);color:var(--green-deep);border-radius:7px;padding:5px 8px;font-size:10.5px;font-weight:700;font-family:var(--font-mono);flex-shrink:0;white-space:nowrap;}
 .chip-mini:active{background:var(--gold);color:var(--cream);}
 .chip-mini.x{border-color:var(--danger);color:var(--danger);}
 .chip-mini.x:active{background:var(--danger);color:#fff;}
@@ -160,6 +163,17 @@ tbody tr:nth-child(even){background:rgba(183,145,43,0.05);}
 .rekap-summary .rs-label{font-size:11.5px;color:rgba(251,246,234,0.7);text-transform:uppercase;letter-spacing:0.4px;font-weight:700;}
 .rekap-summary .rs-total{font-family:var(--font-mono);font-size:24px;font-weight:700;color:var(--gold-light);margin-top:2px;}
 .det-btn{font-size:12px;color:var(--green-deep);font-weight:700;background:rgba(23,60,49,0.08);padding:6px 10px;border-radius:8px;}
+
+.rekap-matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius-md);box-shadow:var(--shadow-card);background:var(--cream);margin-bottom:12px;}
+table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
+.rekap-matrix th,.rekap-matrix td{padding:8px 9px;text-align:center;border-bottom:1px solid var(--cream-line);border-right:1px solid var(--cream-line);white-space:nowrap;font-family:var(--font-mono);}
+.rekap-matrix thead th{background:var(--green-deep);color:var(--gold-light);font-size:10.5px;font-family:var(--font-ui);font-weight:700;}
+.rekap-matrix .sticky-col{position:sticky;left:0;background:var(--cream);text-align:left;min-width:120px;font-weight:700;font-family:var(--font-ui);color:var(--ink);cursor:pointer;z-index:1;}
+.rekap-matrix thead .sticky-col{background:var(--green-deep);color:var(--gold-light);z-index:3;}
+.rekap-matrix .sticky-col-end{position:sticky;right:0;background:var(--paper);font-weight:700;color:var(--green-deep);z-index:1;}
+.rekap-matrix thead .sticky-col-end{background:var(--green-deep);color:var(--gold-light);z-index:3;}
+.rekap-matrix .rekap-footer td{background:rgba(183,145,43,0.14);font-weight:700;color:var(--green-deep);}
+.rekap-matrix .rekap-footer .sticky-col{background:rgba(183,145,43,0.24);}
 
 /* ---------- Modal ---------- */
 .modal-backdrop{position:fixed;inset:0;background:rgba(23,36,32,0.55);z-index:50;display:flex;align-items:flex-end;justify-content:center;}
@@ -295,6 +309,9 @@ tbody tr:nth-child(even){background:rgba(183,145,43,0.05);}
   <div class="setup-banner hidden" id="setupBanner">
     Sambungan ke Apps Script belum diatur. <button id="setupBannerBtn">Atur sekarang</button>
   </div>
+  <div class="setup-banner hidden" id="bioBanner">
+    Aktifkan masuk cepat pakai sidik jari/wajah di HP ini? <button id="bioBannerBtn">Aktifkan</button> <button id="bioBannerDismiss">Nanti</button>
+  </div>
 
   <main>
     <!-- ===================== KARTU ===================== -->
@@ -339,10 +356,11 @@ tbody tr:nth-child(even){background:rgba(183,145,43,0.05);}
             <button class="btn btn-danger" id="kartuHapus">Hapus Nilai</button>
           </div>
         </div>
-        <div class="nav-row">
+        <div class="nav-row-top">
           <button class="btn btn-ghost" id="kartuBack">&#8249; Kembali</button>
-          <button class="btn btn-primary" id="kartuNext">Simpan &amp; Lanjut &#8250;</button>
+          <button class="btn btn-ghost" id="kartuLewati">Lewati &#8250;</button>
         </div>
+        <button class="btn btn-primary btn-block" id="kartuNext" style="margin-top:9px;">Simpan &amp; Lanjut &#8250;</button>
       </div>
 
       <div id="kartuSelesai" class="finish-card hidden">
@@ -416,13 +434,14 @@ tbody tr:nth-child(even){background:rgba(183,145,43,0.05);}
             <div class="rs-total" id="rekapTotalBulan">Rp 0</div>
           </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th style="width:26px">#</th><th>Nama Siswa</th><th>Total</th><th style="width:60px"></th></tr></thead>
-            <tbody id="rekapBody"></tbody>
+        <div class="rekap-matrix-wrap">
+          <table class="rekap-matrix">
+            <thead><tr id="rekapMatrixHead"></tr></thead>
+            <tbody id="rekapMatrixBody"></tbody>
           </table>
         </div>
-        <button class="btn btn-outline btn-block" id="rekapDownload">&#11015; Unduh Excel (.xlsx)</button>
+        <div class="hint" style="text-align:center;">Geser tabel ke kanan untuk melihat semua tanggal. Ketuk nama siswa untuk melihat riwayat lengkapnya.</div>
+        <button class="btn btn-outline btn-block" id="rekapDownload" style="margin-top:10px;">&#11015; Unduh Excel (.xlsx)</button>
       </div>
     </section>
 
@@ -442,6 +461,7 @@ tbody tr:nth-child(even){background:rgba(183,145,43,0.05);}
           <input type="date" id="spTanggalSetor">
         </div>
         <button class="btn btn-primary btn-block" id="spSetorkanBtn">Setorkan Sekarang</button>
+        <button class="btn btn-ghost btn-block" id="spShowQrBtn" style="margin-top:8px;">&#9635; Tampilkan QR untuk Bendahara</button>
 
         <h3 class="riwayat-head">Riwayat Setoran Saya</h3>
         <div class="table-wrap">
@@ -460,6 +480,8 @@ tbody tr:nth-child(even){background:rgba(183,145,43,0.05);}
           <div class="sh-total" id="sbGrandTotal">Rp 0</div>
           <div class="sh-sub" id="sbSub">dari seluruh petugas pencatat tabungan</div>
         </div>
+        <button class="btn btn-secondary btn-block" id="sbScanBtn" style="margin-bottom:14px;">Scan QR dari Petugas</button>
+        <div id="sbQrReader" class="hidden" style="width:100%;border-radius:var(--radius-md);overflow:hidden;background:#000;margin-bottom:14px;min-height:190px;"></div>
         <div id="sbList"></div>
 
         <h3 class="riwayat-head">Riwayat Semua Setoran</h3>
@@ -517,6 +539,19 @@ tbody tr:nth-child(even){background:rgba(183,145,43,0.05);}
   </div>
 </div>
 
+<!-- Setoran QR Modal (Petugas) -->
+<div class="modal-backdrop hidden" id="setoranQrModal">
+  <div class="modal-sheet" style="text-align:center;">
+    <div class="modal-head">
+      <h3>QR Setoran</h3>
+      <button class="close-x" id="setoranQrClose">&#10005;</button>
+    </div>
+    <div class="hint">Tunjukkan QR ini ke Bendahara untuk dipindai sebagai konfirmasi penerimaan setoran.</div>
+    <div id="setoranQrBox" style="display:flex;justify-content:center;margin:10px 0;"></div>
+    <div id="setoranQrInfo" style="font-weight:700;color:var(--green-deep);font-size:14px;"></div>
+  </div>
+</div>
+
 <!-- QR Card Modal (Admin) -->
 <div class="modal-backdrop hidden" id="qrCardModal">
   <div class="modal-sheet">
@@ -541,6 +576,7 @@ tbody tr:nth-child(even){background:rgba(183,145,43,0.05);}
       <button class="login-tab active" data-lt="manual">Login Manual</button>
       <button class="login-tab" data-lt="qr">Scan QR</button>
     </div>
+    <button class="btn btn-secondary btn-block hidden" id="bioLoginBtn" style="margin-bottom:14px;">&#128272; Masuk dengan Sidik Jari/Wajah</button>
     <div id="loginError" class="login-error hidden"></div>
 
     <div class="login-panel active" id="panel-manual">
@@ -845,7 +881,13 @@ async function refreshKartuList(){
     hideLoading();
   }
 }
-kartuKelasEl.addEventListener('change', refreshKartuList);
+kartuKelasEl.addEventListener('change', async ()=>{
+  await refreshKartuList();
+  if(kartuKelasEl.value && tabelKelasEl.value !== kartuKelasEl.value){
+    tabelKelasEl.value = kartuKelasEl.value;
+    refreshTabelList();
+  }
+});
 kartuTanggalEl.addEventListener('change', ()=>{
   if(kartuKelasEl.value) refreshKartuList();
 });
@@ -892,18 +934,30 @@ document.getElementById('kartuBack').addEventListener('click', ()=>{
     renderKartuCard();
   }
 });
+document.getElementById('kartuLewati').addEventListener('click', ()=>{
+  if(kartuState.index < kartuState.list.length-1){
+    kartuState.index++;
+    renderKartuCard();
+  }else{
+    showKartuSelesai();
+  }
+});
 document.getElementById('kartuNext').addEventListener('click', async ()=>{
   const s = kartuState.list[kartuState.index];
   const tgl = kartuTanggalEl.value;
   const existing = tabunganMap[s.nisn+'|'+tgl];
   const btn = document.getElementById('kartuNext');
-  const needsSave = kartuState.currentAmount > 0 || !!existing;
-  if(needsSave && (!existing || existing.amount !== kartuState.currentAmount)){
+  // Simpan bila: data baru, jumlah berubah, atau data lama belum tercatat PETUGAS-nya
+  // (mis. tersimpan sebelum fitur login/petugas aktif) - supaya kolom PETUGAS terisi.
+  const petugasBelumTercatat = !!existing && !existing.petugas;
+  const adaPerubahan = !existing || existing.amount !== kartuState.currentAmount || petugasBelumTercatat;
+  const needsSave = adaPerubahan && (kartuState.currentAmount > 0 || !!existing);
+  if(needsSave){
     btn.disabled = true;
     try{
       await simpanTabungan(s.nisn, tgl, kartuState.currentAmount);
-      if(kartuState.currentAmount>0){
-        kartuState.sesiTotal += kartuState.currentAmount;
+      if(kartuState.currentAmount>0 && (!existing || existing.amount !== kartuState.currentAmount)){
+        kartuState.sesiTotal += kartuState.currentAmount - (existing ? existing.amount : 0);
         kartuState.sesiCount++;
       }
     }catch(e){
@@ -969,7 +1023,13 @@ async function refreshTabelList(){
     hideLoading();
   }
 }
-tabelKelasEl.addEventListener('change', refreshTabelList);
+tabelKelasEl.addEventListener('change', async ()=>{
+  await refreshTabelList();
+  if(tabelKelasEl.value && kartuKelasEl.value !== tabelKelasEl.value){
+    kartuKelasEl.value = tabelKelasEl.value;
+    refreshKartuList();
+  }
+});
 tabelTanggalEl.addEventListener('change', ()=>{ if(tabelKelasEl.value) refreshTabelList(); });
 document.getElementById('tabelCari').addEventListener('input', renderTabelBody);
 
@@ -1050,8 +1110,9 @@ const rekapBulanEl = document.getElementById('rekapBulan');
   rekapBulanEl.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 })();
 
-let rekapCurrentData = []; // {nisn,nama,kelas,total}
+let rekapCurrentSiswa = []; // siswa yang direkap bulan ini
 let rekapCurrentLabel = '';
+let rekapCurrentBulan = '';
 
 document.getElementById('rekapMuat').addEventListener('click', async ()=>{
   const kelas = rekapKelasEl.value;
@@ -1060,19 +1121,10 @@ document.getElementById('rekapMuat').addEventListener('click', async ()=>{
   showLoading('Memuat rekap...');
   try{
     await loadTabunganData();
-    const targetSiswa = siswaList.filter(s => !kelas || s.kelas===kelas);
-    const totals = {};
-    targetSiswa.forEach(s=> totals[s.nisn] = 0);
-    Object.keys(tabunganMap).forEach(key=>{
-      const [nisn, dateStr] = key.split('|');
-      if(!(nisn in totals)) return;
-      if(dateStr.substring(0,7) !== bulan) return;
-      totals[nisn] += tabunganMap[key].amount;
-    });
-    rekapCurrentData = targetSiswa.map(s=>({ nisn:s.nisn, nama:s.nama, kelas:s.kelas, total: totals[s.nisn]||0 }))
-      .sort((a,b)=>a.nama.localeCompare(b.nama));
+    rekapCurrentSiswa = siswaList.filter(s => !kelas || s.kelas===kelas).sort((a,b)=>a.nama.localeCompare(b.nama));
     rekapCurrentLabel = (kelas||'Semua Kelas') + ' - ' + bulan;
-    renderRekap();
+    rekapCurrentBulan = bulan;
+    renderRekapMatrix();
     document.getElementById('rekapEmpty').classList.add('hidden');
     document.getElementById('rekapResult').classList.remove('hidden');
   }catch(e){
@@ -1082,21 +1134,46 @@ document.getElementById('rekapMuat').addEventListener('click', async ()=>{
   }
 });
 
-function renderRekap(){
-  const body = document.getElementById('rekapBody');
-  body.innerHTML = '';
+function daysInMonth(yyyymm){
+  const [y,m] = yyyymm.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
+function renderRekapMatrix(){
+  const nDays = daysInMonth(rekapCurrentBulan);
+  const headCells = ['<th class="sticky-col">Nama Siswa</th>'];
+  for(let d=1; d<=nDays; d++) headCells.push('<th>'+d+'</th>');
+  headCells.push('<th class="sticky-col-end">Total</th>');
+  document.getElementById('rekapMatrixHead').innerHTML = headCells.join('');
+
+  const dayTotals = new Array(nDays+1).fill(0);
   let grand = 0;
-  rekapCurrentData.forEach((row, idx)=>{
-    grand += row.total;
-    const tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td>'+(idx+1)+'</td>'+
-      '<td><div class="siswa-cell"><strong>'+escapeHtml(row.nama)+'</strong><span>'+row.kelas+' \u00b7 NISN '+row.nisn+'</span></div></td>'+
-      '<td style="font-family:var(--font-mono);font-weight:700;color:var(--green-deep);">Rp '+formatRupiah(row.total)+'</td>'+
-      '<td><button class="det-btn">Jejak</button></td>';
-    tr.querySelector('.det-btn').addEventListener('click', ()=> openJejak(row.nisn));
-    body.appendChild(tr);
+  const bodyHtml = rekapCurrentSiswa.map(s=>{
+    let rowTotal = 0;
+    const cells = [];
+    for(let d=1; d<=nDays; d++){
+      const dateStr = rekapCurrentBulan+'-'+String(d).padStart(2,'0');
+      const entry = tabunganMap[s.nisn+'|'+dateStr];
+      const amt = entry ? entry.amount : 0;
+      rowTotal += amt;
+      dayTotals[d] += amt;
+      cells.push('<td>'+(amt ? formatRupiah(amt) : '\u2013')+'</td>');
+    }
+    grand += rowTotal;
+    return '<tr><td class="sticky-col jejak-open" data-nisn="'+s.nisn+'">'+escapeHtml(s.nama)+'</td>'+
+      cells.join('')+'<td class="sticky-col-end">'+formatRupiah(rowTotal)+'</td></tr>';
+  }).join('');
+
+  const footerCells = [];
+  for(let d=1; d<=nDays; d++) footerCells.push('<td>'+(dayTotals[d] ? formatRupiah(dayTotals[d]) : '\u2013')+'</td>');
+  const footerHtml = '<tr class="rekap-footer"><td class="sticky-col">Total Harian</td>'+footerCells.join('')+'<td class="sticky-col-end">'+formatRupiah(grand)+'</td></tr>';
+
+  const tbody = document.getElementById('rekapMatrixBody');
+  tbody.innerHTML = bodyHtml + footerHtml;
+  tbody.querySelectorAll('.jejak-open').forEach(cell=>{
+    cell.addEventListener('click', ()=> openJejak(cell.dataset.nisn));
   });
+
   document.getElementById('rekapLabelBulan').textContent = 'Total ' + rekapCurrentLabel;
   document.getElementById('rekapTotalBulan').textContent = 'Rp '+formatRupiah(grand);
 }
@@ -1134,16 +1211,38 @@ document.getElementById('detailClose').addEventListener('click', ()=>{
 });
 
 document.getElementById('rekapDownload').addEventListener('click', async ()=>{
-  if(rekapCurrentData.length===0){ toast('Tidak ada data untuk diunduh', 'err'); return; }
+  if(rekapCurrentSiswa.length===0){ toast('Tidak ada data untuk diunduh', 'err'); return; }
   showLoading('Menyiapkan file Excel...');
   try{
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
-    const aoa = [['NISN','Nama','Kelas','Total Tabungan ('+rekapCurrentLabel+')']];
+    const nDays = daysInMonth(rekapCurrentBulan);
+    const header = ['Nama Siswa'];
+    for(let d=1; d<=nDays; d++) header.push(String(d));
+    header.push('Total');
+    const aoa = [header];
+    const dayTotals = new Array(nDays+1).fill(0);
     let grand = 0;
-    rekapCurrentData.forEach(r=>{ aoa.push([r.nisn, r.nama, r.kelas, r.total]); grand += r.total; });
-    aoa.push(['','','Total', grand]);
+    rekapCurrentSiswa.forEach(s=>{
+      const row = [s.nama];
+      let rowTotal = 0;
+      for(let d=1; d<=nDays; d++){
+        const dateStr = rekapCurrentBulan+'-'+String(d).padStart(2,'0');
+        const entry = tabunganMap[s.nisn+'|'+dateStr];
+        const amt = entry ? entry.amount : 0;
+        row.push(amt || '');
+        rowTotal += amt;
+        dayTotals[d] += amt;
+      }
+      row.push(rowTotal);
+      grand += rowTotal;
+      aoa.push(row);
+    });
+    const footer = ['Total Harian'];
+    for(let d=1; d<=nDays; d++) footer.push(dayTotals[d] || '');
+    footer.push(grand);
+    aoa.push(footer);
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = [{wch:14},{wch:26},{wch:10},{wch:20}];
+    ws['!cols'] = [{wch:24}].concat(new Array(nDays).fill({wch:8})).concat([{wch:12}]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Rekap Tabungan');
     XLSX.writeFile(wb, 'Rekap_Tabungan_'+rekapCurrentLabel.replace(/\s+/g,'_')+'.xlsx');
@@ -1364,7 +1463,7 @@ function renderSetoranBendahara(){
       '</div>'+
       (kelasChips ? '<div class="pc-kelas-chips">'+kelasChips+'</div>' : '<div class="pc-empty">Belum ada tabungan tercatat.</div>')+
       '<button class="btn btn-secondary btn-block terima-btn" '+(data.total<=0?'disabled':'')+'>Diterima</button>';
-    card.querySelector('.terima-btn').addEventListener('click', ()=> terimaSetoranHandler(pu.user, data.total, card));
+    card.querySelector('.terima-btn').addEventListener('click', (e)=> terimaSetoranHandler(pu.user, data.total, e.currentTarget));
     listEl.appendChild(card);
   });
 
@@ -1403,10 +1502,9 @@ document.getElementById('sbDownloadBtn').addEventListener('click', async ()=>{
   await downloadRiwayatXlsx(rows, 'Riwayat_Setoran_'+(filter||'Semua_Petugas').replace(/\s+/g,'_'), true);
 });
 
-async function terimaSetoranHandler(petugas, jumlah, cardEl){
+async function terimaSetoranHandler(petugas, jumlah, btnEl){
   if(!CFG.scriptUrl){ toast('Atur URL Apps Script dulu di Pengaturan', 'err'); return; }
-  const btn = cardEl.querySelector('.terima-btn');
-  btn.disabled = true; btn.textContent = 'Memproses...';
+  if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'Memproses...'; }
   try{
     const url = CFG.scriptUrl + '?action=terima&petugas=' + encodeURIComponent(petugas) + '&jumlah=' + encodeURIComponent(jumlah);
     const res = await fetch(url);
@@ -1417,9 +1515,79 @@ async function terimaSetoranHandler(petugas, jumlah, cardEl){
     renderSetoranBendahara();
   }catch(e){
     toast('Gagal: '+e.message, 'err');
-    btn.disabled = false; btn.textContent = 'Diterima';
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = 'Diterima'; }
   }
 }
+
+/* ---- Bendahara: Terima via Scan QR dari Petugas ---- */
+let sbScanner = null;
+document.getElementById('sbScanBtn').addEventListener('click', async ()=>{
+  if(sbScanner){ await stopSbScanner(); return; }
+  const btn = document.getElementById('sbScanBtn');
+  btn.disabled = true; btn.textContent = 'Memuat kamera...';
+  try{
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js');
+    const reader = document.getElementById('sbQrReader');
+    reader.classList.remove('hidden');
+    reader.innerHTML = '';
+    sbScanner = new Html5Qrcode('sbQrReader');
+    await sbScanner.start({ facingMode:'environment' }, { fps:10, qrbox:220 }, onSbQrDecoded, ()=>{});
+    btn.textContent = 'Hentikan Kamera';
+  }catch(e){
+    toast('Tidak bisa mengakses kamera: '+e.message, 'err');
+    document.getElementById('sbQrReader').classList.add('hidden');
+    btn.textContent = 'Scan QR dari Petugas';
+  }finally{
+    btn.disabled = false;
+  }
+});
+async function stopSbScanner(){
+  if(sbScanner){
+    try{ await sbScanner.stop(); sbScanner.clear(); }catch(e){}
+    sbScanner = null;
+  }
+  document.getElementById('sbQrReader').classList.add('hidden');
+  document.getElementById('sbScanBtn').textContent = 'Scan QR dari Petugas';
+}
+async function onSbQrDecoded(text){
+  let obj = null;
+  try{ obj = JSON.parse(text); }catch(e){}
+  if(!obj || obj.type !== 'setoran' || !obj.petugas){
+    toast('QR tidak dikenali sebagai QR setoran', 'err');
+    return;
+  }
+  await stopSbScanner();
+  const { result } = computePetugasPending();
+  const data = result[obj.petugas];
+  if(!data || data.total<=0){
+    toast('Tidak ada setoran yang perlu diterima dari '+obj.petugas, 'err');
+    return;
+  }
+  await terimaSetoranHandler(obj.petugas, data.total, null);
+}
+
+/* ---- Petugas: Tampilkan QR Setoran untuk dipindai Bendahara ---- */
+document.getElementById('spShowQrBtn').addEventListener('click', async ()=>{
+  const { result } = computePetugasPending();
+  const mine = result[session.user] || { total:0 };
+  if(mine.total <= 0){ toast('Tidak ada setoran untuk ditampilkan'); return; }
+  showLoading('Menyiapkan QR...');
+  try{
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    const box = document.getElementById('setoranQrBox');
+    box.innerHTML = '';
+    new QRCode(box, { text: JSON.stringify({ type:'setoran', petugas: session.user }), width:200, height:200, colorDark:'#173C31', colorLight:'#ffffff' });
+    document.getElementById('setoranQrInfo').textContent = session.user+' \u00b7 Rp '+formatRupiah(mine.total);
+    document.getElementById('setoranQrModal').classList.remove('hidden');
+  }catch(e){
+    toast('Gagal membuat QR: '+e.message, 'err');
+  }finally{
+    hideLoading();
+  }
+});
+document.getElementById('setoranQrClose').addEventListener('click', ()=>{
+  document.getElementById('setoranQrModal').classList.add('hidden');
+});
 
 /* ================= SETTINGS MODAL ================= */
 function openSettings(){
@@ -1597,6 +1765,8 @@ function enterApp(){
   document.getElementById('ubRole').textContent = session.status;
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('qrCardBtn').classList.toggle('hidden', !isAdmin());
+  document.getElementById('settingsBtn').classList.toggle('hidden', !isAdmin());
+  maybeShowBioBanner();
 }
 
 function showLoginGate(){
@@ -1604,6 +1774,9 @@ function showLoginGate(){
   document.getElementById('userBadge').classList.add('hidden');
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('qrCardBtn').classList.add('hidden');
+  document.getElementById('settingsBtn').classList.remove('hidden');
+  document.getElementById('bioBanner').classList.add('hidden');
+  updateBiometricButton();
   const hint = document.getElementById('loginHint');
   hint.textContent = loginList.length
     ? 'Masuk dengan akun yang terdaftar di sheet TABUNGAN KLS 8 (kolom USER).'
@@ -1640,6 +1813,106 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
   showLoginGate();
+});
+
+/* ---- Login Sidik Jari / Wajah (WebAuthn, per perangkat) ---- */
+// Catatan: ini memakai penguncian biometrik BAWAAN perangkat (mis. sidik jari
+// atau Face Unlock di HP) untuk membuka SESI YANG SUDAH TERSIMPAN di perangkat
+// ini saja. Tidak ada verifikasi wajah/sidik jari ke server - keamanannya
+// setara dengan "kunci layar" perangkat itu sendiri, bukan pengenalan identitas
+// terpusat. Harus diaktifkan ulang di tiap HP/laptop yang dipakai.
+const BIOMETRIC_KEY = 'buku_tabungan_biometric_v1';
+
+function bufToBase64(buf){
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(buf)));
+}
+function base64ToBuf(b64){
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+  return arr.buffer;
+}
+
+async function registerBiometric(){
+  if(!window.PublicKeyCredential){
+    toast('Perangkat atau browser ini tidak mendukung sidik jari/wajah', 'err');
+    return;
+  }
+  try{
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const userId = crypto.getRandomValues(new Uint8Array(16));
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: 'Buku Tabungan Siswa' },
+        user: { id: userId, name: session.user, displayName: session.user },
+        pubKeyCredParams: [{ type:'public-key', alg:-7 }, { type:'public-key', alg:-257 }],
+        authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
+        timeout: 60000
+      }
+    });
+    localStorage.setItem(BIOMETRIC_KEY, JSON.stringify({
+      credentialId: bufToBase64(cred.rawId), user: session.user, status: session.status
+    }));
+    toast('Sidik jari/wajah berhasil diaktifkan di HP ini', 'ok');
+    document.getElementById('bioBanner').classList.add('hidden');
+  }catch(e){
+    toast('Gagal mengaktifkan: '+e.message, 'err');
+  }
+}
+
+async function loginWithBiometric(){
+  const raw = localStorage.getItem(BIOMETRIC_KEY);
+  if(!raw) return;
+  const stored = JSON.parse(raw);
+  try{
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: [{ id: base64ToBuf(stored.credentialId), type:'public-key' }],
+        userVerification: 'required',
+        timeout: 60000
+      }
+    });
+    if(!assertion) return;
+    const match = loginList.find(l=>l.user.toLowerCase()===stored.user.toLowerCase());
+    if(!match){
+      toast('Akun tersimpan sudah tidak terdaftar di Sheet1', 'err');
+      return;
+    }
+    saveSession({ user: match.user, status: match.status });
+    toast('Selamat datang kembali, '+match.user, 'ok');
+    enterApp();
+  }catch(e){
+    toast('Verifikasi sidik jari/wajah gagal atau dibatalkan', 'err');
+  }
+}
+
+function updateBiometricButton(){
+  const raw = localStorage.getItem(BIOMETRIC_KEY);
+  const btn = document.getElementById('bioLoginBtn');
+  if(raw && window.PublicKeyCredential){
+    const stored = JSON.parse(raw);
+    btn.classList.remove('hidden');
+    btn.textContent = '\uD83D\uDD12 Masuk sebagai '+stored.user;
+  }else{
+    btn.classList.add('hidden');
+  }
+}
+function maybeShowBioBanner(){
+  const banner = document.getElementById('bioBanner');
+  if(!window.PublicKeyCredential){ banner.classList.add('hidden'); return; }
+  const raw = localStorage.getItem(BIOMETRIC_KEY);
+  const already = raw && JSON.parse(raw).user.toLowerCase() === session.user.toLowerCase();
+  const dismissed = sessionStorage.getItem('bio_banner_dismissed_'+session.user);
+  banner.classList.toggle('hidden', !!already || !!dismissed);
+}
+document.getElementById('bioLoginBtn').addEventListener('click', loginWithBiometric);
+document.getElementById('bioBannerBtn').addEventListener('click', registerBiometric);
+document.getElementById('bioBannerDismiss').addEventListener('click', ()=>{
+  sessionStorage.setItem('bio_banner_dismissed_'+session.user, '1');
+  document.getElementById('bioBanner').classList.add('hidden');
 });
 
 /* ---- QR Scan Login ---- */

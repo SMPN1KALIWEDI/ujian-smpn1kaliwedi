@@ -280,7 +280,7 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
 .siswa-pick-item:active{background:var(--paper);}
 .siswa-pick-item .spi-sub{font-size:11px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
 .view-toggle{display:flex;gap:6px;background:var(--paper);border-radius:12px;padding:4px;margin-bottom:14px;}
-.view-toggle button{flex:1;padding:9px 6px;border-radius:9px;font-size:13px;font-weight:700;color:var(--ink-soft);background:none;}
+.view-toggle button{flex:1;padding:9px 6px;border-radius:9px;font-size:13px;font-weight:700;color:#8a8578;background:#E1DDCE;}
 .view-toggle button.active{background:var(--green-deep);color:var(--gold-light);}
 .pending-card{background:var(--cream);border-radius:var(--radius-md);padding:16px;box-shadow:var(--shadow-card);margin-bottom:12px;border-left:4px solid var(--gold);}
 .pending-card .pd-name{font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--ink);}
@@ -289,6 +289,12 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
 .pending-card .pd-ket{font-size:12px;color:var(--ink-soft);font-style:italic;margin-bottom:12px;}
 .pending-actions{display:flex;gap:8px;}
 .pending-actions .btn{flex:1;}
+.kas-summary{display:flex;gap:8px;margin-bottom:16px;}
+.kas-stat{flex:1;background:var(--cream);border-radius:var(--radius-md);padding:14px 8px;text-align:center;box-shadow:var(--shadow-card);}
+.kas-stat .ks-label{font-size:9.5px;text-transform:uppercase;color:var(--ink-soft);font-weight:700;letter-spacing:0.3px;margin-bottom:5px;}
+.kas-stat .ks-val{font-family:var(--font-mono);font-weight:700;font-size:14px;color:var(--green-deep);}
+.pc-sudah{font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;font-weight:600;}
+.pc-sudah b{color:var(--success);font-family:var(--font-mono);}
 </style>
 </head>
 <body>
@@ -313,16 +319,16 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
         </div>
         <button class="icon-btn hidden" id="qrCardBtn" title="Kartu QR Login">&#9635;</button>
         <button class="icon-btn hidden" id="logoutBtn" title="Keluar">&#8630;</button>
+        <button class="icon-btn" id="refreshBtn" title="Muat Ulang Data">&#8635;</button>
         <button class="icon-btn" id="settingsBtn" title="Pengaturan">&#9881;</button>
       </div>
     </div>
     <div class="tabs">
-      <button class="tab active" data-tab="kartu">Kartu</button>
-      <button class="tab" data-tab="tabel">Tabel</button>
-      <button class="tab" data-tab="rekap">Rekap</button>
+      <button class="tab active" data-tab="input" id="tabInput">Input</button>
       <button class="tab" data-tab="setoran">Setoran</button>
       <button class="tab" data-tab="ambil">Ambil</button>
       <button class="tab" data-tab="siswa">Siswa</button>
+      <button class="tab" data-tab="rekap">Rekap</button>
     </div>
   </div>
 
@@ -335,7 +341,13 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
 
   <main>
     <!-- ===================== KARTU ===================== -->
-    <section id="view-kartu" class="view">
+    <section id="view-input" class="view">
+      <div class="view-toggle">
+        <button class="active" data-iv="kartu">Kartu</button>
+        <button data-iv="tabel">Tabel</button>
+      </div>
+
+      <div id="inputKartu">
       <div class="controls-row">
         <div class="field">
           <label>Tanggal</label>
@@ -393,10 +405,9 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
           <button class="btn btn-secondary" id="kartuGantiKelas">Ganti Kelas</button>
         </div>
       </div>
-    </section>
+      </div>
 
-    <!-- ===================== TABEL ===================== -->
-    <section id="view-tabel" class="view hidden">
+      <div id="inputTabel" class="hidden">
       <div class="controls-row">
         <div class="field">
           <label>Tanggal</label>
@@ -425,16 +436,19 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
         </div>
         <button class="btn btn-primary btn-block" id="tabelSimpanSemua">Simpan Semua Perubahan</button>
       </div>
+      </div>
     </section>
 
     <!-- ===================== REKAP ===================== -->
     <section id="view-rekap" class="view hidden">
+
       <div class="view-toggle">
-        <button class="active" data-rv="harian">Harian (per bulan)</button>
-        <button data-rv="bulanan">Bulanan (per tahun)</button>
+        <button class="active" data-rv="harian">Harian</button>
+        <button data-rv="bulanan">Bulanan (Siswa)</button>
+        <button data-rv="kelas">Per Kelas</button>
       </div>
       <div class="controls-row">
-        <div class="field">
+        <div class="field" id="rekapKelasWrap">
           <label>Kelas</label>
           <select id="rekapKelas"><option value="">Semua kelas</option></select>
         </div>
@@ -443,10 +457,11 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
           <input type="month" id="rekapBulan">
         </div>
         <div class="field hidden" id="rekapTahunWrap">
-          <label>Tahun</label>
+          <label>Tahun Ajaran Mulai</label>
           <input type="number" id="rekapTahun" min="2020" max="2100">
         </div>
       </div>
+      <div class="hint hidden" id="rekapTahunHint" style="margin-top:-10px;">Contoh: isi 2026 untuk tahun ajaran 2026/2027 (Juli 2026 - Juni 2027).</div>
       <button class="btn btn-secondary btn-block" id="rekapMuat" style="margin-bottom:16px;">Tampilkan Rekap</button>
 
       <div id="rekapEmpty" class="empty-state">
@@ -483,6 +498,9 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
           <div class="sh-sub" id="spSub">dari hasil tabungan yang sudah dicatat</div>
           <div class="pending-badge hidden" id="spBadge">&#9203; Menunggu konfirmasi Bendahara</div>
         </div>
+        <div class="kas-summary">
+          <div class="kas-stat" style="flex:1;"><div class="ks-label">Jumlah Setoran (Sudah Disetorkan)</div><div class="ks-val" id="spSudahDisetor" style="color:var(--success);">Rp 0</div></div>
+        </div>
         <div class="kelas-breakdown" id="spKelasList"></div>
         <div class="field" style="margin-bottom:12px;">
           <label>Tanggal Setor</label>
@@ -503,6 +521,11 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
 
       <!-- Tampilan Bendahara / Admin -->
       <div id="setoranBendahara" class="hidden">
+        <div class="kas-summary">
+          <div class="kas-stat"><div class="ks-label">Sudah Diterima</div><div class="ks-val" id="sbTotalDiterima" style="color:var(--success);">Rp 0</div></div>
+          <div class="kas-stat"><div class="ks-label">Sudah Diambil</div><div class="ks-val" id="sbTotalDiambil" style="color:var(--danger);">Rp 0</div></div>
+          <div class="kas-stat"><div class="ks-label">Saldo Kas</div><div class="ks-val" id="sbSaldoKas">Rp 0</div></div>
+        </div>
         <div class="setoran-hero">
           <div class="sh-label">Total Belum Disetor Semua Petugas</div>
           <div class="sh-total" id="sbGrandTotal">Rp 0</div>
@@ -573,12 +596,17 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
         </div>
 
         <h3 class="riwayat-head">Riwayat Pengajuan Saya</h3>
+        <div class="field" style="margin-bottom:12px;">
+          <label>Filter Kelas</label>
+          <select id="ambilRiwayatFilterKelas"><option value="">Semua kelas</option></select>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Tanggal</th><th>Siswa</th><th>Jumlah</th><th>Status</th></tr></thead>
             <tbody id="ambilRiwayatBody"></tbody>
           </table>
         </div>
+        <button class="btn btn-outline btn-block" id="ambilDownloadBtn" style="margin-top:10px;">&#11015; Unduh Riwayat (.xlsx)</button>
       </div>
 
       <!-- Tampilan Bendahara / Admin -->
@@ -587,14 +615,20 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
         <div id="ambilPendingList"></div>
 
         <h3 class="riwayat-head">Riwayat Semua Pengambilan</h3>
-        <div class="field" style="margin-bottom:12px;">
-          <label>Filter Status</label>
-          <select id="ambilFilterStatus">
-            <option value="">Semua status</option>
-            <option value="Menunggu">Menunggu</option>
-            <option value="Disetujui">Disetujui</option>
-            <option value="Ditolak">Ditolak</option>
-          </select>
+        <div class="controls-row">
+          <div class="field">
+            <label>Filter Status</label>
+            <select id="ambilFilterStatus">
+              <option value="">Semua status</option>
+              <option value="Menunggu">Menunggu</option>
+              <option value="Disetujui">Disetujui</option>
+              <option value="Ditolak">Ditolak</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Filter Kelas</label>
+            <select id="ambilBendaharaFilterKelas"><option value="">Semua kelas</option></select>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
@@ -602,6 +636,7 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
             <tbody id="ambilRiwayatBendaharaBody"></tbody>
           </table>
         </div>
+        <button class="btn btn-outline btn-block" id="ambilBendaharaDownloadBtn" style="margin-top:10px;">&#11015; Unduh Riwayat (.xlsx)</button>
       </div>
 
       <div id="ambilEmpty" class="empty-state">
@@ -637,6 +672,7 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
         </div>
         <h3 class="riwayat-head" style="margin-top:0;">Riwayat Transaksi</h3>
         <div id="siswaCardHistory"></div>
+        <button class="btn btn-outline btn-block" id="siswaDownloadBtn" style="margin-top:12px;">&#11015; Unduh Riwayat (.xlsx)</button>
       </div>
     </section>
   </main>
@@ -766,6 +802,14 @@ let setoranRows = []; // {ts, petugas, jumlah, status, tsTerima}
 let pengambilanRows = []; // {ts, nisn, nama, kelas, jumlah, petugas, status, tsSetuju, keterangan}
 const SESSION_KEY = 'buku_tabungan_session_v1';
 
+// Cache ringan supaya berpindah tab tidak selalu memuat ulang dari Google Sheets
+// (yang lambat karena setiap panggilan gviz/Apps Script adalah request jaringan
+// baru). Data dianggap masih segar selama CACHE_TTL ms sejak terakhir diambil;
+// setelah aksi simpan/setor/ambil, pemanggilan memakai force=true supaya pasti
+// mengambil data terbaru.
+let cacheTime = { siswa:0, tabungan:0, setoran:0, pengambilan:0 };
+const CACHE_TTL = 20000;
+
 /* ================= UTIL ================= */
 function todayStr(){
   const d = new Date();
@@ -818,7 +862,8 @@ function cellVal(cell){
   return cell.v === null || cell.v === undefined ? '' : cell.v;
 }
 
-async function loadSiswaData(){
+async function loadSiswaData(force){
+  if(!force && Date.now()-cacheTime.siswa < CACHE_TTL) return;
   const table = await fetchSheet('Sheet1');
   const rows = table.rows || [];
   siswaList = [];
@@ -847,9 +892,11 @@ async function loadSiswaData(){
     if(!user || !password) return;
     loginList.push({ user, password, status: status || 'User' });
   });
+  cacheTime.siswa = Date.now();
 }
 
-async function loadTabunganData(){
+async function loadTabunganData(force){
+  if(!force && Date.now()-cacheTime.tabungan < CACHE_TTL) return;
   const table = await fetchSheet('Sheet2');
   tabunganMap = {};
   (table.rows||[]).forEach(r=>{
@@ -858,13 +905,15 @@ async function loadTabunganData(){
     const nisn = String(cellVal(c[1])).trim();
     const nominal = Number(cellVal(c[2])) || 0;
     const petugas = String(cellVal(c[3])).trim();
+    const statusSetor = String(cellVal(c[4])).trim(); // '' = belum disetor, 'TERSETOR' = sudah
     if(!nisn || !rawDate) return;
     const d = gvizDateToDate(rawDate, c[0].f);
     if(!d) return;
     const dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     const key = nisn+'|'+dateStr;
-    tabunganMap[key] = { amount: nominal, dateStr, nisn, petugas, ts: d.getTime() };
+    tabunganMap[key] = { amount: nominal, dateStr, nisn, petugas, ts: d.getTime(), statusSetor };
   });
+  cacheTime.tabungan = Date.now();
 }
 
 // gviz date cells come as "Date(y,m,d,h,i,s)" in .v, or formatted string in .f
@@ -889,7 +938,8 @@ function gvizDateToStr(v, f){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
-async function loadSetoranData(){
+async function loadSetoranData(force){
+  if(!force && Date.now()-cacheTime.setoran < CACHE_TTL) return;
   setoranRows = [];
   try{
     const table = await fetchSheet('Setoran');
@@ -930,9 +980,11 @@ async function loadSetoranData(){
     // Sheet "Setoran" belum ada (belum pernah ada transaksi setor) - anggap kosong.
     setoranRows = [];
   }
+  cacheTime.setoran = Date.now();
 }
 
-async function loadPengambilanData(){
+async function loadPengambilanData(force){
+  if(!force && Date.now()-cacheTime.pengambilan < CACHE_TTL) return;
   pengambilanRows = [];
   try{
     const table = await fetchSheet('Pengambilan');
@@ -961,6 +1013,7 @@ async function loadPengambilanData(){
     // Sheet "Pengambilan" belum ada (belum pernah ada pengajuan) - anggap kosong.
     pengambilanRows = [];
   }
+  cacheTime.pengambilan = Date.now();
 }
 
 // Saldo bersih siswa = total setoran tabungan - total pengambilan yang sudah Disetujui.
@@ -981,7 +1034,7 @@ function tsToKey(ts){
 }
 
 function populateKelasSelects(){
-  ['kartuKelas','tabelKelas','rekapKelas','ambilKelas','siswaKelasSel'].forEach(id=>{
+  ['kartuKelas','tabelKelas','rekapKelas','ambilKelas','siswaKelasSel','ambilRiwayatFilterKelas','ambilBendaharaFilterKelas'].forEach(id=>{
     const sel = document.getElementById(id);
     const keep = sel.value;
     const firstOpt = sel.options[0];
@@ -1007,7 +1060,15 @@ async function simpanTabungan(nisn, tanggal, nominal){
   const res = await fetch(url);
   const data = await res.json();
   if(data.status !== 'ok') throw new Error(data.message || 'Gagal menyimpan');
-  tabunganMap[nisn+'|'+tanggal] = { amount: nominal, dateStr: tanggal, nisn, petugas, ts: Date.now() };
+  const key = nisn+'|'+tanggal;
+  const existing = tabunganMap[key];
+  // Cerminkan aturan server: kalau sebelumnya sudah TERSETOR tapi nominal berubah,
+  // status kembali ke belum-disetor supaya "Harus Disetorkan" ikut terkoreksi.
+  let statusSetor = '';
+  if(existing){
+    statusSetor = (existing.statusSetor === 'TERSETOR' && existing.amount !== nominal) ? '' : (existing.statusSetor || '');
+  }
+  tabunganMap[key] = { amount: nominal, dateStr: tanggal, nisn, petugas, ts: Date.now(), statusSetor };
   return data;
 }
 
@@ -1017,12 +1078,22 @@ document.querySelectorAll('.tab').forEach(btn=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
-    ['kartu','tabel','rekap','setoran','ambil','siswa'].forEach(t=>{
+    ['input','rekap','setoran','ambil','siswa'].forEach(t=>{
       document.getElementById('view-'+t).classList.toggle('hidden', t!==tab);
     });
     if(tab === 'setoran') refreshSetoranTab();
     if(tab === 'ambil') refreshAmbilTab();
     if(tab === 'siswa') refreshSiswaTab();
+  });
+});
+
+document.querySelectorAll('#view-input .view-toggle [data-iv]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#view-input .view-toggle [data-iv]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const iv = btn.dataset.iv;
+    document.getElementById('inputKartu').classList.toggle('hidden', iv!=='kartu');
+    document.getElementById('inputTabel').classList.toggle('hidden', iv!=='tabel');
   });
 });
 
@@ -1290,9 +1361,21 @@ let rekapCurrentSiswa = []; // siswa yang direkap
 let rekapCurrentLabel = '';
 let rekapCurrentBulan = '';
 let rekapCurrentTahun = new Date().getFullYear();
-let rekapView = 'harian'; // 'harian' | 'bulanan'
+let rekapView = 'harian'; // 'harian' | 'bulanan' | 'kelas'
 const rekapTahunEl = document.getElementById('rekapTahun');
 rekapTahunEl.value = rekapCurrentTahun;
+
+// Bulan tahun ajaran, urut Juli -> Juni. tahunMulai = tahun kalender saat Juli
+// dimulai (mis. 2026 untuk tahun ajaran 2026/2027).
+function academicMonths(tahunMulai){
+  const bulanNama = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const order = [7,8,9,10,11,12,1,2,3,4,5,6];
+  return order.map(m=>({
+    month: m,
+    year: m>=7 ? tahunMulai : tahunMulai+1,
+    label: bulanNama[m-1]
+  }));
+}
 
 document.querySelectorAll('.view-toggle [data-rv]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -1300,8 +1383,10 @@ document.querySelectorAll('.view-toggle [data-rv]').forEach(btn=>{
     btn.classList.add('active');
     rekapView = btn.dataset.rv;
     document.getElementById('rekapBulanWrap').classList.toggle('hidden', rekapView!=='harian');
-    document.getElementById('rekapTahunWrap').classList.toggle('hidden', rekapView!=='bulanan');
-    if(rekapView==='bulanan' && !rekapTahunEl.value){
+    document.getElementById('rekapTahunWrap').classList.toggle('hidden', rekapView==='harian');
+    document.getElementById('rekapTahunHint').classList.toggle('hidden', rekapView==='harian');
+    document.getElementById('rekapKelasWrap').classList.toggle('hidden', rekapView==='kelas');
+    if(rekapView!=='harian' && !rekapTahunEl.value){
       rekapTahunEl.value = rekapBulanEl.value ? rekapBulanEl.value.substring(0,4) : new Date().getFullYear();
     }
   });
@@ -1320,11 +1405,16 @@ document.getElementById('rekapMuat').addEventListener('click', async ()=>{
       rekapCurrentBulan = bulan;
       rekapCurrentLabel = (kelas||'Semua Kelas') + ' - ' + bulan;
       renderRekapMatrixHarian();
+    }else if(rekapView === 'bulanan'){
+      const tahun = Number(rekapTahunEl.value) || new Date().getFullYear();
+      rekapCurrentTahun = tahun;
+      rekapCurrentLabel = (kelas||'Semua Kelas') + ' - Tahun Ajaran ' + tahun + '/' + (tahun+1);
+      renderRekapMatrixBulanan();
     }else{
       const tahun = Number(rekapTahunEl.value) || new Date().getFullYear();
       rekapCurrentTahun = tahun;
-      rekapCurrentLabel = (kelas||'Semua Kelas') + ' - Tahun ' + tahun;
-      renderRekapMatrixBulanan();
+      rekapCurrentLabel = 'Semua Kelas - Tahun Ajaran ' + tahun + '/' + (tahun+1);
+      renderRekapMatrixPerKelas();
     }
     document.getElementById('rekapEmpty').classList.add('hidden');
     document.getElementById('rekapResult').classList.remove('hidden');
@@ -1399,27 +1489,27 @@ function renderRekapMatrixHarian(){
 
 function renderRekapMatrixBulanan(){
   const netMap = computeNetMapByNisnDate();
-  const tahun = rekapCurrentTahun;
-  const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const months = academicMonths(rekapCurrentTahun);
   const headCells = ['<th class="sticky-col">Nama Siswa</th>'];
-  monthNames.forEach(m=>headCells.push('<th>'+m+'</th>'));
-  headCells.push('<th class="sticky-col-end">Total</th>');
+  months.forEach(md=>headCells.push('<th>'+md.label+'</th>'));
+  headCells.push('<th class="sticky-col-end">Jumlah</th>');
   document.getElementById('rekapMatrixHead').innerHTML = headCells.join('');
 
-  const monthTotals = new Array(12).fill(0);
+  const monthTotals = new Array(months.length).fill(0);
   let grand = 0;
   const bodyHtml = rekapCurrentSiswa.map(s=>{
     const perTanggal = netMap[s.nisn] || {};
-    const perBulan = new Array(12).fill(0);
+    const perBulan = new Array(months.length).fill(0);
     Object.keys(perTanggal).forEach(dateStr=>{
-      if(dateStr.substring(0,4) !== String(tahun)) return;
-      const mIdx = parseInt(dateStr.substring(5,7),10) - 1;
-      if(mIdx>=0 && mIdx<12) perBulan[mIdx] += perTanggal[dateStr];
+      const y = parseInt(dateStr.substring(0,4),10);
+      const m = parseInt(dateStr.substring(5,7),10);
+      const idx = months.findIndex(md=>md.year===y && md.month===m);
+      if(idx>=0) perBulan[idx] += perTanggal[dateStr];
     });
     let rowTotal = 0;
-    const cells = perBulan.map((amt,m)=>{
+    const cells = perBulan.map((amt,idx)=>{
       rowTotal += amt;
-      monthTotals[m] += amt;
+      monthTotals[idx] += amt;
       return '<td>'+(amt ? formatRupiah(amt) : '\u2013')+'</td>';
     });
     grand += rowTotal;
@@ -1428,7 +1518,7 @@ function renderRekapMatrixBulanan(){
   }).join('');
 
   const footerCells = monthTotals.map(t=>'<td>'+(t?formatRupiah(t):'\u2013')+'</td>').join('');
-  const footerHtml = '<tr class="rekap-footer"><td class="sticky-col">Total Bulanan</td>'+footerCells+'<td class="sticky-col-end">'+formatRupiah(grand)+'</td></tr>';
+  const footerHtml = '<tr class="rekap-footer"><td class="sticky-col">JUMLAH</td>'+footerCells+'<td class="sticky-col-end">'+formatRupiah(grand)+'</td></tr>';
 
   const tbody = document.getElementById('rekapMatrixBody');
   tbody.innerHTML = bodyHtml + footerHtml;
@@ -1440,6 +1530,57 @@ function renderRekapMatrixBulanan(){
   document.getElementById('rekapTotalBulan').textContent = 'Rp '+formatRupiah(grand);
 }
 
+// Rekap Kelas | Jul | Agu | ... | Jun | Jumlah - satu baris per kelas, baris
+// JUMLAH di bawah menjumlah semua kelas per bulan + total keseluruhan.
+function renderRekapMatrixPerKelas(){
+  const netMap = computeNetMapByNisnDate();
+  const months = academicMonths(rekapCurrentTahun);
+  const headCells = ['<th class="sticky-col">Kelas</th>'];
+  months.forEach(md=>headCells.push('<th>'+md.label+'</th>'));
+  headCells.push('<th class="sticky-col-end">Jumlah</th>');
+  document.getElementById('rekapMatrixHead').innerHTML = headCells.join('');
+
+  // Pra-hitung total per siswa per bulan sekali saja supaya tidak diulang per kelas.
+  const perSiswaBulan = {}; // nisn -> [12 angka]
+  siswaList.forEach(s=>{
+    const perTanggal = netMap[s.nisn] || {};
+    const arr = new Array(months.length).fill(0);
+    Object.keys(perTanggal).forEach(dateStr=>{
+      const y = parseInt(dateStr.substring(0,4),10);
+      const m = parseInt(dateStr.substring(5,7),10);
+      const idx = months.findIndex(md=>md.year===y && md.month===m);
+      if(idx>=0) arr[idx] += perTanggal[dateStr];
+    });
+    perSiswaBulan[s.nisn] = arr;
+  });
+
+  const monthTotals = new Array(months.length).fill(0);
+  let grand = 0;
+  const bodyHtml = kelasList.map(kelas=>{
+    const siswaKelas = siswaList.filter(s=>s.kelas===kelas);
+    const perBulan = new Array(months.length).fill(0);
+    siswaKelas.forEach(s=>{
+      const arr = perSiswaBulan[s.nisn] || [];
+      arr.forEach((amt,idx)=>{ perBulan[idx] += amt; });
+    });
+    let rowTotal = 0;
+    const cells = perBulan.map((amt,idx)=>{
+      rowTotal += amt;
+      monthTotals[idx] += amt;
+      return '<td>'+(amt ? formatRupiah(amt) : '\u2013')+'</td>';
+    });
+    grand += rowTotal;
+    return '<tr><td class="sticky-col">'+escapeHtml(kelas)+'</td>'+cells.join('')+'<td class="sticky-col-end">'+formatRupiah(rowTotal)+'</td></tr>';
+  }).join('');
+
+  const footerCells = monthTotals.map(t=>'<td>'+(t?formatRupiah(t):'\u2013')+'</td>').join('');
+  const footerHtml = '<tr class="rekap-footer"><td class="sticky-col">JUMLAH</td>'+footerCells+'<td class="sticky-col-end">'+formatRupiah(grand)+'</td></tr>';
+
+  document.getElementById('rekapMatrixBody').innerHTML = bodyHtml + footerHtml;
+  document.getElementById('rekapLabelBulan').textContent = rekapCurrentLabel;
+  document.getElementById('rekapTotalBulan').textContent = 'Rp '+formatRupiah(grand);
+}
+
 function formatTanggalIndo(dateStr){
   const bulanNama = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const [y,m,d] = dateStr.split('-').map(Number);
@@ -1447,7 +1588,7 @@ function formatTanggalIndo(dateStr){
 }
 
 document.getElementById('rekapDownload').addEventListener('click', async ()=>{
-  if(rekapCurrentSiswa.length===0){ toast('Tidak ada data untuk diunduh', 'err'); return; }
+  if(rekapView !== 'kelas' && rekapCurrentSiswa.length===0){ toast('Tidak ada data untuk diunduh', 'err'); return; }
   showLoading('Menyiapkan file Excel...');
   try{
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
@@ -1458,7 +1599,7 @@ document.getElementById('rekapDownload').addEventListener('click', async ()=>{
       const nDays = daysInMonth(rekapCurrentBulan);
       header = ['Nama Siswa'];
       for(let d=1; d<=nDays; d++) header.push(String(d));
-      header.push('Total');
+      header.push('Jumlah');
       aoa = [header];
       const dayTotals = new Array(nDays+1).fill(0);
       let grand = 0;
@@ -1482,30 +1623,59 @@ document.getElementById('rekapDownload').addEventListener('click', async ()=>{
       footer.push(grand);
       aoa.push(footer);
       colWidths = [{wch:24}].concat(new Array(nDays).fill({wch:8})).concat([{wch:12}]);
-    }else{
-      const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-      header = ['Nama Siswa'].concat(monthNames).concat(['Total']);
+    }else if(rekapView === 'bulanan'){
+      const months = academicMonths(rekapCurrentTahun);
+      header = ['Nama Siswa'].concat(months.map(m=>m.label)).concat(['Jumlah']);
       aoa = [header];
-      const monthTotals = new Array(12).fill(0);
+      const monthTotals = new Array(months.length).fill(0);
       let grand = 0;
       rekapCurrentSiswa.forEach(s=>{
         const perTanggal = netMap[s.nisn] || {};
-        const perBulan = new Array(12).fill(0);
+        const perBulan = new Array(months.length).fill(0);
         Object.keys(perTanggal).forEach(dateStr=>{
-          if(dateStr.substring(0,4) !== String(rekapCurrentTahun)) return;
-          const mIdx = parseInt(dateStr.substring(5,7),10) - 1;
-          if(mIdx>=0 && mIdx<12) perBulan[mIdx] += perTanggal[dateStr];
+          const y = parseInt(dateStr.substring(0,4),10);
+          const m = parseInt(dateStr.substring(5,7),10);
+          const idx = months.findIndex(md=>md.year===y && md.month===m);
+          if(idx>=0) perBulan[idx] += perTanggal[dateStr];
         });
         let rowTotal = 0;
         const row = [s.nama];
-        perBulan.forEach((amt,m)=>{ row.push(amt||''); rowTotal += amt; monthTotals[m]+=amt; });
+        perBulan.forEach((amt,idx)=>{ row.push(amt||''); rowTotal += amt; monthTotals[idx]+=amt; });
         row.push(rowTotal);
         grand += rowTotal;
         aoa.push(row);
       });
-      const footer = ['Total Bulanan'].concat(monthTotals.map(t=>t||'')).concat([grand]);
+      const footer = ['JUMLAH'].concat(monthTotals.map(t=>t||'')).concat([grand]);
       aoa.push(footer);
-      colWidths = [{wch:24}].concat(new Array(12).fill({wch:10})).concat([{wch:12}]);
+      colWidths = [{wch:24}].concat(new Array(months.length).fill({wch:10})).concat([{wch:12}]);
+    }else{
+      const months = academicMonths(rekapCurrentTahun);
+      header = ['Kelas'].concat(months.map(m=>m.label)).concat(['Jumlah']);
+      aoa = [header];
+      const monthTotals = new Array(months.length).fill(0);
+      let grand = 0;
+      kelasList.forEach(kelas=>{
+        const siswaKelas = siswaList.filter(s=>s.kelas===kelas);
+        const perBulan = new Array(months.length).fill(0);
+        siswaKelas.forEach(s=>{
+          const perTanggal = netMap[s.nisn] || {};
+          Object.keys(perTanggal).forEach(dateStr=>{
+            const y = parseInt(dateStr.substring(0,4),10);
+            const m = parseInt(dateStr.substring(5,7),10);
+            const idx = months.findIndex(md=>md.year===y && md.month===m);
+            if(idx>=0) perBulan[idx] += perTanggal[dateStr];
+          });
+        });
+        let rowTotal = 0;
+        const row = [kelas];
+        perBulan.forEach((amt,idx)=>{ row.push(amt||''); rowTotal += amt; monthTotals[idx]+=amt; });
+        row.push(rowTotal);
+        grand += rowTotal;
+        aoa.push(row);
+      });
+      const footer = ['JUMLAH'].concat(monthTotals.map(t=>t||'')).concat([grand]);
+      aoa.push(footer);
+      colWidths = [{wch:14}].concat(new Array(months.length).fill({wch:10})).concat([{wch:12}]);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -1524,49 +1694,48 @@ document.getElementById('rekapDownload').addEventListener('click', async ()=>{
 function normRole(status){
   return String(status||'').trim().toLowerCase();
 }
-// Batas waktu (cutoff, dalam ms) per petugas = waktu TERAKHIR baris "Diterima".
-// Setoran yang belum tersetor dihitung hanya dari transaksi SETELAH cutoff ini.
-function computeCutoffs(){
-  const cutoffs = {};
-  setoranRows.forEach(row=>{
-    if(normRole(row.status) === 'diterima'){
-      const t = row.tsTerima || row.ts;
-      if(!cutoffs[row.petugas] || t > cutoffs[row.petugas]) cutoffs[row.petugas] = t;
-    }
-  });
-  return cutoffs;
-}
-// Notifikasi "menunggu konfirmasi" = ada baris Menunggu yang lebih baru dari cutoff diterima terakhir.
-function computePendingNotif(cutoffs){
+// Notifikasi "menunggu konfirmasi" = petugas ini punya baris Setoran berstatus
+// Menunggu yang belum diproses. Begitu Bendahara menerima, baris itu langsung
+// diubah jadi "Diterima" di server, jadi tidak perlu perbandingan cutoff lagi.
+function computePendingNotif(){
   const notif = {};
   setoranRows.forEach(row=>{
     if(normRole(row.status) === 'menunggu'){
-      const cutoff = cutoffs[row.petugas] || 0;
-      if(row.ts > cutoff){
-        if(!notif[row.petugas] || row.ts > notif[row.petugas].ts){
-          notif[row.petugas] = { jumlah: row.jumlah, ts: row.ts };
-        }
+      if(!notif[row.petugas] || row.ts > notif[row.petugas].ts){
+        notif[row.petugas] = { jumlah: row.jumlah, ts: row.ts };
       }
     }
   });
   return notif;
 }
-// Menghitung total & rincian per-kelas yang BELUM disetor, untuk tiap petugas,
-// berdasarkan catatan tabungan (Sheet2) yang timestamp-nya setelah cutoff.
+// Menghitung total & rincian per-kelas yang BELUM disetor, untuk tiap petugas.
+// Sumber kebenarannya adalah kolom STATUS di Sheet2 sendiri: kosong = belum
+// disetor, "TERSETOR" = sudah - bukan lagi perbandingan waktu (cutoff), supaya
+// tidak mungkin ada transaksi yang tersetor dua kali atau lolos terhitung.
 function computePetugasPending(){
-  const cutoffs = computeCutoffs();
   const result = {}; // petugas -> {total, perKelas:{kelas:jumlah}}
   Object.values(tabunganMap).forEach(entry=>{
     if(!entry.petugas || !entry.amount) return;
-    const cutoff = cutoffs[entry.petugas] || 0;
-    if(entry.ts <= cutoff) return;
+    if(entry.statusSetor === 'TERSETOR') return; // sudah disetor, jangan dihitung lagi
     const siswa = siswaByNisn[entry.nisn];
     const kelas = siswa ? siswa.kelas : 'Lainnya';
     if(!result[entry.petugas]) result[entry.petugas] = { total:0, perKelas:{} };
     result[entry.petugas].total += entry.amount;
     result[entry.petugas].perKelas[kelas] = (result[entry.petugas].perKelas[kelas]||0) + entry.amount;
   });
-  return { cutoffs, result };
+  return { result };
+}
+// Total yang SUDAH disetorkan (sepanjang waktu) per petugas, dari Sheet2
+// kolom STATUS = "TERSETOR" - dipakai untuk tampilan "Jumlah Setoran".
+function computeSudahDisetorPerPetugas(){
+  const result = {};
+  let grandTotal = 0;
+  Object.values(tabunganMap).forEach(entry=>{
+    if(!entry.petugas || entry.statusSetor !== 'TERSETOR') return;
+    result[entry.petugas] = (result[entry.petugas]||0) + entry.amount;
+    grandTotal += entry.amount;
+  });
+  return { perPetugas: result, grandTotal };
 }
 
 async function refreshSetoranTab(){
@@ -1581,7 +1750,7 @@ async function refreshSetoranTab(){
   }
   showLoading('Memuat data setoran...');
   try{
-    await Promise.all([loadTabunganData(), loadSetoranData()]);
+    await Promise.all([loadTabunganData(), loadSetoranData(), loadPengambilanData()]);
     if(role === 'petugas'){
       renderSetoranPetugas();
     }else{
@@ -1595,15 +1764,17 @@ async function refreshSetoranTab(){
 }
 
 function renderSetoranPetugas(){
-  const { cutoffs, result } = computePetugasPending();
-  const notif = computePendingNotif(cutoffs);
+  const { result } = computePetugasPending();
+  const notif = computePendingNotif();
   const mine = result[session.user] || { total:0, perKelas:{} };
+  const { perPetugas: sudahDisetor } = computeSudahDisetorPerPetugas();
   document.getElementById('spTotal').textContent = 'Rp '+formatRupiah(mine.total);
   document.getElementById('spSub').textContent = mine.total>0
     ? 'dari hasil tabungan yang sudah dicatat atas nama '+session.user
     : 'semua sudah disetorkan, kerja bagus!';
   const badge = document.getElementById('spBadge');
   badge.classList.toggle('hidden', !notif[session.user]);
+  document.getElementById('spSudahDisetor').textContent = 'Rp '+formatRupiah(sudahDisetor[session.user]||0);
 
   const listEl = document.getElementById('spKelasList');
   const kelasEntries = Object.entries(mine.perKelas).sort((a,b)=>a[0].localeCompare(b[0]));
@@ -1664,7 +1835,7 @@ document.getElementById('spSetorkanBtn').addEventListener('click', async ()=>{
     const data = await res.json();
     if(data.status !== 'ok') throw new Error(data.message||'Gagal menyetorkan');
     toast('Setoran sebesar Rp '+formatRupiah(mine.total)+' terkirim ke Bendahara', 'ok');
-    await loadSetoranData();
+    await loadSetoranData(true);
     renderSetoranPetugas();
   }catch(e){
     toast('Gagal menyetorkan: '+e.message, 'err');
@@ -1704,9 +1875,15 @@ async function downloadRiwayatXlsx(rows, filename, withPetugasColumn){
 }
 
 function renderSetoranBendahara(){
-  const { cutoffs, result } = computePetugasPending();
-  const notif = computePendingNotif(cutoffs);
+  const { result } = computePetugasPending();
+  const notif = computePendingNotif();
+  const { perPetugas: sudahDisetor, grandTotal: totalDiterima } = computeSudahDisetorPerPetugas();
+  const totalDiambil = pengambilanRows.reduce((sum,r)=> normRole(r.status)==='disetujui' ? sum+r.jumlah : sum, 0);
   const petugasUsers = loginList.filter(l=>normRole(l.status)==='petugas');
+
+  document.getElementById('sbTotalDiterima').textContent = 'Rp '+formatRupiah(totalDiterima);
+  document.getElementById('sbTotalDiambil').textContent = 'Rp '+formatRupiah(totalDiambil);
+  document.getElementById('sbSaldoKas').textContent = 'Rp '+formatRupiah(totalDiterima - totalDiambil);
 
   let grand = 0;
   const listEl = document.getElementById('sbList');
@@ -1726,8 +1903,9 @@ function renderSetoranBendahara(){
         '<div><div class="pc-name">'+escapeHtml(pu.user)+'</div>'+
         (notif[pu.user] ? '<div class="pending-badge">&#9203; Menunggu konfirmasi</div>' : '')+
         '</div>'+
-        '<div class="pc-total">Rp '+formatRupiah(data.total)+'<small>Total Setoran</small></div>'+
+        '<div class="pc-total">Rp '+formatRupiah(data.total)+'<small>Belum Disetor</small></div>'+
       '</div>'+
+      '<div class="pc-sudah">Jumlah Setoran (sudah disetorkan): <b>Rp '+formatRupiah(sudahDisetor[pu.user]||0)+'</b></div>'+
       (kelasChips ? '<div class="pc-kelas-chips">'+kelasChips+'</div>' : '<div class="pc-empty">Belum ada tabungan tercatat.</div>')+
       '<button class="btn btn-secondary btn-block terima-btn" '+(data.total<=0?'disabled':'')+'>Diterima</button>';
     card.querySelector('.terima-btn').addEventListener('click', (e)=> terimaSetoranHandler(pu.user, data.total, e.currentTarget));
@@ -1778,7 +1956,7 @@ async function terimaSetoranHandler(petugas, jumlah, btnEl){
     const data = await res.json();
     if(data.status !== 'ok') throw new Error(data.message||'Gagal konfirmasi');
     toast('Setoran '+petugas+' sebesar Rp '+formatRupiah(jumlah)+' diterima', 'ok');
-    await loadSetoranData();
+    await Promise.all([loadSetoranData(true), loadTabunganData(true)]);
     renderSetoranBendahara();
   }catch(e){
     toast('Gagal: '+e.message, 'err');
@@ -1954,7 +2132,7 @@ document.getElementById('ambilAjukanBtn').addEventListener('click', async ()=>{
     const data = await res.json();
     if(data.status !== 'ok') throw new Error(data.message||'Gagal mengajukan');
     toast('Pengajuan pengambilan Rp '+formatRupiah(jumlah)+' terkirim ke Bendahara', 'ok');
-    await loadPengambilanData();
+    await loadPengambilanData(true);
     ambilSelected = null;
     document.getElementById('ambilForm').classList.add('hidden');
     document.getElementById('ambilPickWrap').classList.remove('hidden');
@@ -1973,8 +2151,11 @@ function ambilStatusPill(status){
   return '<span class="status-pill menunggu">Menunggu</span>';
 }
 
+document.getElementById('ambilRiwayatFilterKelas').addEventListener('change', renderAmbilRiwayatSaya);
+
 function renderAmbilRiwayatSaya(){
-  const rows = pengambilanRows.filter(r=>r.petugas===session.user).sort((a,b)=>b.ts-a.ts);
+  const filterKelas = document.getElementById('ambilRiwayatFilterKelas').value;
+  const rows = pengambilanRows.filter(r=> r.petugas===session.user && (!filterKelas || r.kelas===filterKelas)).sort((a,b)=>b.ts-a.ts);
   const body = document.getElementById('ambilRiwayatBody');
   if(rows.length===0){
     body.innerHTML = '<tr><td colspan="4" class="riwayat-empty">Belum ada pengajuan pengambilan.</td></tr>';
@@ -1987,6 +2168,37 @@ function renderAmbilRiwayatSaya(){
     '<td>'+ambilStatusPill(r.status)+'</td></tr>'
   ).join('');
 }
+
+async function downloadPengambilanXlsx(rows, filename, withPetugasColumn){
+  if(rows.length===0){ toast('Tidak ada riwayat untuk diunduh', 'err'); return; }
+  showLoading('Menyiapkan file Excel...');
+  try{
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+    const header = withPetugasColumn
+      ? ['Tanggal','Nama Siswa','Kelas','Petugas','Jumlah','Status','Keterangan']
+      : ['Tanggal','Nama Siswa','Kelas','Jumlah','Status','Keterangan'];
+    const aoa = [header];
+    rows.forEach(r=>{
+      const row = [formatTanggalIndo(tsToDateStr(r.ts)), r.nama, r.kelas];
+      if(withPetugasColumn) row.push(r.petugas);
+      row.push(r.jumlah, r.status, r.keterangan||'');
+      aoa.push(row);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Riwayat Pengambilan');
+    XLSX.writeFile(wb, filename+'.xlsx');
+  }catch(e){
+    toast('Gagal membuat file Excel: '+e.message, 'err');
+  }finally{
+    hideLoading();
+  }
+}
+document.getElementById('ambilDownloadBtn').addEventListener('click', async ()=>{
+  const filterKelas = document.getElementById('ambilRiwayatFilterKelas').value;
+  const rows = pengambilanRows.filter(r=> r.petugas===session.user && (!filterKelas || r.kelas===filterKelas)).sort((a,b)=>b.ts-a.ts);
+  await downloadPengambilanXlsx(rows, 'Riwayat_Pengambilan_'+session.user.replace(/\s+/g,'_'), false);
+});
 
 function renderAmbilBendahara(){
   const pending = pengambilanRows.filter(r=>normRole(r.status)==='menunggu').sort((a,b)=>b.ts-a.ts);
@@ -2015,10 +2227,14 @@ function renderAmbilBendahara(){
   renderAmbilRiwayatBendahara();
 }
 document.getElementById('ambilFilterStatus').addEventListener('change', renderAmbilRiwayatBendahara);
+document.getElementById('ambilBendaharaFilterKelas').addEventListener('change', renderAmbilRiwayatBendahara);
 
 function renderAmbilRiwayatBendahara(){
   const filter = document.getElementById('ambilFilterStatus').value;
-  const rows = pengambilanRows.filter(r=> !filter || normRole(r.status)===normRole(filter)).sort((a,b)=>b.ts-a.ts);
+  const filterKelas = document.getElementById('ambilBendaharaFilterKelas').value;
+  const rows = pengambilanRows.filter(r=>
+    (!filter || normRole(r.status)===normRole(filter)) && (!filterKelas || r.kelas===filterKelas)
+  ).sort((a,b)=>b.ts-a.ts);
   const body = document.getElementById('ambilRiwayatBendaharaBody');
   if(rows.length===0){
     body.innerHTML = '<tr><td colspan="5" class="riwayat-empty">Belum ada riwayat pengambilan.</td></tr>';
@@ -2032,6 +2248,14 @@ function renderAmbilRiwayatBendahara(){
     '<td>'+ambilStatusPill(r.status)+'</td></tr>'
   ).join('');
 }
+document.getElementById('ambilBendaharaDownloadBtn').addEventListener('click', async ()=>{
+  const filter = document.getElementById('ambilFilterStatus').value;
+  const filterKelas = document.getElementById('ambilBendaharaFilterKelas').value;
+  const rows = pengambilanRows.filter(r=>
+    (!filter || normRole(r.status)===normRole(filter)) && (!filterKelas || r.kelas===filterKelas)
+  ).sort((a,b)=>b.ts-a.ts);
+  await downloadPengambilanXlsx(rows, 'Riwayat_Pengambilan_'+(filterKelas||'Semua_Kelas').replace(/\s+/g,'_'), true);
+});
 
 async function prosesAmbilHandler(row, aksi, btnEl, cardEl){
   if(!CFG.scriptUrl){ toast('Atur URL Apps Script dulu di Pengaturan', 'err'); return; }
@@ -2046,7 +2270,7 @@ async function prosesAmbilHandler(row, aksi, btnEl, cardEl){
     const data = await res.json();
     if(data.status !== 'ok') throw new Error(data.message||'Gagal memproses');
     toast(aksi==='setuju' ? 'Pengambilan '+row.nama+' disetujui' : 'Pengambilan '+row.nama+' ditolak', 'ok');
-    await loadPengambilanData();
+    await loadPengambilanData(true);
     renderAmbilBendahara();
   }catch(e){
     toast('Gagal: '+e.message, 'err');
@@ -2057,6 +2281,8 @@ async function prosesAmbilHandler(row, aksi, btnEl, cardEl){
 
 /* ================= SISWA (KARTU SISWA) ================= */
 const siswaKelasSel = document.getElementById('siswaKelasSel');
+let siswaCardSelected = null;
+let siswaCardHistory = [];
 
 async function refreshSiswaTab(){
   document.getElementById('siswaCardDetail').classList.add('hidden');
@@ -2095,6 +2321,7 @@ function renderSiswaPickList(){
 function openKartuSiswa(nisn){
   const s = siswaByNisn[nisn];
   if(!s) return;
+  siswaCardSelected = s;
   document.getElementById('siswaEmptyPick').classList.add('hidden');
   document.getElementById('siswaPickList').classList.add('hidden');
   document.getElementById('siswaCardDetail').classList.remove('hidden');
@@ -2108,13 +2335,13 @@ function openKartuSiswa(nisn){
   const ambilEntries = pengambilanRows.filter(r=>r.nisn===nisn).map(r=>({
     type:'ambil', dateStr: tsToDateStr(r.ts), amount: r.jumlah, ts: r.ts, status: r.status
   }));
-  const all = setorEntries.concat(ambilEntries).sort((a,b)=>b.ts-a.ts);
+  siswaCardHistory = setorEntries.concat(ambilEntries).sort((a,b)=>b.ts-a.ts);
 
   const histEl = document.getElementById('siswaCardHistory');
-  if(all.length===0){
+  if(siswaCardHistory.length===0){
     histEl.innerHTML = '<div class="pc-empty">Belum ada transaksi.</div>';
   }else{
-    histEl.innerHTML = '<div class="table-wrap"><div style="padding:2px;">'+all.map(en=>{
+    histEl.innerHTML = '<div class="table-wrap"><div style="padding:2px;">'+siswaCardHistory.map(en=>{
       if(en.type==='setor'){
         return '<div class="jejak-item"><div><div class="jejak-date">'+formatTanggalIndo(en.dateStr)+'</div>'+
           '<div style="font-size:10px;color:var(--success);font-weight:700;letter-spacing:0.3px;">SETOR TABUNGAN</div></div>'+
@@ -2133,6 +2360,36 @@ document.getElementById('siswaGantiBtn').addEventListener('click', ()=>{
   document.getElementById('siswaCardDetail').classList.add('hidden');
   document.getElementById('siswaEmptyPick').classList.remove('hidden');
 });
+document.getElementById('siswaDownloadBtn').addEventListener('click', async ()=>{
+  if(!siswaCardSelected || siswaCardHistory.length===0){ toast('Tidak ada riwayat untuk diunduh', 'err'); return; }
+  showLoading('Menyiapkan file Excel...');
+  try{
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+    const aoa = [['Tanggal','Jenis Transaksi','Status','Jumlah']];
+    let saldo = 0;
+    siswaCardHistory.slice().sort((a,b)=>a.ts-b.ts).forEach(en=>{
+      if(en.type==='setor'){
+        saldo += en.amount;
+        aoa.push([formatTanggalIndo(en.dateStr), 'Setor Tabungan', '-', en.amount]);
+      }else{
+        const s2 = normRole(en.status);
+        const label = s2==='disetujui' ? 'Disetujui' : (s2==='menunggu' ? 'Menunggu' : 'Ditolak');
+        if(s2==='disetujui') saldo -= en.amount;
+        aoa.push([formatTanggalIndo(en.dateStr), 'Pengambilan', label, -en.amount]);
+      }
+    });
+    aoa.push(['', '', 'Saldo Akhir', saldo]);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{wch:16},{wch:16},{wch:12},{wch:14}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Kartu Siswa');
+    XLSX.writeFile(wb, 'Kartu_Tabungan_'+siswaCardSelected.nama.replace(/\s+/g,'_')+'.xlsx');
+  }catch(e){
+    toast('Gagal membuat file Excel: '+e.message, 'err');
+  }finally{
+    hideLoading();
+  }
+});
 
 // Dipanggil dari Rekap: melompat ke tab Siswa dan langsung membuka kartu siswa tsb.
 function jumpToKartuSiswa(nisn){
@@ -2140,7 +2397,7 @@ function jumpToKartuSiswa(nisn){
   if(!s) return;
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   document.querySelector('.tab[data-tab="siswa"]').classList.add('active');
-  ['kartu','tabel','rekap','setoran','ambil','siswa'].forEach(t=>{
+  ['input','rekap','setoran','ambil','siswa'].forEach(t=>{
     document.getElementById('view-'+t).classList.toggle('hidden', t!=='siswa');
   });
   siswaKelasSel.value = s.kelas;
@@ -2154,6 +2411,35 @@ function openSettings(){
   document.getElementById('cfgScriptUrl').value = CFG.scriptUrl || '';
   document.getElementById('settingsModal').classList.remove('hidden');
 }
+document.getElementById('refreshBtn').addEventListener('click', async ()=>{
+  if(!session) return;
+  showLoading('Memuat ulang data...');
+  try{
+    await loadSiswaData(true);
+    saveDataCache();
+    const activeTab = document.querySelector('.tab.active');
+    const tab = activeTab ? activeTab.dataset.tab : 'input';
+    if(tab === 'input'){
+      await loadTabunganData(true);
+      if(kartuKelasEl.value) await refreshKartuList();
+      if(tabelKelasEl.value) await refreshTabelList();
+    }else if(tab === 'setoran'){
+      await Promise.all([loadTabunganData(true), loadSetoranData(true), loadPengambilanData(true)]);
+      await refreshSetoranTab();
+    }else if(tab === 'ambil'){
+      await Promise.all([loadTabunganData(true), loadPengambilanData(true)]);
+      await refreshAmbilTab();
+    }else if(tab === 'siswa'){
+      await Promise.all([loadTabunganData(true), loadPengambilanData(true)]);
+      if(siswaCardSelected) openKartuSiswa(siswaCardSelected.nisn);
+    }
+    toast('Data diperbarui', 'ok');
+  }catch(e){
+    toast('Gagal memuat ulang: '+e.message, 'err');
+  }finally{
+    hideLoading();
+  }
+});
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
 document.getElementById('setupBannerBtn').addEventListener('click', openSettings);
 document.getElementById('settingsClose').addEventListener('click', ()=>{
@@ -2325,6 +2611,20 @@ function enterApp(){
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('qrCardBtn').classList.toggle('hidden', !isAdmin());
   document.getElementById('settingsBtn').classList.toggle('hidden', !isAdmin());
+
+  // Bendahara tidak butuh input transaksi - sembunyikan tab Input.
+  const isBendahara = normRole(session.status) === 'bendahara';
+  const inputTabBtn = document.getElementById('tabInput');
+  inputTabBtn.classList.toggle('hidden', isBendahara);
+  if(isBendahara && inputTabBtn.classList.contains('active')){
+    inputTabBtn.classList.remove('active');
+    document.getElementById('view-input').classList.add('hidden');
+    const setoranTabBtn = document.querySelector('.tab[data-tab="setoran"]');
+    setoranTabBtn.classList.add('active');
+    document.getElementById('view-setoran').classList.remove('hidden');
+    refreshSetoranTab();
+  }
+
   maybeShowBioBanner();
 }
 
@@ -2566,21 +2866,71 @@ async function openQrCards(){
 }
 
 /* ================= BOOT ================= */
+const DATA_CACHE_KEY = 'buku_tabungan_data_cache_v1';
+function loadDataCache(){
+  try{
+    const raw = localStorage.getItem(DATA_CACHE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return null;
+}
+function saveDataCache(){
+  try{
+    localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ siswaList, loginList, savedAt: Date.now() }));
+  }catch(e){}
+}
+function applyCachedSiswaLogin(cached){
+  siswaList = cached.siswaList || [];
+  siswaByNisn = {};
+  siswaList.forEach(s=> siswaByNisn[s.nisn]=s);
+  kelasList = [...new Set(siswaList.map(s=>s.kelas).filter(Boolean))].sort();
+  loginList = cached.loginList || [];
+  populateKelasSelects();
+}
+function resolveSessionAfterLoad(){
+  session = loadSession();
+  const stillValid = session && loginList.find(l => l.user.toLowerCase() === String(session.user).toLowerCase());
+  if(stillValid){
+    session.status = stillValid.status;
+    saveSession(session);
+    enterApp();
+  }else{
+    if(session) clearSession();
+    showLoginGate();
+  }
+}
+
 async function bootData(){
   if(!CFG.spreadsheetId) return;
+
+  // Stale-while-revalidate: kalau ada data tersimpan di HP dari sesi
+  // sebelumnya, tampilkan itu dulu supaya aplikasi terasa instan, sambil
+  // diam-diam memuat data terbaru dari Google Sheets di latar belakang.
+  const cached = loadDataCache();
+  if(cached && cached.siswaList && cached.siswaList.length){
+    applyCachedSiswaLogin(cached);
+    resolveSessionAfterLoad();
+    loadSiswaData(true).then(()=>{
+      saveDataCache();
+      if(session){
+        const refreshed = loginList.find(l=>l.user.toLowerCase()===String(session.user).toLowerCase());
+        if(refreshed){
+          session.status = refreshed.status;
+          saveSession(session);
+          document.getElementById('ubRole').textContent = session.status;
+        }
+      }else{
+        showLoginGate(); // perbarui hint kalau masih di gerbang login
+      }
+    }).catch(()=>{ /* diam-diam gagal, data cache lama tetap dipakai */ });
+    return;
+  }
+
   showLoading('Memuat data siswa...');
   try{
-    await loadSiswaData();
-    session = loadSession();
-    const stillValid = session && loginList.find(l => l.user.toLowerCase() === String(session.user).toLowerCase());
-    if(stillValid){
-      session.status = stillValid.status; // sinkron jika status berubah di sheet
-      saveSession(session);
-      enterApp();
-    }else{
-      if(session) clearSession();
-      showLoginGate();
-    }
+    await loadSiswaData(true);
+    saveDataCache();
+    resolveSessionAfterLoad();
   }catch(e){
     toast('Gagal memuat data siswa: '+e.message, 'err');
     showLoginGate();

@@ -59,8 +59,9 @@ h1,h2,h3{font-family:var(--font-display);margin:0;}
 .brand-text span{display:block;font-size:11px;color:var(--gold-light);letter-spacing:0.5px;text-transform:uppercase;}
 .icon-btn{background:rgba(255,255,255,0.08);color:var(--cream);width:38px;height:38px;border-radius:11px;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .icon-btn:active{background:rgba(255,255,255,0.2);}
-.tabs{display:flex;gap:4px;}
-.tab{flex:1;background:none;color:rgba(251,246,234,0.6);padding:10px 6px 12px 6px;font-size:14px;font-weight:600;border-bottom:3px solid transparent;transition:color .15s;}
+.tabs{display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:0 0 auto;background:none;color:rgba(251,246,234,0.6);padding:10px 13px 12px 13px;font-size:13.5px;font-weight:600;border-bottom:3px solid transparent;transition:color .15s;white-space:nowrap;}
 .tab.active{color:var(--cream);border-bottom-color:var(--gold);}
 
 .setup-banner{background:var(--gold-light);color:var(--green-deep);font-size:13px;padding:9px 16px;text-align:center;font-weight:600;}
@@ -271,6 +272,23 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
 .status-pill.menunggu{background:rgba(183,145,43,0.18);color:var(--gold);}
 .status-pill.diterima{background:rgba(47,143,91,0.15);color:var(--success);}
 .riwayat-empty{text-align:center;color:var(--ink-soft);font-size:12.5px;padding:16px 0;}
+
+/* ---------- Siswa pick list (Ambil & Kartu Siswa) ---------- */
+.siswa-pick-list{max-height:280px;overflow-y:auto;background:var(--cream);border-radius:var(--radius-md);box-shadow:var(--shadow-card);margin-bottom:16px;}
+.siswa-pick-item{padding:12px 14px;border-bottom:1px solid var(--cream-line);font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+.siswa-pick-item:last-child{border-bottom:none;}
+.siswa-pick-item:active{background:var(--paper);}
+.siswa-pick-item .spi-sub{font-size:11px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
+.view-toggle{display:flex;gap:6px;background:var(--paper);border-radius:12px;padding:4px;margin-bottom:14px;}
+.view-toggle button{flex:1;padding:9px 6px;border-radius:9px;font-size:13px;font-weight:700;color:var(--ink-soft);background:none;}
+.view-toggle button.active{background:var(--green-deep);color:var(--gold-light);}
+.pending-card{background:var(--cream);border-radius:var(--radius-md);padding:16px;box-shadow:var(--shadow-card);margin-bottom:12px;border-left:4px solid var(--gold);}
+.pending-card .pd-name{font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--ink);}
+.pending-card .pd-meta{font-size:11.5px;color:var(--ink-soft);font-weight:600;margin:2px 0 10px 0;}
+.pending-card .pd-amt{font-family:var(--font-mono);font-weight:700;color:var(--danger);font-size:19px;margin-bottom:4px;}
+.pending-card .pd-ket{font-size:12px;color:var(--ink-soft);font-style:italic;margin-bottom:12px;}
+.pending-actions{display:flex;gap:8px;}
+.pending-actions .btn{flex:1;}
 </style>
 </head>
 <body>
@@ -303,6 +321,8 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
       <button class="tab" data-tab="tabel">Tabel</button>
       <button class="tab" data-tab="rekap">Rekap</button>
       <button class="tab" data-tab="setoran">Setoran</button>
+      <button class="tab" data-tab="ambil">Ambil</button>
+      <button class="tab" data-tab="siswa">Siswa</button>
     </div>
   </div>
 
@@ -409,21 +429,29 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
 
     <!-- ===================== REKAP ===================== -->
     <section id="view-rekap" class="view hidden">
+      <div class="view-toggle">
+        <button class="active" data-rv="harian">Harian (per bulan)</button>
+        <button data-rv="bulanan">Bulanan (per tahun)</button>
+      </div>
       <div class="controls-row">
         <div class="field">
           <label>Kelas</label>
           <select id="rekapKelas"><option value="">Semua kelas</option></select>
         </div>
-        <div class="field">
+        <div class="field" id="rekapBulanWrap">
           <label>Bulan</label>
           <input type="month" id="rekapBulan">
+        </div>
+        <div class="field hidden" id="rekapTahunWrap">
+          <label>Tahun</label>
+          <input type="number" id="rekapTahun" min="2020" max="2100">
         </div>
       </div>
       <button class="btn btn-secondary btn-block" id="rekapMuat" style="margin-bottom:16px;">Tampilkan Rekap</button>
 
       <div id="rekapEmpty" class="empty-state">
         <div class="icon">&#128176;</div>
-        <p>Pilih kelas dan bulan, lalu tekan "Tampilkan Rekap".</p>
+        <p>Pilih kelas dan bulan/tahun, lalu tekan "Tampilkan Rekap".</p>
       </div>
 
       <div id="rekapResult" class="hidden">
@@ -440,7 +468,7 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
             <tbody id="rekapMatrixBody"></tbody>
           </table>
         </div>
-        <div class="hint" style="text-align:center;">Geser tabel ke kanan untuk melihat semua tanggal. Ketuk nama siswa untuk melihat riwayat lengkapnya.</div>
+        <div class="hint" style="text-align:center;">Geser tabel ke kanan untuk melihat semua kolom. Ketuk nama siswa untuk membuka kartu tabungannya.</div>
         <button class="btn btn-outline btn-block" id="rekapDownload" style="margin-top:10px;">&#11015; Unduh Excel (.xlsx)</button>
       </div>
     </section>
@@ -503,18 +531,115 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
         <p>Data setoran hanya tersedia untuk akun berperan Petugas, Bendahara, atau Admin.</p>
       </div>
     </section>
-  </main>
-</div>
 
-<!-- Detail Jejak Siswa Modal -->
-<div class="modal-backdrop hidden" id="detailModal">
-  <div class="modal-sheet">
-    <div class="modal-head">
-      <h3 id="detailNama">Jejak Tabungan</h3>
-      <button class="close-x" id="detailClose">&#10005;</button>
-    </div>
-    <div id="detailBody"></div>
-  </div>
+    <!-- ===================== AMBIL (PENGAMBILAN) ===================== -->
+    <section id="view-ambil" class="view hidden">
+      <!-- Tampilan Petugas -->
+      <div id="ambilPetugas" class="hidden">
+        <div id="ambilPickWrap">
+          <div class="controls-row">
+            <div class="field">
+              <label>Kelas</label>
+              <select id="ambilKelas"><option value="">Pilih kelas</option></select>
+            </div>
+          </div>
+          <div class="field search-field">
+            <input type="text" id="ambilCariSiswa" placeholder="Cari nama siswa...">
+          </div>
+          <div id="ambilSiswaList" class="siswa-pick-list hidden"></div>
+        </div>
+
+        <div id="ambilForm" class="hidden">
+          <button class="btn btn-ghost btn-block" id="ambilGantiSiswaBtn" style="margin-bottom:14px;">&#8592; Pilih Siswa Lain</button>
+          <div class="passbook-card" style="border-top-color:var(--danger);">
+            <div class="card-top">
+              <div class="avatar-badge" id="ambilInisial"></div>
+              <div>
+                <div class="siswa-nama" id="ambilNamaSiswa"></div>
+                <div class="siswa-meta" id="ambilMetaSiswa"></div>
+              </div>
+            </div>
+            <div class="kb-row" style="margin-bottom:14px;"><span class="kb-kelas">Saldo Saat Ini</span><span class="kb-amt" id="ambilSaldo">Rp 0</span></div>
+            <div class="field-group">
+              <label>Jumlah Pengambilan</label>
+              <input type="number" id="ambilJumlah" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="field-group">
+              <label>Keterangan (opsional)</label>
+              <input type="text" id="ambilKeterangan" placeholder="Misal: untuk keperluan sekolah">
+            </div>
+            <button class="btn btn-danger btn-block" id="ambilAjukanBtn">Ajukan Pengambilan</button>
+          </div>
+        </div>
+
+        <h3 class="riwayat-head">Riwayat Pengajuan Saya</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tanggal</th><th>Siswa</th><th>Jumlah</th><th>Status</th></tr></thead>
+            <tbody id="ambilRiwayatBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tampilan Bendahara / Admin -->
+      <div id="ambilBendahara" class="hidden">
+        <h3 class="riwayat-head" style="margin-top:0;">Menunggu Persetujuan</h3>
+        <div id="ambilPendingList"></div>
+
+        <h3 class="riwayat-head">Riwayat Semua Pengambilan</h3>
+        <div class="field" style="margin-bottom:12px;">
+          <label>Filter Status</label>
+          <select id="ambilFilterStatus">
+            <option value="">Semua status</option>
+            <option value="Menunggu">Menunggu</option>
+            <option value="Disetujui">Disetujui</option>
+            <option value="Ditolak">Ditolak</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tanggal</th><th>Siswa</th><th>Petugas</th><th>Jumlah</th><th>Status</th></tr></thead>
+            <tbody id="ambilRiwayatBendaharaBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="ambilEmpty" class="empty-state">
+        <div class="icon">&#128181;</div>
+        <p>Fitur pengambilan hanya tersedia untuk akun berperan Petugas, Bendahara, atau Admin.</p>
+      </div>
+    </section>
+
+    <!-- ===================== SISWA (KARTU SISWA) ===================== -->
+    <section id="view-siswa" class="view hidden">
+      <div class="controls-row">
+        <div class="field">
+          <label>Kelas</label>
+          <select id="siswaKelasSel"><option value="">Pilih kelas</option></select>
+        </div>
+      </div>
+      <div class="field search-field">
+        <input type="text" id="siswaCariNama" placeholder="Cari nama siswa...">
+      </div>
+      <div id="siswaPickList" class="siswa-pick-list hidden"></div>
+
+      <div id="siswaEmptyPick" class="empty-state">
+        <div class="icon">&#128100;</div>
+        <p>Pilih kelas, lalu pilih nama siswa untuk melihat kartu tabungannya.</p>
+      </div>
+
+      <div id="siswaCardDetail" class="hidden">
+        <button class="btn btn-ghost btn-block" id="siswaGantiBtn" style="margin-bottom:14px;">&#8592; Pilih Siswa Lain</button>
+        <div class="setoran-hero">
+          <div class="sh-label" id="siswaCardNama">-</div>
+          <div class="sh-total" id="siswaCardTotal">Rp 0</div>
+          <div class="sh-sub" id="siswaCardMeta">-</div>
+        </div>
+        <h3 class="riwayat-head" style="margin-top:0;">Riwayat Transaksi</h3>
+        <div id="siswaCardHistory"></div>
+      </div>
+    </section>
+  </main>
 </div>
 
 <!-- Settings Modal -->
@@ -638,6 +763,7 @@ let tabelState = { kelas:'', rows:[] };
 let loginList = [];   // {user, password, status}
 let session = null;   // {user, status}
 let setoranRows = []; // {ts, petugas, jumlah, status, tsTerima}
+let pengambilanRows = []; // {ts, nisn, nama, kelas, jumlah, petugas, status, tsSetuju, keterangan}
 const SESSION_KEY = 'buku_tabungan_session_v1';
 
 /* ================= UTIL ================= */
@@ -806,8 +932,56 @@ async function loadSetoranData(){
   }
 }
 
+async function loadPengambilanData(){
+  pengambilanRows = [];
+  try{
+    const table = await fetchSheet('Pengambilan');
+    (table.rows||[]).forEach(r=>{
+      const c = r.c || [];
+      const rawTs = c[0] ? c[0].v : null;
+      const nisn = String(cellVal(c[1])).trim();
+      const nama = String(cellVal(c[2])).trim();
+      const kelas = String(cellVal(c[3])).trim();
+      const jumlah = Number(cellVal(c[4])) || 0;
+      const petugas = String(cellVal(c[5])).trim();
+      const status = String(cellVal(c[6])).trim();
+      const rawSetuju = c[7] ? c[7].v : null;
+      const keterangan = String(cellVal(c[8])).trim();
+      if(!nisn || !rawTs) return;
+      const d = gvizDateToDate(rawTs, c[0].f);
+      const dSetuju = rawSetuju ? gvizDateToDate(rawSetuju, c[7].f) : null;
+      pengambilanRows.push({
+        ts: d ? d.getTime() : 0,
+        nisn, nama, kelas, jumlah, petugas, status,
+        tsSetuju: dSetuju ? dSetuju.getTime() : null,
+        keterangan
+      });
+    });
+  }catch(e){
+    // Sheet "Pengambilan" belum ada (belum pernah ada pengajuan) - anggap kosong.
+    pengambilanRows = [];
+  }
+}
+
+// Saldo bersih siswa = total setoran tabungan - total pengambilan yang sudah Disetujui.
+function computeSaldoSiswa(nisn){
+  let total = 0;
+  Object.values(tabunganMap).forEach(e=>{ if(e.nisn===nisn) total += e.amount; });
+  pengambilanRows.forEach(r=>{
+    if(r.nisn===nisn && normRole(r.status)==='disetujui') total -= r.jumlah;
+  });
+  return total;
+}
+
+// Kunci unik baris pengajuan pengambilan (dipakai untuk setuju/tolak lewat Apps Script).
+function tsToKey(ts){
+  const d = new Date(ts);
+  const p = n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
+
 function populateKelasSelects(){
-  ['kartuKelas','tabelKelas','rekapKelas'].forEach(id=>{
+  ['kartuKelas','tabelKelas','rekapKelas','ambilKelas','siswaKelasSel'].forEach(id=>{
     const sel = document.getElementById(id);
     const keep = sel.value;
     const firstOpt = sel.options[0];
@@ -843,10 +1017,12 @@ document.querySelectorAll('.tab').forEach(btn=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
-    ['kartu','tabel','rekap','setoran'].forEach(t=>{
+    ['kartu','tabel','rekap','setoran','ambil','siswa'].forEach(t=>{
       document.getElementById('view-'+t).classList.toggle('hidden', t!==tab);
     });
     if(tab === 'setoran') refreshSetoranTab();
+    if(tab === 'ambil') refreshAmbilTab();
+    if(tab === 'siswa') refreshSiswaTab();
   });
 });
 
@@ -1110,21 +1286,46 @@ const rekapBulanEl = document.getElementById('rekapBulan');
   rekapBulanEl.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 })();
 
-let rekapCurrentSiswa = []; // siswa yang direkap bulan ini
+let rekapCurrentSiswa = []; // siswa yang direkap
 let rekapCurrentLabel = '';
 let rekapCurrentBulan = '';
+let rekapCurrentTahun = new Date().getFullYear();
+let rekapView = 'harian'; // 'harian' | 'bulanan'
+const rekapTahunEl = document.getElementById('rekapTahun');
+rekapTahunEl.value = rekapCurrentTahun;
+
+document.querySelectorAll('.view-toggle [data-rv]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.view-toggle [data-rv]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    rekapView = btn.dataset.rv;
+    document.getElementById('rekapBulanWrap').classList.toggle('hidden', rekapView!=='harian');
+    document.getElementById('rekapTahunWrap').classList.toggle('hidden', rekapView!=='bulanan');
+    if(rekapView==='bulanan' && !rekapTahunEl.value){
+      rekapTahunEl.value = rekapBulanEl.value ? rekapBulanEl.value.substring(0,4) : new Date().getFullYear();
+    }
+  });
+});
 
 document.getElementById('rekapMuat').addEventListener('click', async ()=>{
   const kelas = rekapKelasEl.value;
-  const bulan = rekapBulanEl.value; // yyyy-mm
-  if(!bulan){ toast('Pilih bulan terlebih dahulu', 'err'); return; }
   showLoading('Memuat rekap...');
   try{
-    await loadTabunganData();
+    await Promise.all([loadTabunganData(), loadPengambilanData()]);
     rekapCurrentSiswa = siswaList.filter(s => !kelas || s.kelas===kelas).sort((a,b)=>a.nama.localeCompare(b.nama));
-    rekapCurrentLabel = (kelas||'Semua Kelas') + ' - ' + bulan;
-    rekapCurrentBulan = bulan;
-    renderRekapMatrix();
+
+    if(rekapView === 'harian'){
+      const bulan = rekapBulanEl.value;
+      if(!bulan){ toast('Pilih bulan terlebih dahulu', 'err'); hideLoading(); return; }
+      rekapCurrentBulan = bulan;
+      rekapCurrentLabel = (kelas||'Semua Kelas') + ' - ' + bulan;
+      renderRekapMatrixHarian();
+    }else{
+      const tahun = Number(rekapTahunEl.value) || new Date().getFullYear();
+      rekapCurrentTahun = tahun;
+      rekapCurrentLabel = (kelas||'Semua Kelas') + ' - Tahun ' + tahun;
+      renderRekapMatrixBulanan();
+    }
     document.getElementById('rekapEmpty').classList.add('hidden');
     document.getElementById('rekapResult').classList.remove('hidden');
   }catch(e){
@@ -1139,7 +1340,25 @@ function daysInMonth(yyyymm){
   return new Date(y, m, 0).getDate();
 }
 
-function renderRekapMatrix(){
+// Peta jumlah BERSIH (setoran dikurangi pengambilan yang Disetujui) per siswa per tanggal.
+// Pengambilan dihitung pada tanggal disetujui (bukan tanggal pengajuan).
+function computeNetMapByNisnDate(){
+  const map = {};
+  Object.values(tabunganMap).forEach(e=>{
+    if(!map[e.nisn]) map[e.nisn] = {};
+    map[e.nisn][e.dateStr] = (map[e.nisn][e.dateStr]||0) + e.amount;
+  });
+  pengambilanRows.forEach(r=>{
+    if(normRole(r.status) !== 'disetujui') return;
+    const dateStr = r.tsSetuju ? tsToDateStr(r.tsSetuju) : tsToDateStr(r.ts);
+    if(!map[r.nisn]) map[r.nisn] = {};
+    map[r.nisn][dateStr] = (map[r.nisn][dateStr]||0) - r.jumlah;
+  });
+  return map;
+}
+
+function renderRekapMatrixHarian(){
+  const netMap = computeNetMapByNisnDate();
   const nDays = daysInMonth(rekapCurrentBulan);
   const headCells = ['<th class="sticky-col">Nama Siswa</th>'];
   for(let d=1; d<=nDays; d++) headCells.push('<th>'+d+'</th>');
@@ -1151,10 +1370,10 @@ function renderRekapMatrix(){
   const bodyHtml = rekapCurrentSiswa.map(s=>{
     let rowTotal = 0;
     const cells = [];
+    const perTanggal = netMap[s.nisn] || {};
     for(let d=1; d<=nDays; d++){
       const dateStr = rekapCurrentBulan+'-'+String(d).padStart(2,'0');
-      const entry = tabunganMap[s.nisn+'|'+dateStr];
-      const amt = entry ? entry.amount : 0;
+      const amt = perTanggal[dateStr] || 0;
       rowTotal += amt;
       dayTotals[d] += amt;
       cells.push('<td>'+(amt ? formatRupiah(amt) : '\u2013')+'</td>');
@@ -1171,78 +1390,126 @@ function renderRekapMatrix(){
   const tbody = document.getElementById('rekapMatrixBody');
   tbody.innerHTML = bodyHtml + footerHtml;
   tbody.querySelectorAll('.jejak-open').forEach(cell=>{
-    cell.addEventListener('click', ()=> openJejak(cell.dataset.nisn));
+    cell.addEventListener('click', ()=> jumpToKartuSiswa(cell.dataset.nisn));
   });
 
   document.getElementById('rekapLabelBulan').textContent = 'Total ' + rekapCurrentLabel;
   document.getElementById('rekapTotalBulan').textContent = 'Rp '+formatRupiah(grand);
 }
 
-function openJejak(nisn){
-  const s = siswaByNisn[nisn];
-  if(!s) return;
-  document.getElementById('detailNama').textContent = s.nama;
-  const entries = Object.keys(tabunganMap)
-    .filter(k=>k.startsWith(nisn+'|'))
-    .map(k=>({ dateStr: tabunganMap[k].dateStr, amount: tabunganMap[k].amount }))
-    .sort((a,b)=> a.dateStr < b.dateStr ? 1 : -1);
-  const body = document.getElementById('detailBody');
-  let total = 0;
-  let html = '<div style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:10px;">'+s.kelas+' \u00b7 NISN '+s.nisn+'</div>';
-  if(entries.length===0){
-    html += '<div class="empty-state"><p>Belum ada catatan tabungan untuk siswa ini.</p></div>';
-  }else{
-    entries.forEach(en=>{
-      total += en.amount;
-      html += '<div class="jejak-item"><div class="jejak-date">'+formatTanggalIndo(en.dateStr)+'</div><div class="jejak-amt">Rp '+formatRupiah(en.amount)+'</div></div>';
+function renderRekapMatrixBulanan(){
+  const netMap = computeNetMapByNisnDate();
+  const tahun = rekapCurrentTahun;
+  const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const headCells = ['<th class="sticky-col">Nama Siswa</th>'];
+  monthNames.forEach(m=>headCells.push('<th>'+m+'</th>'));
+  headCells.push('<th class="sticky-col-end">Total</th>');
+  document.getElementById('rekapMatrixHead').innerHTML = headCells.join('');
+
+  const monthTotals = new Array(12).fill(0);
+  let grand = 0;
+  const bodyHtml = rekapCurrentSiswa.map(s=>{
+    const perTanggal = netMap[s.nisn] || {};
+    const perBulan = new Array(12).fill(0);
+    Object.keys(perTanggal).forEach(dateStr=>{
+      if(dateStr.substring(0,4) !== String(tahun)) return;
+      const mIdx = parseInt(dateStr.substring(5,7),10) - 1;
+      if(mIdx>=0 && mIdx<12) perBulan[mIdx] += perTanggal[dateStr];
     });
-    html += '<div class="jejak-total"><span>Total Keseluruhan</span><span>Rp '+formatRupiah(total)+'</span></div>';
-  }
-  body.innerHTML = html;
-  document.getElementById('detailModal').classList.remove('hidden');
+    let rowTotal = 0;
+    const cells = perBulan.map((amt,m)=>{
+      rowTotal += amt;
+      monthTotals[m] += amt;
+      return '<td>'+(amt ? formatRupiah(amt) : '\u2013')+'</td>';
+    });
+    grand += rowTotal;
+    return '<tr><td class="sticky-col jejak-open" data-nisn="'+s.nisn+'">'+escapeHtml(s.nama)+'</td>'+
+      cells.join('')+'<td class="sticky-col-end">'+formatRupiah(rowTotal)+'</td></tr>';
+  }).join('');
+
+  const footerCells = monthTotals.map(t=>'<td>'+(t?formatRupiah(t):'\u2013')+'</td>').join('');
+  const footerHtml = '<tr class="rekap-footer"><td class="sticky-col">Total Bulanan</td>'+footerCells+'<td class="sticky-col-end">'+formatRupiah(grand)+'</td></tr>';
+
+  const tbody = document.getElementById('rekapMatrixBody');
+  tbody.innerHTML = bodyHtml + footerHtml;
+  tbody.querySelectorAll('.jejak-open').forEach(cell=>{
+    cell.addEventListener('click', ()=> jumpToKartuSiswa(cell.dataset.nisn));
+  });
+
+  document.getElementById('rekapLabelBulan').textContent = 'Total ' + rekapCurrentLabel;
+  document.getElementById('rekapTotalBulan').textContent = 'Rp '+formatRupiah(grand);
 }
+
 function formatTanggalIndo(dateStr){
   const bulanNama = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const [y,m,d] = dateStr.split('-').map(Number);
   return d+' '+bulanNama[m-1]+' '+y;
 }
-document.getElementById('detailClose').addEventListener('click', ()=>{
-  document.getElementById('detailModal').classList.add('hidden');
-});
 
 document.getElementById('rekapDownload').addEventListener('click', async ()=>{
   if(rekapCurrentSiswa.length===0){ toast('Tidak ada data untuk diunduh', 'err'); return; }
   showLoading('Menyiapkan file Excel...');
   try{
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
-    const nDays = daysInMonth(rekapCurrentBulan);
-    const header = ['Nama Siswa'];
-    for(let d=1; d<=nDays; d++) header.push(String(d));
-    header.push('Total');
-    const aoa = [header];
-    const dayTotals = new Array(nDays+1).fill(0);
-    let grand = 0;
-    rekapCurrentSiswa.forEach(s=>{
-      const row = [s.nama];
-      let rowTotal = 0;
-      for(let d=1; d<=nDays; d++){
-        const dateStr = rekapCurrentBulan+'-'+String(d).padStart(2,'0');
-        const entry = tabunganMap[s.nisn+'|'+dateStr];
-        const amt = entry ? entry.amount : 0;
-        row.push(amt || '');
-        rowTotal += amt;
-        dayTotals[d] += amt;
-      }
-      row.push(rowTotal);
-      grand += rowTotal;
-      aoa.push(row);
-    });
-    const footer = ['Total Harian'];
-    for(let d=1; d<=nDays; d++) footer.push(dayTotals[d] || '');
-    footer.push(grand);
-    aoa.push(footer);
+    const netMap = computeNetMapByNisnDate();
+    let header, aoa, colWidths;
+
+    if(rekapView === 'harian'){
+      const nDays = daysInMonth(rekapCurrentBulan);
+      header = ['Nama Siswa'];
+      for(let d=1; d<=nDays; d++) header.push(String(d));
+      header.push('Total');
+      aoa = [header];
+      const dayTotals = new Array(nDays+1).fill(0);
+      let grand = 0;
+      rekapCurrentSiswa.forEach(s=>{
+        const perTanggal = netMap[s.nisn] || {};
+        const row = [s.nama];
+        let rowTotal = 0;
+        for(let d=1; d<=nDays; d++){
+          const dateStr = rekapCurrentBulan+'-'+String(d).padStart(2,'0');
+          const amt = perTanggal[dateStr] || 0;
+          row.push(amt || '');
+          rowTotal += amt;
+          dayTotals[d] += amt;
+        }
+        row.push(rowTotal);
+        grand += rowTotal;
+        aoa.push(row);
+      });
+      const footer = ['Total Harian'];
+      for(let d=1; d<=nDays; d++) footer.push(dayTotals[d] || '');
+      footer.push(grand);
+      aoa.push(footer);
+      colWidths = [{wch:24}].concat(new Array(nDays).fill({wch:8})).concat([{wch:12}]);
+    }else{
+      const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+      header = ['Nama Siswa'].concat(monthNames).concat(['Total']);
+      aoa = [header];
+      const monthTotals = new Array(12).fill(0);
+      let grand = 0;
+      rekapCurrentSiswa.forEach(s=>{
+        const perTanggal = netMap[s.nisn] || {};
+        const perBulan = new Array(12).fill(0);
+        Object.keys(perTanggal).forEach(dateStr=>{
+          if(dateStr.substring(0,4) !== String(rekapCurrentTahun)) return;
+          const mIdx = parseInt(dateStr.substring(5,7),10) - 1;
+          if(mIdx>=0 && mIdx<12) perBulan[mIdx] += perTanggal[dateStr];
+        });
+        let rowTotal = 0;
+        const row = [s.nama];
+        perBulan.forEach((amt,m)=>{ row.push(amt||''); rowTotal += amt; monthTotals[m]+=amt; });
+        row.push(rowTotal);
+        grand += rowTotal;
+        aoa.push(row);
+      });
+      const footer = ['Total Bulanan'].concat(monthTotals.map(t=>t||'')).concat([grand]);
+      aoa.push(footer);
+      colWidths = [{wch:24}].concat(new Array(12).fill({wch:10})).concat([{wch:12}]);
+    }
+
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = [{wch:24}].concat(new Array(nDays).fill({wch:8})).concat([{wch:12}]);
+    ws['!cols'] = colWidths;
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Rekap Tabungan');
     XLSX.writeFile(wb, 'Rekap_Tabungan_'+rekapCurrentLabel.replace(/\s+/g,'_')+'.xlsx');
@@ -1588,6 +1855,298 @@ document.getElementById('spShowQrBtn').addEventListener('click', async ()=>{
 document.getElementById('setoranQrClose').addEventListener('click', ()=>{
   document.getElementById('setoranQrModal').classList.add('hidden');
 });
+
+/* ================= AMBIL (PENGAMBILAN) ================= */
+const ambilKelasEl = document.getElementById('ambilKelas');
+let ambilSelected = null; // {nisn, nama, kelas}
+
+async function refreshAmbilTab(){
+  document.getElementById('ambilPetugas').classList.add('hidden');
+  document.getElementById('ambilBendahara').classList.add('hidden');
+  document.getElementById('ambilEmpty').classList.add('hidden');
+  if(!session) return;
+  const role = normRole(session.status);
+  if(role !== 'petugas' && role !== 'bendahara' && role !== 'admin'){
+    document.getElementById('ambilEmpty').classList.remove('hidden');
+    return;
+  }
+  showLoading('Memuat data pengambilan...');
+  try{
+    await Promise.all([loadTabunganData(), loadPengambilanData()]);
+    if(role === 'petugas'){
+      ambilSelected = null;
+      document.getElementById('ambilForm').classList.add('hidden');
+      document.getElementById('ambilPickWrap').classList.remove('hidden');
+      document.getElementById('ambilCariSiswa').value = '';
+      renderAmbilSiswaList();
+      renderAmbilRiwayatSaya();
+      document.getElementById('ambilPetugas').classList.remove('hidden');
+    }else{
+      renderAmbilBendahara();
+      document.getElementById('ambilBendahara').classList.remove('hidden');
+    }
+  }catch(e){
+    toast('Gagal memuat data: '+e.message, 'err');
+  }finally{
+    hideLoading();
+  }
+}
+
+ambilKelasEl.addEventListener('change', renderAmbilSiswaList);
+document.getElementById('ambilCariSiswa').addEventListener('input', renderAmbilSiswaList);
+
+function renderAmbilSiswaList(){
+  const kelas = ambilKelasEl.value;
+  const q = document.getElementById('ambilCariSiswa').value.toLowerCase();
+  const listEl = document.getElementById('ambilSiswaList');
+  if(!kelas){ listEl.classList.add('hidden'); listEl.innerHTML=''; return; }
+  let list = siswaList.filter(s=>s.kelas===kelas);
+  if(q) list = list.filter(s=>s.nama.toLowerCase().includes(q));
+  list.sort((a,b)=>a.nama.localeCompare(b.nama));
+  listEl.innerHTML = list.length===0
+    ? '<div class="pc-empty">Tidak ditemukan siswa.</div>'
+    : list.map(s=>'<div class="siswa-pick-item" data-nisn="'+s.nisn+'">'+escapeHtml(s.nama)+'<div class="spi-sub">NISN '+s.nisn+' \u00b7 '+escapeHtml(s.kelas)+'</div></div>').join('');
+  listEl.querySelectorAll('.siswa-pick-item').forEach(item=>{
+    item.addEventListener('click', ()=> pilihSiswaAmbil(item.dataset.nisn));
+  });
+  listEl.classList.remove('hidden');
+}
+
+function pilihSiswaAmbil(nisn){
+  const s = siswaByNisn[nisn];
+  if(!s) return;
+  ambilSelected = s;
+  document.getElementById('ambilPickWrap').classList.add('hidden');
+  document.getElementById('ambilSiswaList').classList.add('hidden');
+  document.getElementById('ambilForm').classList.remove('hidden');
+  document.getElementById('ambilInisial').textContent = initials(s.nama);
+  document.getElementById('ambilNamaSiswa').textContent = s.nama;
+  document.getElementById('ambilMetaSiswa').textContent = 'NISN '+s.nisn+' \u00b7 '+s.kelas;
+  document.getElementById('ambilSaldo').textContent = 'Rp '+formatRupiah(computeSaldoSiswa(nisn));
+  document.getElementById('ambilJumlah').value = '';
+  document.getElementById('ambilKeterangan').value = '';
+}
+document.getElementById('ambilGantiSiswaBtn').addEventListener('click', ()=>{
+  ambilSelected = null;
+  document.getElementById('ambilForm').classList.add('hidden');
+  document.getElementById('ambilPickWrap').classList.remove('hidden');
+});
+
+document.getElementById('ambilAjukanBtn').addEventListener('click', async ()=>{
+  if(!ambilSelected){ toast('Pilih siswa terlebih dahulu', 'err'); return; }
+  const jumlah = Number(document.getElementById('ambilJumlah').value) || 0;
+  const keterangan = document.getElementById('ambilKeterangan').value.trim();
+  const saldo = computeSaldoSiswa(ambilSelected.nisn);
+  if(jumlah <= 0){ toast('Isi jumlah pengambilan', 'err'); return; }
+  if(jumlah > saldo){ toast('Jumlah melebihi saldo tabungan siswa (Rp '+formatRupiah(saldo)+')', 'err'); return; }
+  if(!CFG.scriptUrl){ toast('Atur URL Apps Script dulu di Pengaturan', 'err'); return; }
+  const btn = document.getElementById('ambilAjukanBtn');
+  btn.disabled = true; btn.textContent = 'Mengajukan...';
+  try{
+    const url = CFG.scriptUrl + '?action=ajukan_ambil'
+      + '&nisn=' + encodeURIComponent(ambilSelected.nisn)
+      + '&nama=' + encodeURIComponent(ambilSelected.nama)
+      + '&kelas=' + encodeURIComponent(ambilSelected.kelas)
+      + '&jumlah=' + encodeURIComponent(jumlah)
+      + '&petugas=' + encodeURIComponent(session.user)
+      + '&keterangan=' + encodeURIComponent(keterangan);
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.status !== 'ok') throw new Error(data.message||'Gagal mengajukan');
+    toast('Pengajuan pengambilan Rp '+formatRupiah(jumlah)+' terkirim ke Bendahara', 'ok');
+    await loadPengambilanData();
+    ambilSelected = null;
+    document.getElementById('ambilForm').classList.add('hidden');
+    document.getElementById('ambilPickWrap').classList.remove('hidden');
+    renderAmbilRiwayatSaya();
+  }catch(e){
+    toast('Gagal mengajukan: '+e.message, 'err');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Ajukan Pengambilan';
+  }
+});
+
+function ambilStatusPill(status){
+  const s = normRole(status);
+  if(s === 'disetujui') return '<span class="status-pill diterima">Disetujui</span>';
+  if(s === 'ditolak') return '<span class="status-pill" style="background:rgba(180,66,54,0.15);color:var(--danger);">Ditolak</span>';
+  return '<span class="status-pill menunggu">Menunggu</span>';
+}
+
+function renderAmbilRiwayatSaya(){
+  const rows = pengambilanRows.filter(r=>r.petugas===session.user).sort((a,b)=>b.ts-a.ts);
+  const body = document.getElementById('ambilRiwayatBody');
+  if(rows.length===0){
+    body.innerHTML = '<tr><td colspan="4" class="riwayat-empty">Belum ada pengajuan pengambilan.</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(r=>
+    '<tr><td>'+formatTanggalIndo(tsToDateStr(r.ts))+'</td>'+
+    '<td>'+escapeHtml(r.nama)+'</td>'+
+    '<td style="font-family:var(--font-mono);font-weight:700;color:var(--danger);">Rp '+formatRupiah(r.jumlah)+'</td>'+
+    '<td>'+ambilStatusPill(r.status)+'</td></tr>'
+  ).join('');
+}
+
+function renderAmbilBendahara(){
+  const pending = pengambilanRows.filter(r=>normRole(r.status)==='menunggu').sort((a,b)=>b.ts-a.ts);
+  const listEl = document.getElementById('ambilPendingList');
+  if(pending.length===0){
+    listEl.innerHTML = '<div class="empty-state"><p>Tidak ada pengajuan pengambilan yang menunggu.</p></div>';
+  }else{
+    listEl.innerHTML = '';
+    pending.forEach(r=>{
+      const card = document.createElement('div');
+      card.className = 'pending-card';
+      card.innerHTML =
+        '<div class="pd-name">'+escapeHtml(r.nama)+'</div>'+
+        '<div class="pd-meta">'+escapeHtml(r.kelas)+' \u00b7 NISN '+r.nisn+' \u00b7 diajukan '+escapeHtml(r.petugas)+' \u00b7 '+formatTanggalIndo(tsToDateStr(r.ts))+'</div>'+
+        '<div class="pd-amt">Rp '+formatRupiah(r.jumlah)+'</div>'+
+        (r.keterangan ? '<div class="pd-ket">"'+escapeHtml(r.keterangan)+'"</div>' : '')+
+        '<div class="pending-actions">'+
+          '<button class="btn btn-danger tolak-btn">Tolak</button>'+
+          '<button class="btn btn-primary setuju-btn">Setujui</button>'+
+        '</div>';
+      card.querySelector('.setuju-btn').addEventListener('click', (e)=> prosesAmbilHandler(r, 'setuju', e.currentTarget, card));
+      card.querySelector('.tolak-btn').addEventListener('click', (e)=> prosesAmbilHandler(r, 'tolak', e.currentTarget, card));
+      listEl.appendChild(card);
+    });
+  }
+  renderAmbilRiwayatBendahara();
+}
+document.getElementById('ambilFilterStatus').addEventListener('change', renderAmbilRiwayatBendahara);
+
+function renderAmbilRiwayatBendahara(){
+  const filter = document.getElementById('ambilFilterStatus').value;
+  const rows = pengambilanRows.filter(r=> !filter || normRole(r.status)===normRole(filter)).sort((a,b)=>b.ts-a.ts);
+  const body = document.getElementById('ambilRiwayatBendaharaBody');
+  if(rows.length===0){
+    body.innerHTML = '<tr><td colspan="5" class="riwayat-empty">Belum ada riwayat pengambilan.</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(r=>
+    '<tr><td>'+formatTanggalIndo(tsToDateStr(r.ts))+'</td>'+
+    '<td>'+escapeHtml(r.nama)+'</td>'+
+    '<td>'+escapeHtml(r.petugas)+'</td>'+
+    '<td style="font-family:var(--font-mono);font-weight:700;color:var(--danger);">Rp '+formatRupiah(r.jumlah)+'</td>'+
+    '<td>'+ambilStatusPill(r.status)+'</td></tr>'
+  ).join('');
+}
+
+async function prosesAmbilHandler(row, aksi, btnEl, cardEl){
+  if(!CFG.scriptUrl){ toast('Atur URL Apps Script dulu di Pengaturan', 'err'); return; }
+  cardEl.querySelectorAll('button').forEach(b=>b.disabled=true);
+  btnEl.textContent = 'Memproses...';
+  try{
+    const url = CFG.scriptUrl + '?action=proses_ambil'
+      + '&nisn=' + encodeURIComponent(row.nisn)
+      + '&reqkey=' + encodeURIComponent(tsToKey(row.ts))
+      + '&aksi=' + encodeURIComponent(aksi);
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.status !== 'ok') throw new Error(data.message||'Gagal memproses');
+    toast(aksi==='setuju' ? 'Pengambilan '+row.nama+' disetujui' : 'Pengambilan '+row.nama+' ditolak', 'ok');
+    await loadPengambilanData();
+    renderAmbilBendahara();
+  }catch(e){
+    toast('Gagal: '+e.message, 'err');
+    cardEl.querySelectorAll('button').forEach(b=>b.disabled=false);
+    btnEl.textContent = aksi==='setuju' ? 'Setujui' : 'Tolak';
+  }
+}
+
+/* ================= SISWA (KARTU SISWA) ================= */
+const siswaKelasSel = document.getElementById('siswaKelasSel');
+
+async function refreshSiswaTab(){
+  document.getElementById('siswaCardDetail').classList.add('hidden');
+  document.getElementById('siswaPickList').classList.add('hidden');
+  document.getElementById('siswaEmptyPick').classList.remove('hidden');
+  document.getElementById('siswaCariNama').value = '';
+  showLoading('Memuat data siswa...');
+  try{
+    await Promise.all([loadTabunganData(), loadPengambilanData()]);
+  }catch(e){
+    toast('Gagal memuat data: '+e.message, 'err');
+  }finally{
+    hideLoading();
+  }
+}
+siswaKelasSel.addEventListener('change', renderSiswaPickList);
+document.getElementById('siswaCariNama').addEventListener('input', renderSiswaPickList);
+
+function renderSiswaPickList(){
+  const kelas = siswaKelasSel.value;
+  const q = document.getElementById('siswaCariNama').value.toLowerCase();
+  const listEl = document.getElementById('siswaPickList');
+  if(!kelas){ listEl.classList.add('hidden'); listEl.innerHTML=''; return; }
+  let list = siswaList.filter(s=>s.kelas===kelas);
+  if(q) list = list.filter(s=>s.nama.toLowerCase().includes(q));
+  list.sort((a,b)=>a.nama.localeCompare(b.nama));
+  listEl.innerHTML = list.length===0
+    ? '<div class="pc-empty">Tidak ditemukan siswa.</div>'
+    : list.map(s=>'<div class="siswa-pick-item" data-nisn="'+s.nisn+'">'+escapeHtml(s.nama)+'<div class="spi-sub">NISN '+s.nisn+' \u00b7 '+escapeHtml(s.kelas)+'</div></div>').join('');
+  listEl.querySelectorAll('.siswa-pick-item').forEach(item=>{
+    item.addEventListener('click', ()=> openKartuSiswa(item.dataset.nisn));
+  });
+  listEl.classList.remove('hidden');
+}
+
+function openKartuSiswa(nisn){
+  const s = siswaByNisn[nisn];
+  if(!s) return;
+  document.getElementById('siswaEmptyPick').classList.add('hidden');
+  document.getElementById('siswaPickList').classList.add('hidden');
+  document.getElementById('siswaCardDetail').classList.remove('hidden');
+  document.getElementById('siswaCardNama').textContent = s.nama;
+  document.getElementById('siswaCardMeta').textContent = 'NISN '+s.nisn+' \u00b7 '+s.kelas;
+  document.getElementById('siswaCardTotal').textContent = 'Rp '+formatRupiah(computeSaldoSiswa(nisn));
+
+  const setorEntries = Object.keys(tabunganMap).filter(k=>k.startsWith(nisn+'|')).map(k=>({
+    type:'setor', dateStr: tabunganMap[k].dateStr, amount: tabunganMap[k].amount, ts: tabunganMap[k].ts
+  }));
+  const ambilEntries = pengambilanRows.filter(r=>r.nisn===nisn).map(r=>({
+    type:'ambil', dateStr: tsToDateStr(r.ts), amount: r.jumlah, ts: r.ts, status: r.status
+  }));
+  const all = setorEntries.concat(ambilEntries).sort((a,b)=>b.ts-a.ts);
+
+  const histEl = document.getElementById('siswaCardHistory');
+  if(all.length===0){
+    histEl.innerHTML = '<div class="pc-empty">Belum ada transaksi.</div>';
+  }else{
+    histEl.innerHTML = '<div class="table-wrap"><div style="padding:2px;">'+all.map(en=>{
+      if(en.type==='setor'){
+        return '<div class="jejak-item"><div><div class="jejak-date">'+formatTanggalIndo(en.dateStr)+'</div>'+
+          '<div style="font-size:10px;color:var(--success);font-weight:700;letter-spacing:0.3px;">SETOR TABUNGAN</div></div>'+
+          '<div class="jejak-amt" style="color:var(--success);">+Rp '+formatRupiah(en.amount)+'</div></div>';
+      }
+      const s2 = normRole(en.status);
+      const label = s2==='disetujui' ? 'PENGAMBILAN DISETUJUI' : (s2==='menunggu' ? 'PENGAMBILAN MENUNGGU' : 'PENGAMBILAN DITOLAK');
+      const color = s2==='disetujui' ? 'var(--danger)' : 'var(--ink-soft)';
+      return '<div class="jejak-item"><div><div class="jejak-date">'+formatTanggalIndo(en.dateStr)+'</div>'+
+        '<div style="font-size:10px;color:'+color+';font-weight:700;letter-spacing:0.3px;">'+label+'</div></div>'+
+        '<div class="jejak-amt" style="color:'+color+';">-Rp '+formatRupiah(en.amount)+'</div></div>';
+    }).join('')+'</div></div>';
+  }
+}
+document.getElementById('siswaGantiBtn').addEventListener('click', ()=>{
+  document.getElementById('siswaCardDetail').classList.add('hidden');
+  document.getElementById('siswaEmptyPick').classList.remove('hidden');
+});
+
+// Dipanggil dari Rekap: melompat ke tab Siswa dan langsung membuka kartu siswa tsb.
+function jumpToKartuSiswa(nisn){
+  const s = siswaByNisn[nisn];
+  if(!s) return;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.tab[data-tab="siswa"]').classList.add('active');
+  ['kartu','tabel','rekap','setoran','ambil','siswa'].forEach(t=>{
+    document.getElementById('view-'+t).classList.toggle('hidden', t!=='siswa');
+  });
+  siswaKelasSel.value = s.kelas;
+  document.getElementById('siswaCariNama').value = '';
+  openKartuSiswa(nisn);
+}
 
 /* ================= SETTINGS MODAL ================= */
 function openSettings(){

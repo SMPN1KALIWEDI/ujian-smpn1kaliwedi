@@ -271,6 +271,7 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
 .status-pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}
 .status-pill.menunggu{background:rgba(183,145,43,0.18);color:var(--gold);}
 .status-pill.diterima{background:rgba(47,143,91,0.15);color:var(--success);}
+.status-pill.dibatalkan{background:rgba(91,106,98,0.15);color:var(--ink-soft);}
 .riwayat-empty{text-align:center;color:var(--ink-soft);font-size:12.5px;padding:16px 0;}
 .queue-badge{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:11.5px;font-weight:700;padding:9px 16px;border-radius:20px;box-shadow:0 10px 24px -8px rgba(0,0,0,0.5);z-index:60;}
 
@@ -508,6 +509,7 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
           <input type="date" id="spTanggalSetor">
         </div>
         <button class="btn btn-primary btn-block" id="spSetorkanBtn">Setorkan Sekarang</button>
+        <button class="btn btn-danger btn-block hidden" id="spBatalkanBtn">&#10005; Batalkan Setoran</button>
         <button class="btn btn-ghost btn-block" id="spShowQrBtn" style="margin-top:8px;">&#9635; Tampilkan QR untuk Bendahara</button>
 
         <h3 class="riwayat-head">Riwayat Setoran Saya</h3>
@@ -928,6 +930,19 @@ async function loadTabunganData(force){
     const dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     const key = nisn+'|'+dateStr;
     tabunganMap[key] = { amount: nominal, dateStr, nisn, petugas, ts: d.getTime(), statusSetor };
+  });
+  // Timpa kembali dengan data yang MASIH ANTRE (belum sempat tersinkron ke
+  // server) - supaya jumlah "sementara" yang baru diketik petugas tidak
+  // hilang/kembali ke 0 kalau kebetulan ada pembacaan ulang dari Sheets
+  // sebelum antrian itu berhasil terkirim (mis. pindah kelas lalu balik lagi
+  // ke kelas & tanggal yang sama).
+  writeQueue.forEach(item=>{
+    const existing = tabunganMap[item.key];
+    tabunganMap[item.key] = {
+      amount: item.nominal, dateStr: item.tanggal, nisn: item.nisn, petugas: item.petugas,
+      ts: Date.now(),
+      statusSetor: (existing && existing.statusSetor === 'TERSETOR' && existing.amount !== item.nominal) ? '' : (existing ? existing.statusSetor : '')
+    };
   });
   cacheTime.tabungan = Date.now();
 }
@@ -1889,7 +1904,8 @@ function renderSetoranPetugas(){
     ? 'dari hasil tabungan yang sudah dicatat atas nama '+session.user
     : 'semua sudah disetorkan, kerja bagus!';
   const badge = document.getElementById('spBadge');
-  badge.classList.toggle('hidden', !notif[session.user]);
+  const hasPending = !!notif[session.user];
+  badge.classList.toggle('hidden', !hasPending);
   document.getElementById('spSudahDisetor').textContent = 'Rp '+formatRupiah(sudahDisetor[session.user]||0);
 
   const listEl = document.getElementById('spKelasList');
@@ -1901,7 +1917,12 @@ function renderSetoranPetugas(){
       '<div class="kb-row"><span class="kb-kelas">'+escapeHtml(kelas)+'</span><span class="kb-amt">Rp '+formatRupiah(amt)+'</span></div>'
     ).join('');
   }
+  // Selama masih ada pengajuan Menunggu, sembunyikan tombol Setorkan (supaya
+  // tidak bisa dobel-setor) dan tawarkan tombol Batalkan sebagai gantinya.
   const btn = document.getElementById('spSetorkanBtn');
+  const btnBatal = document.getElementById('spBatalkanBtn');
+  btn.classList.toggle('hidden', hasPending);
+  btnBatal.classList.toggle('hidden', !hasPending);
   btn.disabled = mine.total <= 0;
 
   const tglInput = document.getElementById('spTanggalSetor');
@@ -1915,6 +1936,7 @@ function statusPill(status){
   const s = normRole(status);
   if(s === 'diterima') return '<span class="status-pill diterima">Diterima</span>';
   if(s === 'menunggu') return '<span class="status-pill menunggu">Menunggu</span>';
+  if(s === 'dibatalkan') return '<span class="status-pill dibatalkan">Dibatalkan</span>';
   return escapeHtml(status||'-');
 }
 
@@ -1950,13 +1972,34 @@ document.getElementById('spSetorkanBtn').addEventListener('click', async ()=>{
     const res = await fetch(url);
     const data = await res.json();
     if(data.status !== 'ok') throw new Error(data.message||'Gagal menyetorkan');
-    toast('Setoran sebesar Rp '+formatRupiah(mine.total)+' terkirim ke Bendahara', 'ok');
+    toast('Setoran sebesar Rp '+formatRupiah(mine.total)+' terkirim ke Bendahara, menunggu konfirmasi Bendahara', 'ok');
+    await loadSetoranData(true);
+    renderSetoranPetugas(); // ini juga yang menyembunyikan tombol Setorkan & menampilkan Batalkan
+  }catch(e){
+    toast('Gagal menyetorkan: '+e.message, 'err');
+    btn.disabled = false;
+  }finally{
+    btn.textContent = 'Setorkan Sekarang';
+  }
+});
+
+document.getElementById('spBatalkanBtn').addEventListener('click', async ()=>{
+  if(!CFG.scriptUrl){ toast('Atur URL Apps Script dulu di Pengaturan', 'err'); return; }
+  const btn = document.getElementById('spBatalkanBtn');
+  btn.disabled = true; btn.textContent = 'Membatalkan...';
+  try{
+    const url = CFG.scriptUrl + '?action=batalkan_setoran&petugas=' + encodeURIComponent(session.user);
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.status !== 'ok') throw new Error(data.message||'Gagal membatalkan');
+    toast('Pengajuan setoran dibatalkan', 'ok');
     await loadSetoranData(true);
     renderSetoranPetugas();
   }catch(e){
-    toast('Gagal menyetorkan: '+e.message, 'err');
+    toast('Gagal membatalkan: '+e.message, 'err');
+    btn.disabled = false;
   }finally{
-    btn.textContent = 'Setorkan Sekarang';
+    btn.textContent = '\u2715 Batalkan Setoran';
   }
 });
 

@@ -272,6 +272,7 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
 .status-pill.menunggu{background:rgba(183,145,43,0.18);color:var(--gold);}
 .status-pill.diterima{background:rgba(47,143,91,0.15);color:var(--success);}
 .riwayat-empty{text-align:center;color:var(--ink-soft);font-size:12.5px;padding:16px 0;}
+.queue-badge{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:11.5px;font-weight:700;padding:9px 16px;border-radius:20px;box-shadow:0 10px 24px -8px rgba(0,0,0,0.5);z-index:60;}
 
 /* ---------- Siswa pick list (Ambil & Kartu Siswa) ---------- */
 .siswa-pick-list{max-height:280px;overflow-y:auto;background:var(--cream);border-radius:var(--radius-md);box-shadow:var(--shadow-card);margin-bottom:16px;}
@@ -762,6 +763,7 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
   </div>
 </div>
 
+<div id="queueBadge" class="queue-badge hidden"></div>
 <div id="toast"></div>
 <div class="overlay hidden" id="loading"><div class="spinner"></div><div class="msg" id="loadingMsg">Memuat...</div></div>
 
@@ -809,6 +811,20 @@ const SESSION_KEY = 'buku_tabungan_session_v1';
 // mengambil data terbaru.
 let cacheTime = { siswa:0, tabungan:0, setoran:0, pengambilan:0 };
 const CACHE_TTL = 20000;
+
+// Antrian penyimpanan tabungan: setiap kali petugas menekan Simpan, perubahan
+// langsung terlihat di aplikasi (tabunganMap diperbarui seketika) tapi
+// penulisan sesungguhnya ke Sheet2 DITUNDA sebentar dan digabung jadi SATU
+// permintaan (satu eksekusi Apps Script) untuk banyak baris sekaligus,
+// bukan satu permintaan jaringan per siswa. Ini menghindari antrian
+// permintaan yang menumpuk dan membuat perpindahan antar siswa terasa instan.
+let writeQueue = [];
+let flushTimer = null;
+let flushInFlight = null;
+let flushAgainNeeded = false;
+const QUEUE_KEY = 'buku_tabungan_write_queue_v1';
+const FLUSH_DEBOUNCE_MS = 1200;
+const FLUSH_MAX_QUEUE = 15;
 
 /* ================= UTIL ================= */
 function todayStr(){
@@ -1072,15 +1088,116 @@ async function simpanTabungan(nisn, tanggal, nominal){
   return data;
 }
 
+/* ---- Antrian penyimpanan (batch) ---- */
+function loadQueueFromStorage(){
+  try{
+    const raw = localStorage.getItem(QUEUE_KEY);
+    writeQueue = raw ? (JSON.parse(raw) || []) : [];
+  }catch(e){
+    writeQueue = [];
+  }
+}
+function saveQueueToStorage(){
+  try{ localStorage.setItem(QUEUE_KEY, JSON.stringify(writeQueue)); }catch(e){}
+}
+function updateQueueBadge(msg){
+  const el = document.getElementById('queueBadge');
+  if(!el) return;
+  if(writeQueue.length === 0 && !msg){
+    el.classList.add('hidden');
+    return;
+  }
+  el.classList.remove('hidden');
+  el.textContent = msg || ('\u21BB ' + writeQueue.length + ' data menunggu disimpan');
+}
+
+// Dipanggil setiap kali petugas menekan Simpan (Kartu atau Tabel). Tabungan
+// langsung terlihat di aplikasi (tabunganMap diperbarui seketika, tanpa
+// menunggu jaringan), sementara penulisan ke Sheet2 yang sesungguhnya
+// ditunda sebentar dan digabung dengan perubahan lain jadi satu permintaan.
+function queueTabunganSave(nisn, tanggal, nominal){
+  const petugas = session ? session.user : '';
+  const key = nisn+'|'+tanggal;
+  const existing = tabunganMap[key];
+  let statusSetor = '';
+  if(existing){
+    statusSetor = (existing.statusSetor === 'TERSETOR' && existing.amount !== nominal) ? '' : (existing.statusSetor || '');
+  }
+  tabunganMap[key] = { amount: nominal, dateStr: tanggal, nisn, petugas, ts: Date.now(), statusSetor };
+
+  const idx = writeQueue.findIndex(q=>q.key===key);
+  const item = { key, nisn, tanggal, nominal, petugas };
+  if(idx>=0) writeQueue[idx] = item; else writeQueue.push(item);
+  saveQueueToStorage();
+  updateQueueBadge();
+  scheduleFlush();
+}
+
+function scheduleFlush(){
+  if(flushTimer){ clearTimeout(flushTimer); flushTimer = null; }
+  if(writeQueue.length >= FLUSH_MAX_QUEUE){
+    flushQueue();
+  }else{
+    flushTimer = setTimeout(()=>flushQueue(), FLUSH_DEBOUNCE_MS);
+  }
+}
+
+// Mengirim seluruh antrian sebagai SATU permintaan (satu eksekusi Apps
+// Script menulis banyak baris sekaligus). Aman dipanggil berulang - kalau
+// sedang ada pengiriman berjalan, panggilan berikutnya menunggu giliran
+// (bukan menumpuk permintaan paralel).
+async function flushQueue(){
+  if(flushTimer){ clearTimeout(flushTimer); flushTimer = null; }
+  if(writeQueue.length === 0) return;
+  if(flushInFlight){
+    flushAgainNeeded = true;
+    return flushInFlight;
+  }
+  if(!CFG.scriptUrl){
+    updateQueueBadge('\u26A0 URL Apps Script belum diatur');
+    return;
+  }
+  flushInFlight = (async ()=>{
+    const batch = writeQueue.slice();
+    updateQueueBadge('\u21BB Menyinkronkan ' + batch.length + ' data...');
+    try{
+      const url = CFG.scriptUrl + '?action=simpan_batch&data=' + encodeURIComponent(JSON.stringify(batch));
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data.status !== 'ok') throw new Error(data.message || 'Gagal menyinkronkan');
+      // Hapus dari antrian HANYA item yang persis sama dengan yang barusan
+      // terkirim - kalau ada yang berubah lagi selagi pengiriman berlangsung,
+      // versi terbaru tetap tertinggal di antrian untuk dikirim berikutnya.
+      writeQueue = writeQueue.filter(q => !batch.some(b=>
+        b.key===q.key && b.nominal===q.nominal && b.tanggal===q.tanggal && b.petugas===q.petugas
+      ));
+      saveQueueToStorage();
+      updateQueueBadge();
+    }catch(e){
+      updateQueueBadge('\u26A0 Gagal sinkron, mencoba lagi...');
+      scheduleFlush();
+    }
+  })();
+  await flushInFlight;
+  flushInFlight = null;
+  if(flushAgainNeeded){
+    flushAgainNeeded = false;
+    if(writeQueue.length>0) flushQueue();
+  }
+}
+
 /* ================= TAB SWITCH ================= */
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
+    const prevActive = document.querySelector('.tab.active');
+    const leavingInput = prevActive && prevActive.dataset.tab === 'input' && btn.dataset.tab !== 'input';
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
     ['input','rekap','setoran','ambil','siswa'].forEach(t=>{
       document.getElementById('view-'+t).classList.toggle('hidden', t!==tab);
     });
+    if(leavingInput && writeQueue.length>0) flushQueue();
     if(tab === 'setoran') refreshSetoranTab();
     if(tab === 'ambil') refreshAmbilTab();
     if(tab === 'siswa') refreshSiswaTab();
@@ -1189,35 +1306,30 @@ document.getElementById('kartuLewati').addEventListener('click', ()=>{
     showKartuSelesai();
   }
 });
-document.getElementById('kartuNext').addEventListener('click', async ()=>{
+document.getElementById('kartuNext').addEventListener('click', ()=>{
   const s = kartuState.list[kartuState.index];
   const tgl = kartuTanggalEl.value;
   const existing = tabunganMap[s.nisn+'|'+tgl];
-  const btn = document.getElementById('kartuNext');
   // Simpan bila: data baru, jumlah berubah, atau data lama belum tercatat PETUGAS-nya
   // (mis. tersimpan sebelum fitur login/petugas aktif) - supaya kolom PETUGAS terisi.
   const petugasBelumTercatat = !!existing && !existing.petugas;
   const adaPerubahan = !existing || existing.amount !== kartuState.currentAmount || petugasBelumTercatat;
   const needsSave = adaPerubahan && (kartuState.currentAmount > 0 || !!existing);
   if(needsSave){
-    btn.disabled = true;
-    try{
-      await simpanTabungan(s.nisn, tgl, kartuState.currentAmount);
-      if(kartuState.currentAmount>0 && (!existing || existing.amount !== kartuState.currentAmount)){
-        kartuState.sesiTotal += kartuState.currentAmount - (existing ? existing.amount : 0);
-        kartuState.sesiCount++;
-      }
-    }catch(e){
-      toast('Gagal menyimpan: '+e.message, 'err');
-      btn.disabled = false;
-      return;
+    if(kartuState.currentAmount>0 && (!existing || existing.amount !== kartuState.currentAmount)){
+      kartuState.sesiTotal += kartuState.currentAmount - (existing ? existing.amount : 0);
+      kartuState.sesiCount++;
     }
-    btn.disabled = false;
+    // Antrekan ke penyimpanan batch - tabunganMap sudah diperbarui seketika di
+    // dalam queueTabunganSave, jadi bisa langsung pindah ke siswa berikutnya
+    // tanpa menunggu jaringan.
+    queueTabunganSave(s.nisn, tgl, kartuState.currentAmount);
   }
   if(kartuState.index < kartuState.list.length-1){
     kartuState.index++;
     renderKartuCard();
   }else{
+    flushQueue(); // pastikan sisa antrian langsung terkirim saat sesi selesai
     showKartuSelesai();
   }
 });
@@ -1309,14 +1421,17 @@ function renderTabelBody(){
     tr.querySelector('.row-save').addEventListener('click', async (e)=>{
       const b = e.currentTarget;
       b.disabled = true; b.textContent = '...';
-      try{
-        await simpanTabungan(row.nisn, tabelTanggalEl.value, row.amount);
+      const key = row.nisn+'|'+tabelTanggalEl.value;
+      queueTabunganSave(row.nisn, tabelTanggalEl.value, row.amount);
+      await flushQueue();
+      const stillPending = writeQueue.some(q=>q.key===key);
+      if(!stillPending){
         row.savedAmount = row.amount;
         b.textContent = 'Tersimpan';
         setTimeout(()=>{ b.textContent='Simpan'; b.disabled=false; }, 1200);
         toast(row.nama+' tersimpan', 'ok');
-      }catch(err){
-        toast('Gagal: '+err.message, 'err');
+      }else{
+        toast('Gagal menyimpan, akan dicoba lagi otomatis', 'err');
         b.textContent = 'Simpan'; b.disabled = false;
       }
     });
@@ -1326,22 +1441,23 @@ function renderTabelBody(){
 document.getElementById('tabelSimpanSemua').addEventListener('click', async ()=>{
   const toSave = tabelState.rows.filter(r=>r.amount !== r.savedAmount);
   if(toSave.length===0){ toast('Tidak ada perubahan untuk disimpan'); return; }
-  showLoading('Menyimpan 0/'+toSave.length+'...');
-  let done = 0;
-  for(const row of toSave){
-    try{
-      await simpanTabungan(row.nisn, tabelTanggalEl.value, row.amount);
-      row.savedAmount = row.amount;
-      done++;
-      document.getElementById('loadingMsg').textContent = 'Menyimpan '+done+'/'+toSave.length+'...';
-    }catch(e){
-      hideLoading();
-      toast('Gagal pada '+row.nama+': '+e.message, 'err');
-      return;
-    }
-  }
+  showLoading('Menyimpan '+toSave.length+' data...');
+  // Semua baris yang berubah dimasukkan ke antrian lalu dikirim SEKALIGUS
+  // sebagai satu permintaan (satu eksekusi Apps Script), bukan satu per baris.
+  const keys = toSave.map(row=> row.nisn+'|'+tabelTanggalEl.value);
+  toSave.forEach(row=> queueTabunganSave(row.nisn, tabelTanggalEl.value, row.amount));
+  await flushQueue();
+  const stillPendingKeys = new Set(writeQueue.map(q=>q.key));
+  let success = 0;
+  toSave.forEach((row,idx)=>{
+    if(!stillPendingKeys.has(keys[idx])){ row.savedAmount = row.amount; success++; }
+  });
   hideLoading();
-  toast(done+' data tersimpan', 'ok');
+  if(success === toSave.length){
+    toast(success+' data tersimpan', 'ok');
+  }else{
+    toast(success+' dari '+toSave.length+' tersimpan, sisanya dicoba lagi otomatis', 'err');
+  }
   renderTabelBody();
 });
 
@@ -2668,6 +2784,10 @@ function doManualLogin(){
   enterApp();
 }
 document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  if(writeQueue.length>0){
+    toast('Menyelesaikan penyimpanan sebelum keluar...');
+    flushQueue();
+  }
   clearSession();
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
@@ -2942,6 +3062,17 @@ async function bootData(){
 setupPWA();
 updateSetupBanner();
 bootData();
+
+// Pulihkan antrian yang sempat tertinggal (mis. aplikasi tertutup sebelum
+// sempat terkirim) dan coba kirim lagi begitu koneksi/CFG siap.
+loadQueueFromStorage();
+if(writeQueue.length>0){
+  updateQueueBadge();
+  setTimeout(()=>flushQueue(), 1500);
+}
+// Jaring pengaman: kalau karena sebab apa pun antrian belum juga terkirim
+// (mis. sempat gagal jaringan), coba lagi tiap 10 detik selama masih ada isinya.
+setInterval(()=>{ if(writeQueue.length>0 && !flushInFlight) flushQueue(); }, 10000);
 </script>
 </body>
 </html>

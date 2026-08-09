@@ -501,6 +501,10 @@ table.rekap-matrix{border-collapse:collapse;font-size:11.5px;}
 
     <!-- ===================== SETORAN ===================== -->
     <section id="view-setoran" class="view hidden">
+      <div class="view-toggle hidden" id="setoranAdminToggle">
+        <button class="active" data-sv="petugas">Tampilan Petugas</button>
+        <button data-sv="bendahara">Tampilan Bendahara</button>
+      </div>
       <!-- Tampilan Petugas -->
       <div id="setoranPetugas" class="hidden">
         <div class="setoran-hero">
@@ -1907,12 +1911,24 @@ function computeSudahDisetorPerPetugas(){
   return { perPetugas: result, grandTotal };
 }
 
+let setoranAdminView = 'petugas'; // hanya dipakai kalau role = admin
+document.querySelectorAll('#setoranAdminToggle [data-sv]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#setoranAdminToggle [data-sv]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    setoranAdminView = btn.dataset.sv;
+    if(setoranAdminView === 'petugas') renderSetoranPetugas();
+    else renderSetoranBendahara();
+  });
+});
+
 async function refreshSetoranTab(){
   document.getElementById('setoranPetugas').classList.add('hidden');
   document.getElementById('setoranBendahara').classList.add('hidden');
   document.getElementById('setoranEmpty').classList.add('hidden');
   if(!session) return;
   const role = normRole(session.status);
+  document.getElementById('setoranAdminToggle').classList.toggle('hidden', role !== 'admin');
   if(role !== 'petugas' && role !== 'bendahara' && role !== 'admin'){
     document.getElementById('setoranEmpty').classList.remove('hidden');
     return;
@@ -1920,7 +1936,7 @@ async function refreshSetoranTab(){
   showLoading('Memuat data setoran...');
   try{
     await Promise.all([loadTabunganData(), loadSetoranData(), loadPengambilanData()]);
-    if(role === 'petugas'){
+    if(role === 'petugas' || (role === 'admin' && setoranAdminView === 'petugas')){
       renderSetoranPetugas();
     }else{
       renderSetoranBendahara();

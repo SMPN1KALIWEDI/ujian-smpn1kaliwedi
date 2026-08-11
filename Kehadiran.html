@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1565c0">
+<title>Kehadiran — SMPN 1 Kaliwedi</title>
+
+<!-- ICON APLIKASI (Home Screen / PWA) — bertema absensi (papan klip + centang) -->
+<link id="iconFav" rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABR0lEQVR4nGNkwAJEUw/8xyZOKXg924ERXQxFgFYW43MIE70tR7eLid6WozuChRzNydp3cMrNvapCklmM+Hz/apY9hljlxLkM4R4OOA1cueMAQ3t+MoqYWNpBnOqZcElgs5xcgM8skqOgPT+ZoXLiXLzypACy0gCpluADOKOAXmDAHUAwCvbc/4NX3kWRrFiEgwEPgeHpAP06Ywb9OmOi1BKMQFLjGNli/TpjhotNZylzADkWkwKIjgJ8wYpLnJDvGRgYGFh+PHpIlOXIbGSDsVmOzWJc9pAVBfiCmxhfIwOiooBYQ0m1nIGBhBCAGU5skBMLSC4H0C2jxHIGBjLTAKWWIoPhWRQPLQd83hmP0V1iYGBg4PNYRDVLcJn1eWc8I95ESE1H4AJMMJfQ3CY0ALOTCV2AnpYzMKD1jmGA130hTfqK2DwJAFbaaZfg19KPAAAAAElFTkSuQmCC">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AbsensiKu">
+<meta name="mobile-web-app-capable" content="yes">
+<link id="manifestLink" rel="manifest" href="">
+<script>
+// Membuat manifest PWA secara dinamis (satu file HTML tanpa file manifest terpisah)
+// supaya saat "Add to Home Screen" / diinstal sebagai aplikasi, muncul icon
+// bertema absensi (papan klip dengan tanda centang), bukan ikon generik.
+(function(){
+  const ICON192 = "data:image/png;base64,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";
+  const ICON512 = "data:image/png;base64,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";
+  const manifest = {
+    id: "absensi-ku-smpn1kaliwedi", // identitas unik — WAJIB beda dari aplikasi lain agar tidak saling menimpa saat diinstal
+    name: "AbsensiKu — SMP Negeri 1 Kaliwedi",
+    short_name: "AbsensiKu",
+    start_url: window.location.href.split('#')[0].split('?')[0], // URL persis halaman ini, bukan "."
+    scope: window.location.href.split('#')[0].split('?')[0].replace(/\/[^\/]*$/, '/'),
+    display: "standalone",
+    background_color: "#1565c0",
+    theme_color: "#1565c0",
+    icons: [
+      { src: ICON192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: ICON512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+  document.getElementById('manifestLink').setAttribute('href', URL.createObjectURL(blob));
+})();
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --b1:#0d47a1; --b2:#1565c0; --b3:#1976d2; --b4:#42a5f5; --b5:#bbdefb; --b6:#e3f2fd;
+  --putih:#fff; --teks:#0d1b2a; --abu:#f0f4f8; --abu2:#78909c;
+  --hijau:#2e7d32; --hijau2:#e8f5e9;
+  --merah:#c62828; --merah2:#ffebee;
+  --kuning:#e65100; --kuning2:#fff3e0;
+  --ungu:#6a1b9a; --ungu2:#f3e5f5;
+  --shadow:0 8px 32px rgba(13,71,161,.15); --r:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Nunito',sans-serif;
+  background:linear-gradient(160deg,#e3f2fd 0%,#bbdefb 40%,#e8eaf6 100%);
+  min-height:100vh; display:flex; align-items:flex-start;
+  justify-content:center; padding:16px 12px 40px;
+}
+
+/* LOADING */
+#loading{
+  position:fixed;inset:0;background:rgba(255,255,255,.96);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;
+}
+.spin{
+  width:50px;height:50px;border:5px solid var(--b5);
+  border-top-color:var(--b2);border-radius:50%;
+  animation:spin .8s linear infinite;margin-bottom:14px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{color:var(--b2);font-weight:700;font-size:1rem}
+#loading small{color:var(--abu2);font-size:.8rem;margin-top:4px}
+
+/* WRAP & CARD */
+.wrap{width:100%;max-width:480px}
+.card{background:var(--putih);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;animation:up .5s ease both}
+@keyframes up{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+/* HEADER */
+.hdr{
+  background:linear-gradient(135deg,var(--b1) 0%,var(--b3) 60%,#5c6bc0 100%);
+  padding:28px 22px 36px;text-align:center;color:#fff;position:relative;overflow:hidden;
+}
+.hdr::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;background:rgba(255,255,255,.07);border-radius:50%;
+}
+.hdr::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;
+  height:24px;background:#fff;border-radius:50% 50% 0 0/100% 100% 0 0;
+}
+.logo-ring{
+  width:78px;height:78px;border-radius:50%;border:3px solid rgba(255,255,255,.8);
+  background:#fff;padding:6px;margin:0 auto 12px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(0,0,0,.25);overflow:hidden;
+}
+.logo-ring img{width:100%;height:100%;object-fit:contain}
+.logo-ring .bendera-kibar{font-size:2.6rem;line-height:1;display:inline-block;transform-origin:22% 50%}
+@keyframes kibarBendera{
+  0%,100%{transform:rotate(-8deg) skewY(-4deg)}
+  50%{transform:rotate(8deg) skewY(4deg)}
+}
+.bendera-kibar{animation:kibarBendera 1.6s ease-in-out infinite}
+.dirgahayu-banner{
+  color:#ff1744;font-weight:800;font-size:.76rem;text-align:center;
+  margin-top:6px;letter-spacing:.4px;text-transform:uppercase;
+  text-shadow:0 1px 3px rgba(0,0,0,.25);
+}
+.hdr-app{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:2px}
+.hdr-app span{color:#90caf9}
+.hdr-sekolah{font-size:.82rem;font-weight:600;opacity:.9;letter-spacing:.3px}
+
+/* FORM */
+.body{padding:26px 22px 20px}
+.msg{padding:10px 14px;border-radius:10px;font-size:.87rem;font-weight:700;margin-bottom:14px;display:none}
+.msg.err{background:var(--merah2);color:var(--merah);border-left:4px solid var(--merah);display:block}
+.msg.ok {background:var(--hijau2);color:var(--hijau);border-left:4px solid var(--hijau);display:block}
+.fg{margin-bottom:14px}
+label{display:block;font-size:.78rem;font-weight:700;color:var(--abu2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.iw{position:relative}
+.iw .ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:1rem;opacity:.4}
+input[type=text],input[type=password]{
+  width:100%;padding:12px 42px;border:2px solid #cfd8dc;border-radius:12px;
+  font-family:'Nunito',sans-serif;font-size:.98rem;color:var(--teks);
+  background:var(--abu);outline:none;transition:.2s;
+}
+input:focus{border-color:var(--b3);box-shadow:0 0 0 3px rgba(25,118,210,.12);background:#fff}
+.eye,.qr-btn{
+  position:absolute;right:13px;top:50%;transform:translateY(-50%);
+  cursor:pointer;font-size:1.1rem;opacity:.45;background:none;border:none;
+  padding:2px;transition:opacity .2s;user-select:none;
+}
+.eye:hover,.qr-btn:hover{opacity:.9}
+.btn-login{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--b1),var(--b3));
+  color:#fff;border:none;border-radius:12px;
+  font-family:'Poppins',sans-serif;font-size:1rem;font-weight:700;
+  cursor:pointer;margin-top:4px;box-shadow:0 4px 14px rgba(13,71,161,.3);
+  transition:.2s;letter-spacing:.3px;
+}
+.btn-login:hover{opacity:.92;transform:translateY(-1px)}
+.link-ubah{
+  display:block;text-align:center;margin-top:12px;
+  font-size:.82rem;color:var(--b3);font-weight:700;cursor:pointer;
+}
+.link-ubah:hover{text-decoration:underline}
+
+/* HALAMAN ABSENSI */
+#hAbsen{display:none}
+.profil-bar{
+  background:linear-gradient(135deg,var(--b1),var(--b3));
+  padding:20px 22px 30px;color:#fff;position:relative;
+}
+.profil-bar::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;
+  height:22px;background:#fff;border-radius:50% 50% 0 0/100% 100% 0 0;
+}
+.profil-nama{font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:800;margin-bottom:3px}
+.profil-chip-wrap{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.profil-chip{
+  background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);
+  border-radius:20px;padding:4px 12px;font-size:.78rem;font-weight:700;
+}
+
+/* KEHADIRAN HARI INI */
+.kartu-hari-ini{
+  margin:14px 18px 2px;background:linear-gradient(135deg,var(--b6),#eef6ff);
+  border:1.5px solid var(--b5);border-radius:16px;padding:14px 16px;
+}
+.khi-judul{
+  font-size:.7rem;font-weight:800;color:var(--b2);text-align:center;
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;
+}
+.khi-baris{display:flex;align-items:center;gap:10px}
+.khi-item{flex:1;text-align:center;display:flex;flex-direction:column;gap:5px}
+.khi-label{font-size:.66rem;font-weight:800;color:var(--abu2);letter-spacing:.3px}
+.khi-nilai{font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:800;color:var(--teks)}
+.khi-nilai.kosong{font-size:.78rem;font-weight:700;color:var(--abu2);font-family:'Nunito',sans-serif}
+.khi-nilai.datang{color:var(--hijau)}
+.khi-nilai.pulang{color:var(--kuning)}
+.khi-pemisah{width:1.5px;align-self:stretch;background:var(--b5);border-radius:2px}
+
+/* KEGIATAN SHOLAT BERJAMAAH */
+.kartu-sholat{
+  margin:10px 18px 2px;padding:14px 16px;border-radius:16px;
+  background:linear-gradient(135deg,#0b3d1f,#0f5c2e);
+  box-shadow:0 4px 14px rgba(11,61,31,.35);
+}
+.ks-judul{
+  font-size:.72rem;font-weight:800;color:#ffd54f;text-align:center;
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;
+}
+.ks-teks{
+  font-size:.86rem;font-weight:700;line-height:1.55;text-align:center;
+  color:#fffde7;
+}
+.ks-teks b{color:#ffee58}
+.ks-teks.hadir{color:#e8f5e9}
+.ks-teks.hadir b{color:#69f0ae}
+.ks-teks.pernah b{color:#ffd740}
+.ks-teks.tidak-pernah b{color:#ff8a80}
+
+.kartu-sholat{cursor:pointer}
+.ks-total{
+  margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.18);
+  text-align:center;font-size:.76rem;font-weight:800;color:#ffd54f;letter-spacing:.3px;
+}
+.ks-hint{
+  margin-top:6px;text-align:center;font-size:.68rem;font-style:italic;
+  color:rgba(255,255,255,.65);
+}
+.ks-daftar{
+  margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.25);
+  max-height:180px;overflow-y:auto;
+}
+.ks-daftar-item{
+  display:flex;justify-content:space-between;gap:8px;
+  font-size:.78rem;color:#fffde7;padding:5px 2px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.ks-daftar-item:last-child{border-bottom:none}
+.ks-daftar-kosong{text-align:center;font-size:.78rem;color:rgba(255,255,255,.7);padding:8px 0}
+
+/* KEGIATAN EKSTRAKURIKULER */
+.kartu-ekskul{
+  margin:10px 18px 2px;padding:14px 16px;border-radius:16px;
+  background:linear-gradient(135deg,#e65100,#f57c00);
+  box-shadow:0 4px 14px rgba(230,81,0,.35);
+}
+.ke-judul{
+  font-size:.72rem;font-weight:800;color:#fff9c4;text-align:center;
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;
+}
+.ke-teks{
+  font-size:.86rem;font-weight:700;line-height:1.55;text-align:center;color:#fff3e0;
+}
+.ke-teks b{color:#fff59d}
+
+/* REKAP */
+.rekap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 18px}
+.rbox{background:var(--abu);border-radius:12px;padding:10px 6px;text-align:center}
+.rbox .rn{font-size:1.4rem;font-weight:800;font-family:'Poppins',sans-serif}
+.rbox .rl{font-size:.67rem;font-weight:700;color:var(--abu2);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
+.rbox.h{background:var(--hijau2)} .rbox.h .rn{color:var(--hijau)}
+.rbox.s{background:var(--b6)}    .rbox.s .rn{color:var(--b2)}
+.rbox.i{background:var(--kuning2)}.rbox.i .rn{color:var(--kuning)}
+.rbox.a{background:var(--merah2)}.rbox.a .rn{color:var(--merah)}
+
+/* FILTER */
+.filter-bar{padding:4px 18px 0;display:flex;align-items:center;gap:8px}
+.filter-bar label{text-transform:none;font-size:.82rem;white-space:nowrap}
+select{
+  flex:1;padding:8px 10px;border:2px solid #cfd8dc;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.88rem;color:var(--teks);
+  background:var(--abu);outline:none;cursor:pointer;
+}
+select:focus{border-color:var(--b3)}
+.btn-live{
+  padding:8px 12px;background:var(--b6);color:var(--b2);
+  border:2px solid var(--b5);border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:.2s;
+}
+.btn-live:hover{background:var(--b5)}
+
+/* UPDATE */
+.upd{display:flex;align-items:center;gap:6px;font-size:.73rem;color:var(--abu2);padding:8px 18px 2px}
+.dot-live{width:8px;height:8px;border-radius:50%;background:#4caf50;animation:kedip 1.2s infinite;flex-shrink:0}
+@keyframes kedip{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* TABEL */
+.tbl-wrap{padding:8px 18px 18px;overflow-x:auto}
+.sec-title{font-size:.77rem;font-weight:700;color:var(--abu2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+table.tab{
+  width:100%;border-collapse:collapse;font-size:.83rem;
+  border-radius:12px;overflow:hidden;
+  box-shadow:0 2px 10px rgba(0,0,0,.07);min-width:300px;
+}
+table.tab thead tr{background:linear-gradient(135deg,var(--b1),var(--b3));color:#fff}
+table.tab th{padding:10px 12px;text-align:left;font-size:.74rem;font-weight:700;letter-spacing:.3px}
+table.tab td{padding:9px 12px;border-bottom:1px solid #e8edf2;vertical-align:middle}
+table.tab tbody tr:last-child td{border-bottom:none}
+table.tab tbody tr:nth-child(even){background:var(--b6)}
+table.tab tbody tr:hover{background:var(--b5)}
+.tgl-teks{font-weight:700;font-size:.82rem}
+.tgl-hari{font-size:.7rem;color:var(--abu2)}
+.bdg{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.78rem;font-weight:800;min-width:24px;text-align:center}
+.bdg.h{background:var(--hijau2);color:var(--hijau)}
+.bdg.s{background:var(--b6);color:var(--b2)}
+.bdg.i{background:var(--kuning2);color:var(--kuning)}
+.bdg.a{background:var(--merah2);color:var(--merah)}
+.bdg.b{background:#fff3e0;color:#e65100}
+.bdg.libur{background:transparent;color:var(--b2);font-size:.85rem}
+.bdg.weekend{background:#f5f5f5;color:#bdbdbd}
+.bdg.future{background:#f5f5f5;color:#e0e0e0}
+.bdg.tk{background:var(--ungu2);color:var(--ungu)}
+.bdg.blmdtg{background:#eceff1;color:#546e7a;font-size:.66rem;padding:3px 7px;white-space:nowrap}
+.bdg.blmplg{background:#fff3e0;color:#e65100;font-size:.66rem;padding:3px 7px;white-space:nowrap}
+tr.row-libur td{background:var(--b6)!important}
+tr.row-weekend td{background:#fafafa!important;opacity:.7}
+tr.row-future td{background:#fafafa!important;opacity:.5}
+.tgl-teks.biru{color:var(--b2)!important;font-weight:800}
+.tgl-hari.biru{color:var(--b2)!important}
+.ket-libur{font-size:.65rem;color:var(--b2);line-height:1.2;margin-top:2px;font-weight:600;max-width:70px;word-break:break-word}
+.jam{font-size:.8rem;color:var(--teks);font-weight:700}
+.jam.kosong{color:#b0bec5;font-weight:400}
+.kosong-row{text-align:center;padding:24px;color:var(--abu2);font-size:.9rem}
+
+.btn-keluar{
+  width:100%;padding:12px;background:var(--abu);color:var(--abu2);
+  border:2px solid #cfd8dc;border-radius:12px;
+  font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;
+  cursor:pointer;margin-top:4px;transition:.2s;
+}
+.btn-keluar:hover{background:var(--merah2);color:var(--merah);border-color:#ef9a9a}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:var(--r);padding:26px 22px;width:90%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.2);animation:up .3s ease}
+.modal h3{font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:14px}
+.btn-row{display:flex;gap:10px;margin-top:14px}
+.btn-batal{flex:1;padding:11px;background:var(--abu);color:var(--abu2);border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer}
+.btn-simpan{flex:1;padding:11px;background:var(--b2);color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer}
+
+/* QR */
+#qr-box{width:100%;border-radius:12px;overflow:hidden;background:#000;min-height:260px}
+#qr-box video{width:100%!important;border-radius:12px}
+.qr-status{text-align:center;font-size:.83rem;color:var(--abu2);margin-top:8px;min-height:20px}
+/* ===== KARTU SISWA (desain sama seperti monitor-guru.html) ===== */
+#hKartu { display:none; }
+
+.kartu-wrap { padding:18px 18px 20px; }
+
+.sec-kartu-title {
+  font-size:.78rem;font-weight:700;color:var(--abu2);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;
+}
+
+/* Wrapper untuk centering kartu di layar */
+.kartu-outer {
+  display:flex;justify-content:center;margin-bottom:20px;
+}
+
+#kartuCetak{
+  width:53.98mm;min-height:85.6mm;max-width:100%;
+  background:#fff;border-radius:3mm;overflow:hidden;
+  box-shadow:0 10px 30px rgba(13,71,161,.18);
+  display:flex;flex-direction:column;
+}
+
+.kartu-qr-header{
+  background:linear-gradient(135deg,var(--b2),var(--b1));color:#fff;
+  text-align:center;padding:3mm 2mm 2.2mm;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;gap:1.2mm;
+}
+.kartu-qr-logo{
+  width:9mm;height:9mm;border-radius:50%;background:#fff;padding:.6mm;
+  object-fit:contain;box-shadow:0 1px 3px rgba(0,0,0,.18);
+}
+.kartu-qr-header p{font-family:'Poppins',sans-serif;font-size:2.5mm;font-weight:800;letter-spacing:.3px;line-height:1.2}
+
+.kartu-qr-title{text-align:center;padding:2.6mm 2mm 1mm;flex-shrink:0}
+.kartu-qr-title h2{
+  font-family:'Poppins',sans-serif;font-weight:800;font-size:5mm;color:var(--b1);
+  letter-spacing:.6px;line-height:1.1;
+}
+
+.kartu-qr-qrsection{display:flex;justify-content:center;padding:1mm 0 2mm;flex-shrink:0}
+.qr-frame{
+  width:43.2mm;height:43.2mm;padding:1.6mm;background:#fff;
+  border:1px solid var(--b6);border-radius:2.5mm;display:flex;align-items:center;justify-content:center;
+}
+.kartu-qr-overlay{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.kartu-qr-overlay img{width:100% !important;height:100% !important;display:block;border-radius:1mm;object-fit:contain}
+
+.kartu-qr-info{text-align:center;padding:0 3mm 2mm;flex-shrink:0}
+.kartu-nama-ov{font-family:'Poppins',sans-serif;font-size:3.8mm;font-weight:800;color:var(--teks);line-height:1.15;word-break:break-word}
+.kartu-kelas-ov{display:inline-block;margin-top:1.4mm;background:var(--b6);color:var(--b2);font-weight:800;font-size:2.3mm;padding:.7mm 2.8mm;border-radius:3mm}
+.kartu-nisn-ov{margin-top:1.8mm;font-size:2.3mm;color:var(--abu2);font-weight:700}
+.kartu-nisn-ov b{color:var(--teks);letter-spacing:.5px}
+
+.kartu-qr-footer{
+  flex-shrink:0;margin-top:auto;color:#fff;text-align:center;font-weight:700;
+  font-size:1.9mm;line-height:1.35;padding:1.8mm 3mm;
+}
+.kartu-qr-footer.tingkat-7{background:linear-gradient(120deg,#43a047,#2e7d32)}
+.kartu-qr-footer.tingkat-8{background:linear-gradient(120deg,#fdd835,#f9a825)}
+.kartu-qr-footer.tingkat-9{background:linear-gradient(120deg,#e53935,#c62828)}
+.kartu-qr-footer.tingkat-lain{background:linear-gradient(120deg,var(--b2),var(--b1))}
+
+/* ── TOMBOL DOWNLOAD ── */
+.btn-dl-wrap {
+  display:flex;gap:10px;
+  max-width:320px;margin:0 auto;
+}
+.btn-dl {
+  flex:1;padding:11px 8px;border:none;border-radius:12px;
+  font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:700;
+  cursor:pointer;transition:.2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-dl.jpg {
+  background:linear-gradient(135deg,var(--b1),var(--b3));
+  color:#fff;box-shadow:0 4px 12px rgba(13,71,161,.3);
+}
+.btn-dl.png {
+  background:linear-gradient(135deg,#e65100,#f57c00);
+  color:#fff;box-shadow:0 4px 12px rgba(230,81,0,.3);
+}
+.btn-dl:hover{opacity:.9;transform:translateY(-1px);}
+.btn-dl.loading{opacity:.6;pointer-events:none;}
+
+.btn-back-kartu {
+  width:100%;margin-top:10px;max-width:320px;
+  display:block;margin-left:auto;margin-right:auto;
+  padding:11px;background:var(--abu);color:var(--abu2);
+  border:2px solid #cfd8dc;border-radius:12px;
+  font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;
+  cursor:pointer;transition:.2s;text-align:center;
+}
+.btn-back-kartu:hover{background:var(--merah2);color:var(--merah);border-color:#ef9a9a;}
+
+.btn-kartu {
+  width:100%;padding:11px;margin-top:6px;
+  background:var(--b6);color:var(--b2);
+  border:2px solid var(--b5);border-radius:12px;
+  font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;
+  cursor:pointer;transition:.2s;
+}
+.btn-kartu:hover{background:var(--b5);}
+
+/* ===== END KARTU ===== */
+.btn-tutup-qr{
+  width:100%;margin-top:12px;padding:12px;
+  border:2px solid #cfd8dc;border-radius:10px;
+  background:var(--abu);color:var(--abu2);
+  font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer;
+}
+.btn-tutup-qr:hover{background:var(--merah2);color:var(--merah);border-color:#ef9a9a}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="spin"></div>
+  <p>Memuat data...</p>
+  <small id="loadSub"></small>
+</div>
+
+<div class="wrap">
+
+<!-- ===== LOGIN ===== -->
+<div id="hLogin">
+  <div class="card">
+    <div class="hdr">
+      <div class="logo-ring" id="logoRing">
+        <img id="logoSekolah" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo" onerror="this.style.display='none'">
+        <span id="logoBendera" class="bendera-kibar" style="display:none">🇮🇩</span>
+      </div>
+      <div class="hdr-app">Absensi<span>Ku</span></div>
+      <div class="hdr-sekolah">SMP NEGERI 1 KALIWEDI</div>
+      <div class="dirgahayu-banner" id="dirgahayuBanner" style="display:none">
+        DIRGAHAYU REPUBLIK INDONESIA KE-<span id="diNomor"></span> — MERDEKA
+      </div>
+    </div>
+    <div class="body">
+      <div id="msgLogin" class="msg"></div>
+      <div class="fg">
+        <label>NISN Siswa</label>
+        <div class="iw">
+          <span class="ic">🪪</span>
+          <input type="text" id="inpNISN" placeholder="Ketik NISN atau scan QR" autocomplete="off" inputmode="numeric">
+          <button class="qr-btn" onclick="bukaQR()" title="Scan QR">📷</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <div class="iw">
+          <span class="ic">🔑</span>
+          <input type="password" id="inpPw" placeholder="Masukkan password">
+          <span class="eye" onclick="tglPw('inpPw',this)">👁</span>
+        </div>
+      </div>
+      <button class="btn-login" onclick="login()">Lihat Absensi →</button>
+      <a class="link-ubah" onclick="bukaUbahPw()">🔄 Ubah Password</a>
+      <a class="link-ubah" href="gerbang-sekolah.html" style="display:block;margin-top:4px">⬅️ Kembali ke Gerbang Sekolah</a>
+
+      <!-- Catatan lupa password -->
+      <div style="
+        margin-top:18px;
+        background:#e3f2fd;
+        border-left:4px solid #1565c0;
+        border-radius:10px;
+        padding:11px 14px;
+        font-size:.80rem;
+        color:#1565c0;
+        line-height:1.6;
+      ">
+        <b>🔑 Lupa Password?</b><br>
+        Hubungi <b>guru petugas absen</b> di sekolah dengan membawa <b>Kartu QR</b> Anda.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ABSENSI ===== -->
+<div id="hAbsen">
+  <div class="card">
+    <div class="profil-bar">
+      <div class="profil-nama" id="abNama"></div>
+      <div style="font-size:.82rem;opacity:.85" id="abNISNteks"></div>
+      <div class="profil-chip-wrap">
+        <div class="profil-chip" id="abKls"></div>
+      </div>
+    </div>
+
+    <!-- Kehadiran Hari Ini -->
+    <div class="kartu-hari-ini">
+      <div class="khi-judul">🕐 KEHADIRAN HARI INI</div>
+      <div class="khi-baris">
+        <div class="khi-item">
+          <span class="khi-label">➡️ DATANG</span>
+          <span class="khi-nilai" id="khiDatang">—</span>
+        </div>
+        <div class="khi-pemisah"></div>
+        <div class="khi-item">
+          <span class="khi-label">⬅️ PULANG</span>
+          <span class="khi-nilai" id="khiPulang">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kegiatan Sholat Berjamaah -->
+    <div class="kartu-sholat" id="kartuSholat" onclick="toggleDaftarSholat()">
+      <div class="ks-judul">🕌 SHOLAT BERJAMAAH</div>
+      <div class="ks-teks" id="ksTeks">⏳ Memuat data sholat...</div>
+      <div class="ks-total" id="ksTotal" style="display:none"></div>
+      <div class="ks-hint" id="ksHint" style="display:none">🔽 Tap untuk lihat daftar kehadiran</div>
+      <div class="ks-daftar" id="ksDaftar" style="display:none"></div>
+    </div>
+
+    <!-- Ekstrakurikuler -->
+    <div class="kartu-ekskul" id="kartuEkskul" style="display:none">
+      <div class="ke-judul">🎯 EKSTRAKURIKULER</div>
+      <div class="ke-teks" id="keTeks">—</div>
+    </div>
+
+    <!-- Rekap -->
+    <div class="sec-title" id="judulKehadiranBulan" style="margin:14px 18px 8px;text-align:center;font-size:.78rem">KEHADIRAN BULAN —</div>
+    <div class="rekap-grid">
+      <div class="rbox h"><div class="rn" id="rkH">0</div><div class="rl">Hadir</div></div>
+      <div class="rbox s"><div class="rn" id="rkS">0</div><div class="rl">Sakit</div></div>
+      <div class="rbox i"><div class="rn" id="rkI">0</div><div class="rl">Izin</div></div>
+      <div class="rbox a"><div class="rn" id="rkA">0</div><div class="rl">Alfa</div></div>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-bar">
+      <label>📅</label>
+      <select id="selBulan" onchange="filterTampil()">
+        <option value="">Semua Bulan</option>
+        <option value="1">Januari</option><option value="2">Februari</option>
+        <option value="3">Maret</option><option value="4">April</option>
+        <option value="5">Mei</option><option value="6">Juni</option>
+        <option value="7">Juli</option><option value="8">Agustus</option>
+        <option value="9">September</option><option value="10">Oktober</option>
+        <option value="11">November</option><option value="12">Desember</option>
+      </select>
+      <button class="btn-live" onclick="muatAbsen()">🔄 Live</button>
+    </div>
+
+    <!-- Update info -->
+    <div class="upd">
+      <div class="dot-live"></div>
+      <span id="teksUpd">Memuat...</span>
+    </div>
+
+    <!-- Tabel -->
+    <div class="tbl-wrap">
+      <div class="sec-title" id="toggleDetailKehadiran" onclick="toggleDetailKehadiran()" style="margin-top:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+        <span>📋 Detail Kehadiran</span>
+        <span id="hintDetailKehadiran" style="font-size:.68rem;font-weight:700;color:var(--b2);text-transform:none;letter-spacing:0">🔽 Tap untuk Lihat</span>
+      </div>
+      <div id="isiDetailKehadiran" style="display:none">
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;font-size:.7rem">
+        <span style="display:flex;align-items:center;gap:3px"><span class="bdg h">H</span> Hadir</span>
+        <span style="display:flex;align-items:center;gap:3px"><span class="bdg blmdtg">Blm Dtg</span> Belum Datang</span>
+        <span style="display:flex;align-items:center;gap:3px"><span class="bdg b">B</span> Blm Pulang</span>
+        <span style="display:flex;align-items:center;gap:3px"><span class="bdg s">S</span> Sakit</span>
+        <span style="display:flex;align-items:center;gap:3px"><span class="bdg i">I</span> Izin</span>
+        <span style="display:flex;align-items:center;gap:3px"><span class="bdg a">A</span> Alfa</span>
+        <span style="display:flex;align-items:center;gap:3px;color:var(--b2)">🔵 Libur</span>
+      </div>
+      <table class="tab">
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th style="text-align:center">Ket</th>
+            <th>Datang</th>
+            <th>Pulang</th>
+          </tr>
+        </thead>
+        <tbody id="tbAbsen">
+          <tr><td colspan="4" class="kosong-row">⏳ Memuat...</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div style="padding:0 18px 18px">
+      <button class="btn-kartu" onclick="bukaHalamanKartu()">🪪 Lihat Kartu Absen Saya</button>
+      <button class="btn-keluar" style="margin-top:10px" onclick="logout()">⬅ Keluar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HALAMAN KARTU ===== -->
+<div id="hKartu">
+  <div class="card">
+    <div class="profil-bar">
+      <div class="profil-nama">🪪 Kartu Absen</div>
+      <div style="font-size:.82rem;opacity:.85" id="kartuNamaSub"></div>
+    </div>
+
+    <div class="kartu-wrap">
+      <div class="sec-kartu-title">Kartu Identitas Absensi</div>
+
+      <div class="kartu-outer">
+        <div id="kartuCetak">
+          <div class="kartu-qr-header">
+            <img class="kartu-qr-logo" crossorigin="anonymous" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo">
+            <p>SMP NEGERI 1 KALIWEDI</p>
+          </div>
+
+          <div class="kartu-qr-title">
+            <h2>KARTU SISWA</h2>
+          </div>
+
+          <div class="kartu-qr-qrsection">
+            <div class="qr-frame">
+              <div class="kartu-qr-overlay">
+                <img id="kartuQRImg" src="" alt="QR Code">
+              </div>
+            </div>
+          </div>
+
+          <div class="kartu-qr-info">
+            <div class="kartu-nama-ov" id="kartuNama">—</div>
+            <div class="kartu-kelas-ov" id="kartuKelas">—</div>
+            <div class="kartu-nisn-ov">NISN: <b id="kartuNISN">—</b></div>
+          </div>
+
+          <div class="kartu-qr-footer" id="kartuFooterAbsen">
+            Digunakan untuk Absensi Masuk dan Pulang, sebagai kartu untuk mengikuti Asesmen
+          </div>
+        </div>
+      </div>
+
+      <!-- Tombol Download -->
+      <div class="btn-dl-wrap">
+        <button class="btn-dl jpg" onclick="downloadKartu('jpg')">
+          📥 Download JPG
+        </button>
+        <button class="btn-dl png" onclick="downloadKartu('png')">
+          📥 Download PNG
+        </button>
+      </div>
+
+      <button class="btn-back-kartu" onclick="kembaliDashboard()">
+        ⬅ Kembali ke Absensi
+      </button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- MODAL QR -->
+<div class="modal-bg" id="modalQR">
+  <div class="modal" style="max-width:340px">
+    <h3 style="text-align:center;margin-bottom:12px">📷 Scan QR NISN</h3>
+    <div id="qr-box"></div>
+    <div class="qr-status" id="qrStatus">Memulai kamera...</div>
+    <button class="btn-tutup-qr" id="btnTutupQR" onclick="stopQR()">✕ Tutup Kamera</button>
+  </div>
+</div>
+
+<!-- MODAL UBAH PASSWORD -->
+<div class="modal-bg" id="mUbah">
+  <div class="modal">
+    <h3>🔄 Ubah Password</h3>
+    <div id="msgUbah" class="msg"></div>
+    <div class="fg"><label>NISN</label>
+      <div class="iw"><span class="ic">🪪</span>
+        <input type="text" id="uNISN" placeholder="NISN Anda" inputmode="numeric" autocomplete="off">
+      </div>
+    </div>
+    <div class="fg"><label>Password Lama</label>
+      <div class="iw"><span class="ic">🔑</span>
+        <input type="password" id="uLama" placeholder="Password saat ini">
+        <span class="eye" onclick="tglPw('uLama',this)">👁</span>
+      </div>
+    </div>
+    <div class="fg"><label>Password Baru</label>
+      <div class="iw"><span class="ic">✨</span>
+        <input type="password" id="uBaru" placeholder="Min. 4 karakter">
+        <span class="eye" onclick="tglPw('uBaru',this)">👁</span>
+      </div>
+    </div>
+    <div class="fg"><label>Konfirmasi Baru</label>
+      <div class="iw"><span class="ic">✅</span>
+        <input type="password" id="uKonfirm" placeholder="Ulangi password baru">
+        <span class="eye" onclick="tglPw('uKonfirm',this)">👁</span>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-batal" onclick="tutup('mUbah')">Batal</button>
+      <button class="btn-simpan" onclick="ubahPw()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PERINGATAN PASSWORD DEFAULT -->
+<div class="modal-bg" id="mPeringatanPw">
+  <div class="modal" style="max-width:340px;text-align:center">
+    <div style="font-size:2.6rem;margin-bottom:6px">🔐</div>
+    <h3 style="margin-bottom:8px">Amankan Akun Anda</h3>
+    <p style="font-size:.86rem;color:var(--abu2);line-height:1.55;margin-bottom:18px">
+      Anda masih menggunakan <b>password default</b> (<code>user123</code>).
+      Demi keamanan data Anda, sebaiknya segera ganti dengan password lain yang hanya Anda ketahui.
+    </p>
+    <div class="btn-row">
+      <button class="btn-batal" onclick="tutup('mPeringatanPw')">Nanti Saja</button>
+      <button class="btn-simpan" onclick="lanjutGantiPwDariPeringatan()">Ganti Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const SPREADSHEET_ID = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
+
+// Spreadsheet terpisah untuk data Sholat Berjamaah (Sheet3: Timestamp|NISN|Keterangan)
+const SPREADSHEET_ID_SHOLAT = '1dxNxE46xBmSjTDC5kJExdAE63HcAPuuCBgpzI1qTcto';
+
+// Spreadsheet terpisah untuk data Ekstrakurikuler
+// Sheet1: NAMA KEGIATAN | KODE
+// Sheet2: TIME STAMP | NISN | KODE | HADIR | MULAI | SELESAI
+const SPREADSHEET_ID_EKSKUL = '1mBCj7crwQejX5S3c8VxQluXyi39W9RgoR6D1Ktu9QCU';
+
+// Data runtime
+let D = { users:[], aktif:null, absenAll:[], siswaSemua:[] };
+
+// ============================================================
+// BACA SHEET via gviz — langsung dari Google Sheets (publik)
+// Tidak ada limit concurrent — cocok untuk 1000 user
+// ============================================================
+async function bacaSheet(namaSheet, spreadsheetId) {
+  const ssId = spreadsheetId || SPREADSHEET_ID;
+  const url = `https://docs.google.com/spreadsheets/d/${ssId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&t=${Date.now()}`;
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 12000);
+    const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+    clearTimeout(tid);
+    const txt  = await res.text();
+    const s    = txt.indexOf('{'), e = txt.lastIndexOf('}');
+    if (s < 0) throw new Error('Format tidak dikenal');
+    return JSON.parse(txt.substring(s, e+1)).table;
+  } catch(err) {
+    console.error('bacaSheet gagal:', namaSheet, err.message);
+    return null;
+  }
+}
+
+// Ambil nilai sel sebagai string
+function cel(tbl, row, col) {
+  try {
+    const c = tbl.rows[row].c[col];
+    return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
+  } catch { return ''; }
+}
+
+// Ambil nilai formatted (untuk tanggal/waktu)
+function celf(tbl, row, col) {
+  try {
+    const c = tbl.rows[row].c[col];
+    return (c && c.f) ? String(c.f).trim() : '';
+  } catch { return ''; }
+}
+
+// Parse Date dari gviz — bisa berupa "Date(2025,5,13)" atau formatted string
+function parseDate(tbl, row, col) {
+  try {
+    const c = tbl.rows[row].c[col];
+    if (!c) return null;
+    // gviz mengembalikan v sebagai string "Date(Y,M,D,H,Min,S)"
+    if (c.v && typeof c.v === 'string' && c.v.startsWith('Date(')) {
+      const parts = c.v.replace('Date(','').replace(')','').split(',').map(Number);
+      // parts: [year, month(0-based), day, hour, minute, second]
+      return new Date(parts[0], parts[1], parts[2], parts[3]||0, parts[4]||0, parts[5]||0);
+    }
+    // Coba dari formatted value
+    if (c.f) {
+      const d = new Date(c.f);
+      if (!isNaN(d)) return d;
+    }
+    return null;
+  } catch { return null; }
+}
+
+const HARI  = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+const BLN   = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+const HARI_PANJANG = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BLN_PANJANG  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+function fmtTglLengkap(d) {
+  if (!d) return '-';
+  return `${HARI_PANJANG[d.getDay()]}, ${d.getDate()} ${BLN_PANJANG[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function fmtTgl(d) {
+  if (!d) return '-';
+  return `${d.getDate()} ${BLN[d.getMonth()]} ${d.getFullYear()}`;
+}
+function fmtJam(d) {
+  if (!d) return '';
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function keyTgl(d) {
+  if (!d) return 'x';
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+// ============================================================
+// INIT — muat data user (Sheet6: NISN|NAMA|KLS|PASSWORD)
+// ============================================================
+async function init() {
+  show('loading'); setText('loadSub','Mengambil data pengguna...');
+
+  const [tbl, tblSiswa] = await Promise.all([
+    bacaSheet('Sheet6'),
+    bacaSheet('Sheet1'), // roster utama: NISN|Nama|Kelas — untuk fallback login default
+  ]);
+
+  if (tbl) {
+    D.users = [];
+    // Sheet6 struktur: A=NISN | B=NAMA | C=KLS | D=PASSWORD
+    // index:               0  |    1   |    2  |     3
+    // Baris 0 = header, mulai baca dari baris 1
+    for (let i = 0; i < tbl.rows.length; i++) {
+      const row = tbl.rows[i];
+      if (!row || !row.c) continue;
+
+      // Ambil nilai setiap sel dengan aman
+      const getNilai = (col) => {
+        const c = row.c[col];
+        return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
+      };
+
+      const nisn = getNilai(0);
+
+      // Lewati baris kosong dan header
+      if (!nisn || nisn.toLowerCase() === 'nisn') continue;
+
+      D.users.push({
+        nisn    : nisn,           // kolom A
+        nama    : getNilai(1),    // kolom B
+        kelas   : getNilai(2),    // kolom C
+        password: getNilai(3),    // kolom D = PASSWORD
+      });
+    }
+    console.log('✅ User dimuat:', D.users.length);
+    console.log('Contoh user:', D.users.slice(0,2));
+  } else {
+    console.warn('⚠️ Sheet6 gagal dimuat — pastikan spreadsheet sudah dibagikan publik');
+  }
+
+  // Roster utama (Sheet1) — dipakai untuk fallback login kalau NISN belum
+  // ada di Sheet6 (belum pernah bikin akun / belum pernah ganti password)
+  D.siswaSemua = [];
+  if (tblSiswa) {
+    for (let i = 0; i < tblSiswa.rows.length; i++) {
+      const row = tblSiswa.rows[i];
+      if (!row || !row.c) continue;
+      const getNilai = (col) => {
+        const c = row.c[col];
+        return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
+      };
+      const nisn = getNilai(0);
+      if (!nisn || nisn.toLowerCase() === 'nisn') continue;
+      D.siswaSemua.push({ nisn, nama: getNilai(1), kelas: getNilai(2) });
+    }
+    console.log('✅ Roster utama (Sheet1) dimuat:', D.siswaSemua.length);
+  } else {
+    console.warn('⚠️ Sheet1 (roster utama) gagal dimuat — fallback login default tidak akan bekerja.');
+  }
+
+  hide('loading');
+  cobaAutoLoginDariPortal();
+}
+
+// ============================================================
+// AUTO-LOGIN DARI PORTAL — kalau siswa datang dari portal.html dan
+// baru saja login di sana, isi otomatis NISN & password lalu login,
+// tanpa perlu mengetik ulang.
+// ============================================================
+function cobaAutoLoginDariPortal() {
+  try {
+    const raw = sessionStorage.getItem('portalAuth');
+    if (!raw) return;
+    const sesi = JSON.parse(raw);
+    if (!sesi || !sesi.id || !sesi.pw) return;
+    if (Date.now() - sesi.ts > 30 * 60 * 1000) return; // sesi portal kedaluwarsa
+    document.getElementById('inpNISN').value = sesi.id;
+    document.getElementById('inpPw').value   = sesi.pw;
+    login();
+  } catch (e) { /* abaikan, tampilkan layar login biasa */ }
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+async function login() {
+  const nisn = val('inpNISN');
+  const pw   = val('inpPw');
+  const el   = document.getElementById('msgLogin');
+  el.className = 'msg';
+
+  if (!nisn || !pw) { pesan(el,'err','⚠️ Isi NISN dan password.'); return; }
+
+  let user = D.users.find(u => u.nisn === nisn);
+
+  if (!user) {
+    // NISN belum ada di Sheet6 (belum pernah bikin akun/ganti password) —
+    // izinkan login pakai NISN + password default "user123", asalkan NISN-nya
+    // memang terdaftar di roster utama (Sheet1).
+    const siswaRoster = D.siswaSemua.find(s => s.nisn === nisn);
+    if (!siswaRoster) { pesan(el,'err','❌ NISN tidak ditemukan.'); return; }
+    if (pw !== 'user123') { pesan(el,'err','❌ Password salah.'); return; }
+
+    // Buat entri user "virtual" di memori (belum tersimpan ke Sheet6 sampai
+    // siswa benar-benar ganti password lewat fitur Ubah Password)
+    user = {
+      nisn    : siswaRoster.nisn,
+      nama    : siswaRoster.nama,
+      kelas   : siswaRoster.kelas,
+      password: 'user123',
+      belumTersimpanDiSheet6: true,
+    };
+    D.users.push(user);
+  } else {
+    if (user.password !== pw) { pesan(el,'err','❌ Password salah.'); return; }
+  }
+
+  D.aktif = user;
+  await tampilAbsen(user);
+
+  // Kalau masih pakai password default → ingatkan untuk menggantinya
+  if (String(user.password).trim() === 'user123') {
+    setTimeout(() => buka('mPeringatanPw'), 600);
+  }
+}
+
+function lanjutGantiPwDariPeringatan() {
+  tutup('mPeringatanPw');
+  bukaUbahPw();
+  if (D.aktif) {
+    document.getElementById('uNISN').value = D.aktif.nisn;
+    document.getElementById('uLama').value = D.aktif.password;
+  }
+}
+
+// ============================================================
+// TAMPIL ABSENSI
+// ============================================================
+async function tampilAbsen(user) {
+  show('loading'); setText('loadSub','Mengambil data absensi...');
+
+  setText('abNama',    user.nama);
+  setText('abNISNteks','NISN: ' + user.nisn);
+  setText('abKls',    '🏫 Kelas ' + user.kelas);
+
+  // Set bulan default = bulan ini
+  document.getElementById('selBulan').value = new Date().getMonth() + 1;
+
+  hide('hLogin');
+  show('hAbsen');
+  hide('loading');
+
+  await muatAbsen();
+  muatKartuSholat(user); // tidak perlu ditunggu (await) — biar tidak menghambat tampilan lain
+  muatKartuEkskul(user); // idem
+}
+
+// ============================================================
+// KARTU SHOLAT BERJAMAAH — dari spreadsheet terpisah, Sheet3!A:C
+// (A=Timestamp, B=NISN, C=Keterangan)
+// ============================================================
+async function muatKartuSholat(user) {
+  const el       = document.getElementById('ksTeks');
+  const elTotal  = document.getElementById('ksTotal');
+  const elHint   = document.getElementById('ksHint');
+  const elDaftar = document.getElementById('ksDaftar');
+
+  const tbl = await bacaSheet('Sheet3', SPREADSHEET_ID_SHOLAT);
+  if (!tbl) {
+    el.textContent = '⚠️ Data sholat belum bisa dimuat.';
+    return;
+  }
+
+  const now        = new Date();
+  const todayKey     = keyTgl(now);
+
+  let cocokHariIni  = false;
+  let tglTerakhir   = null; // Date objek tanggal sholat terakhir (kapan pun, selain hari ini)
+  const semuaTanggal = []; // SEMUA catatan kehadiran (tidak dibatasi bulan)
+
+  for (let i = 0; i < tbl.rows.length; i++) {
+    const row = tbl.rows[i];
+    if (!row || !row.c) continue;
+
+    const nisnBaris = cel(tbl, i, 1); // kolom B = NISN
+    if (nisnBaris !== user.nisn) continue;
+
+    const tgl = parseDate(tbl, i, 0); // kolom A = Timestamp
+    if (!tgl) continue;
+
+    const k = keyTgl(tgl);
+    if (k === todayKey) {
+      cocokHariIni = true;
+    } else if (!tglTerakhir || tgl > tglTerakhir) {
+      tglTerakhir = tgl;
+    }
+
+    semuaTanggal.push(tgl);
+  }
+
+  const nama = user.nama;
+
+  if (cocokHariIni) {
+    el.className = 'ks-teks hadir';
+    el.innerHTML = `<b>${nama}</b> Sholat dhuhur berjamaah di mushola sekolah`;
+  } else if (tglTerakhir) {
+    el.className = 'ks-teks pernah';
+    el.innerHTML = `<b>${nama}</b> sholat dhuhur berjamaah di sekolah pada <b>${fmtTglLengkap(tglTerakhir)}</b>`;
+  } else {
+    el.className = 'ks-teks tidak-pernah';
+    el.innerHTML = `<b>${nama}</b> belum pernah sholat berjamaah di sekolah`;
+  }
+
+  // Total absensi keseluruhan (semua tanggal, bukan hanya bulan berjalan)
+  elTotal.style.display = 'block';
+  elTotal.textContent = `📊 Total Absensi: ${semuaTanggal.length} kali`;
+  elHint.style.display = 'block';
+
+  // Daftar SEMUA tanggal kehadiran (diurutkan terbaru dulu), ditampilkan saat kartu di-tap
+  semuaTanggal.sort((a,b) => b - a);
+  if (semuaTanggal.length === 0) {
+    elDaftar.innerHTML = `<div class="ks-daftar-kosong">Belum ada catatan kehadiran sholat berjamaah.</div>`;
+  } else {
+    elDaftar.innerHTML = semuaTanggal.map(tgl => `
+      <div class="ks-daftar-item">
+        <span>${HARI[tgl.getDay()]}, ${fmtTgl(tgl)}</span>
+        <span>${fmtJam(tgl)}</span>
+      </div>
+    `).join('');
+  }
+}
+
+// Tampil/sembunyikan daftar kehadiran saat kartu sholat di-tap
+function toggleDaftarSholat() {
+  const elDaftar = document.getElementById('ksDaftar');
+  const elHint   = document.getElementById('ksHint');
+  const terbuka  = elDaftar.style.display === 'block';
+  elDaftar.style.display = terbuka ? 'none' : 'block';
+  elHint.textContent = terbuka ? '🔽 Tap untuk lihat daftar kehadiran' : '🔼 Tap untuk tutup daftar';
+}
+
+// Tampil/sembunyikan tabel Detail Kehadiran saat judulnya di-tap
+function toggleDetailKehadiran() {
+  const isi  = document.getElementById('isiDetailKehadiran');
+  const hint = document.getElementById('hintDetailKehadiran');
+  const terbuka = isi.style.display === 'block';
+  isi.style.display = terbuka ? 'none' : 'block';
+  hint.textContent = terbuka ? '🔽 Tap untuk Lihat' : '🔼 Tap untuk Tutup';
+}
+
+// ============================================================
+// KARTU EKSTRAKURIKULER — dari spreadsheet terpisah
+// Sheet1: NAMA KEGIATAN | KODE  (kamus kode → nama kegiatan)
+// Sheet2: TIME STAMP | NISN | KODE | HADIR | MULAI | SELESAI
+// ============================================================
+async function muatKartuEkskul(user) {
+  const kartu = document.getElementById('kartuEkskul');
+  const el    = document.getElementById('keTeks');
+
+  const [tblKode, tblAbsen] = await Promise.all([
+    bacaSheet('Sheet1', SPREADSHEET_ID_EKSKUL),
+    bacaSheet('Sheet2', SPREADSHEET_ID_EKSKUL),
+  ]);
+
+  if (!tblKode || !tblAbsen) { kartu.style.display = 'none'; return; }
+
+  // Kamus KODE → NAMA KEGIATAN (Sheet1: A=NAMA KEGIATAN, B=KODE)
+  const petaKode = {};
+  for (let i = 0; i < tblKode.rows.length; i++) {
+    const nama = cel(tblKode, i, 0);
+    const kode = cel(tblKode, i, 1);
+    if (!nama || !kode) continue;
+    if (nama.toUpperCase() === 'NAMA KEGIATAN') continue; // lewati header
+    petaKode[kode.toUpperCase()] = nama;
+  }
+
+  const now         = new Date();
+  const todayKey    = keyTgl(now);
+  const kemarin     = new Date(now); kemarin.setDate(kemarin.getDate() - 1);
+  const kemarinKey  = keyTgl(kemarin);
+
+  let dataHariIni = null;
+  let dataKemarin = null;
+
+  for (let i = 0; i < tblAbsen.rows.length; i++) {
+    const row = tblAbsen.rows[i];
+    if (!row || !row.c) continue;
+
+    const nisnBaris = cel(tblAbsen, i, 1); // kolom B = NISN
+    if (nisnBaris !== user.nisn) continue;
+
+    const tgl = parseDate(tblAbsen, i, 0); // kolom A = TIME STAMP
+    if (!tgl) continue;
+
+    const k       = keyTgl(tgl);
+    const kode    = cel(tblAbsen, i, 2);        // kolom C = KODE
+    const mulai   = parseDate(tblAbsen, i, 4);  // kolom E = MULAI
+    const selesai = parseDate(tblAbsen, i, 5);  // kolom F = SELESAI
+
+    if (k === todayKey)   dataHariIni = { kode, mulai, selesai };
+    if (k === kemarinKey) dataKemarin = { kode, mulai, selesai };
+  }
+
+  if (dataHariIni) {
+    const nama = petaKode[(dataHariIni.kode||'').toUpperCase()] || dataHariIni.kode;
+    const jamSelesai = dataHariIni.selesai ? fmtJam(dataHariIni.selesai) : '-';
+    el.innerHTML = `<b>${fmtTglLengkap(now)}</b> Mengikuti Exkul <b>${nama}</b> sampai <b>${jamSelesai}</b>`;
+    kartu.style.display = 'block';
+  } else if (dataKemarin) {
+    const nama = petaKode[(dataKemarin.kode||'').toUpperCase()] || dataKemarin.kode;
+    const jamMulai   = dataKemarin.mulai   ? fmtJam(dataKemarin.mulai)   : '-';
+    const jamSelesai = dataKemarin.selesai ? fmtJam(dataKemarin.selesai) : '-';
+    el.innerHTML = `<b>${fmtTglLengkap(kemarin)}</b> Mengikuti Exkul <b>${nama}</b> ${jamMulai}-${jamSelesai}`;
+    kartu.style.display = 'block';
+  } else {
+    kartu.style.display = 'none'; // tidak ada data hari ini/kemarin — kartu disembunyikan
+  }
+}
+
+// ============================================================
+// MUAT ABSENSI — logika bersih
+// Sheet2: A=TIMESTAMP | B=NISN | C=NAMA | D=KELAS | E=KET | F=STATUS
+//
+// LANGKAH:
+// 1. Generate semua tanggal dalam bulan (Ascending)
+// 2. Untuk setiap tanggal, cari baris di Sheet2 yang NISN-nya cocok
+//    - Jika ada baris STATUS=DATANG → catat jam sebagai JAM DATANG
+//    - Jika ada baris STATUS=PULANG → catat jam sebagai JAM PULANG
+//    - KET diambil dari kolom E baris DATANG
+// 3. Tentukan keterangan akhir per tanggal:
+//    - Ada DATANG + PULANG         → H, tampilkan kedua jam
+//    - Ada DATANG saja, no PULANG  → B, tampilkan jam datang saja
+//    - Ada S/I di KET               → S/I, tanpa jam
+//    - Tidak ada data sama sekali   → A, tanpa jam
+//    - Tanggal libur (Sheet7)       → merah, tampilkan nama libur
+//    - Sabtu/Minggu                 → strip abu
+// ============================================================
+async function muatAbsen() {
+  setText('teksUpd', 'Memperbarui...');
+  const tb  = document.getElementById('tbAbsen');
+  tb.innerHTML = '<tr><td colspan="4" class="kosong-row">⏳ Memuat...</td></tr>';
+
+  const user = D.aktif;
+  const bln  = parseInt(document.getElementById('selBulan').value) || new Date().getMonth()+1;
+  const thn  = new Date().getFullYear();
+
+  // Muat Sheet2 dan Sheet7 bersamaan
+  const [tblAbsen, tblLibur] = await Promise.all([
+    bacaSheet('Sheet2'),
+    bacaSheet('Sheet7'),
+  ]);
+
+  if (!tblAbsen) {
+    tb.innerHTML = '<tr><td colspan="4" class="kosong-row">❌ Gagal memuat data.</td></tr>';
+    setText('teksUpd','Gagal'); return;
+  }
+
+  // ────────────────────────────────────────────
+  // STEP 1: Baca tanggal libur dari Sheet7
+  // Tabel kiri : A(0)=Tanggal, C(2)=Keterangan  → berlaku untuk SEMUA kelas
+  // Tabel kanan: E(4)=Tanggal, G(6)=Keterangan, H(7)=Target Tingkat (prioritas)
+  //              - Kolom H kosong        → berlaku untuk semua kelas
+  //              - Kolom H isi "7"       → hanya berlaku untuk kelas 7
+  //              - Kolom H isi "7,8"     → berlaku untuk kelas 7 dan 8
+  // Data mulai baris index 4 (baris ke-5 di sheet, header di baris 4)
+  // ────────────────────────────────────────────
+  const mapLibur = {}; // "YYYY-M-D" → nama libur
+
+  // Tingkat kelas siswa yang sedang login, misal "7A" → "7"
+  const tingkatUser = (String(user.kelas || '').match(/^\d+/) || [])[0] || '';
+
+  if (tblLibur) {
+    for (let i = 0; i < tblLibur.rows.length; i++) {
+      const row = tblLibur.rows[i];
+      if (!row || !row.c) continue;
+
+      const ambil = (col) => {
+        const c = row.c[col];
+        return (c && c.v !== null && c.v !== undefined) ? c.v : null;
+      };
+
+      // Tabel kiri — kolom A & C — berlaku untuk semua kelas
+      const tglA = parseDate(tblLibur, i, 0);
+      const ketA = ambil(2);
+      if (tglA && ketA && String(ketA).trim()) {
+        mapLibur[keyTgl(tglA)] = String(ketA).trim();
+      }
+
+      // Tabel kanan — kolom E, G, H — H adalah prioritas target kelas
+      const tglE = parseDate(tblLibur, i, 4);
+      const ketG = ambil(6);
+      const targetH = ambil(7);
+
+      if (tglE && ketG && String(ketG).trim()) {
+        const targetStr = (targetH !== null && targetH !== undefined) ? String(targetH).trim() : '';
+        let berlakuUntukku = true; // default: kosong = berlaku untuk semua
+
+        if (targetStr) {
+          const daftarTingkat = targetStr.split(',').map(x => x.trim()).filter(Boolean);
+          berlakuUntukku = daftarTingkat.includes(tingkatUser);
+        }
+
+        if (berlakuUntukku) {
+          mapLibur[keyTgl(tglE)] = String(ketG).trim();
+        }
+      }
+    }
+  }
+
+  // ────────────────────────────────────────────
+  // STEP 2: Baca Sheet2, kumpulkan data per tanggal untuk NISN ini
+  // perHari[keyTgl] = { tgl, datang: Date|null, pulang: Date|null, ket: string }
+  // ────────────────────────────────────────────
+  const perHari = {};
+
+  // Kehadiran HARI INI — dilacak terpisah, tidak ikut terpengaruh filter bulan,
+  // supaya kartu "Kehadiran Hari Ini" selalu menampilkan status hari ini
+  // meskipun tabel di bawah sedang memfilter bulan yang lain.
+  const keyHariIni = keyTgl(new Date());
+  const kehadiranHariIni = { datang: null, pulang: null };
+
+  for (let i = 0; i < tblAbsen.rows.length; i++) {
+    const row = tblAbsen.rows[i];
+    if (!row || !row.c) continue;
+
+    // Ambil nilai sel dengan aman
+    const g = (col) => {
+      const c = row.c[col];
+      return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
+    };
+
+    // Filter NISN — kolom B (index 1)
+    const nisnBaris = g(1);
+    if (nisnBaris !== user.nisn) continue;
+
+    // Ambil timestamp — kolom A (index 0)
+    const tgl = parseDate(tblAbsen, i, 0);
+    if (!tgl) continue;
+
+    const kBaris  = keyTgl(tgl);
+    const status0 = g(5).toUpperCase();
+
+    // Catat ke kehadiranHariIni kalau baris ini persis hari ini (lepas dari filter bulan)
+    if (kBaris === keyHariIni) {
+      if (status0 === 'DATANG' || status0 === 'MASUK') kehadiranHariIni.datang = tgl;
+      else if (status0 === 'PULANG' || status0 === 'KELUAR') kehadiranHariIni.pulang = tgl;
+    }
+
+    // Filter bulan
+    if ((tgl.getMonth() + 1) !== bln) continue;
+
+    const k      = keyTgl(tgl);
+    const ket    = g(4).toUpperCase(); // kolom E = KET (H/S/I/A)
+    const status = g(5).toUpperCase(); // kolom F = STATUS (DATANG/PULANG)
+
+    if (!perHari[k]) {
+      perHari[k] = { tgl, datang: null, pulang: null, ket: '' };
+    }
+
+    // Tentukan DATANG atau PULANG dari kolom F (STATUS)
+    if (status === 'DATANG' || status === 'MASUK') {
+      perHari[k].datang = tgl;
+      // Ambil KET dari kolom E saat DATANG
+      if (!perHari[k].ket) perHari[k].ket = ket;
+    } else if (status === 'PULANG' || status === 'KELUAR') {
+      perHari[k].pulang = tgl;
+    }
+
+    // KET S atau I dari kolom E selalu menimpa
+    if (ket === 'S' || ket === 'I' || ket === 'A') {
+      perHari[k].ket = ket;
+    }
+  }
+
+  // ────────────────────────────────────────────
+  // STEP 3: Generate semua tanggal bulan ini (Ascending)
+  // ────────────────────────────────────────────
+  const hari1 = new Date(thn, bln - 1, 1);
+  const hariN = new Date(thn, bln, 0);
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
+  const semuaHari = [];
+  for (let d = new Date(hari1); d <= hariN && d <= today; d.setDate(d.getDate() + 1)) {
+    semuaHari.push(new Date(d));
+  }
+
+  // ────────────────────────────────────────────
+  // Aturan Ket berbasis waktu (dipakai di rekap & tabel):
+  // - Belum ada DATANG & belum jam 08:00       -> 'BLM_DTG' (Blm Dtg)
+  // - Belum ada DATANG & sudah lewat jam 08:00  -> 'A'
+  // - Ada DATANG, belum PULANG & belum jam 18:00 -> 'BLM_PLG' (Blm Plg)
+  // - Ada DATANG, belum PULANG & sudah lewat 18:00 -> 'B'
+  // - Ada DATANG & PULANG                       -> 'H'
+  // ────────────────────────────────────────────
+  function statusHariIni(d, h) {
+    const now = new Date();
+    const cutoffPagi = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 8, 0, 0);
+    const cutoffSore = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 18, 0, 0);
+
+    if (!h || !h.datang) {
+      return (now < cutoffPagi) ? 'BLM_DTG' : 'A';
+    }
+    if (!h.pulang) {
+      return (now < cutoffSore) ? 'BLM_PLG' : 'B';
+    }
+    return 'H';
+  }
+
+  // ────────────────────────────────────────────
+  // STEP 4: Hitung rekap
+  // ────────────────────────────────────────────
+  let rH = 0, rS = 0, rI = 0, rA = 0;
+  semuaHari.forEach(d => {
+    const dow = d.getDay();
+    if (dow === 0) return;                  // skip Minggu saja (Sabtu masuk)
+    const k = keyTgl(d);
+    if (mapLibur[k]) return;                // skip libur
+    if (d > today) return;                  // skip hari depan
+
+    const h = perHari[k];
+    const ket = h ? (h.ket || '').toUpperCase() : '';
+
+    if (ket === 'S') { rS++; return; }
+    if (ket === 'I') { rI++; return; }
+    if (ket === 'A') { rA++; return; }
+
+    const status = statusHariIni(d, h);
+    if (status === 'BLM_DTG') return;       // masih pagi, belum dihitung ke box manapun
+    if (status === 'A') { rA++; return; }
+    rH++;                                    // H, BLM_PLG, atau B tetap dihitung hadir
+  });
+
+  setText('rkH', rH); setText('rkS', rS);
+  setText('rkI', rI); setText('rkA', rA);
+  setText('judulKehadiranBulan', `KEHADIRAN BULAN ${BLN_PANJANG[bln-1].toUpperCase()} ${thn}`);
+
+  // ────────────────────────────────────────────
+  // STEP 5: Render tabel Ascending
+  // ────────────────────────────────────────────
+  let html = '';
+
+  semuaHari.forEach(d => {
+    const dow      = d.getDay();
+    const k        = keyTgl(d);
+    const isFuture = d > today;
+    const isLibur  = !!mapLibur[k];
+    const isWeekend= dow === 0;              // hanya Minggu (Sabtu = hari sekolah)
+    const h        = perHari[k];
+
+    // Warna baris
+    let rowClass = '';
+    if (isLibur)    rowClass = 'row-libur';
+    else if (isWeekend)  rowClass = 'row-weekend';
+    else if (isFuture)   rowClass = 'row-future';
+
+    // Kolom tanggal
+    const warnaTgl = isLibur ? 'biru' : '';
+    const tglCell  = `<div class="tgl-teks ${warnaTgl}">${d.getDate()} ${BLN[d.getMonth()]}</div>
+                      <div class="tgl-hari ${warnaTgl}">${HARI[dow]}</div>`;
+
+    // Kolom KET + jam
+    let ketCell = '', jamDatang = '—', jamPulang = '—';
+
+    if (isLibur) {
+      // Tanggal libur — merah + nama libur
+      ketCell  = `<span class="bdg libur">🔵</span><div class="ket-libur">${mapLibur[k]}</div>`;
+
+    } else if (isWeekend) {
+      ketCell  = `<span class="bdg weekend">—</span>`;
+
+    } else if (isFuture) {
+      ketCell  = `<span class="bdg future">—</span>`;
+
+    } else {
+      const ket = h ? (h.ket || '').toUpperCase() : '';
+
+      if (ket === 'S') {
+        // Sakit — tanpa jam
+        ketCell  = `<span class="bdg s">S</span>`;
+
+      } else if (ket === 'I') {
+        // Izin — tanpa jam
+        ketCell  = `<span class="bdg i">I</span>`;
+
+      } else if (ket === 'A') {
+        // Alfa eksplisit
+        ketCell  = `<span class="bdg a">A</span>`;
+
+      } else {
+        const status = statusHariIni(d, h);
+
+        if (status === 'BLM_DTG') {
+          // Belum jam 08:00 & belum ada DATANG
+          ketCell = `<span class="bdg blmdtg">Blm Dtg</span>`;
+
+        } else if (status === 'A') {
+          // Sudah lewat jam 08:00, tetap tidak ada DATANG
+          ketCell = `<span class="bdg a">A</span>`;
+
+        } else if (status === 'BLM_PLG') {
+          // Sudah DATANG, belum PULANG, & belum jam 18:00
+          ketCell   = `<span class="bdg blmplg">Blm Plg</span>`;
+          jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
+          jamPulang = `<span class="jam kosong">—</span>`;
+
+        } else if (status === 'B') {
+          // Sudah DATANG, belum PULANG, & sudah lewat jam 18:00
+          ketCell   = `<span class="bdg b">B</span>`;
+          jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
+          jamPulang = `<span class="jam kosong">—</span>`;
+
+        } else {
+          // status === 'H' — ada DATANG dan PULANG
+          ketCell   = `<span class="bdg h">H</span>`;
+          jamDatang = `<span class="jam">${fmtJam(h.datang)}</span>`;
+          jamPulang = `<span class="jam">${fmtJam(h.pulang)}</span>`;
+        }
+      }
+    }
+
+    html += `<tr class="${rowClass}">
+      <td>${tglCell}</td>
+      <td style="text-align:center">${ketCell}</td>
+      <td>${jamDatang}</td>
+      <td>${jamPulang}</td>
+    </tr>`;
+  });
+
+  tb.innerHTML = html || '<tr><td colspan="4" class="kosong-row">Tidak ada data</td></tr>';
+
+  // ────────────────────────────────────────────
+  // Update kartu "Kehadiran Hari Ini"
+  // ────────────────────────────────────────────
+  const elDatang = document.getElementById('khiDatang');
+  const elPulang = document.getElementById('khiPulang');
+
+  if (kehadiranHariIni.datang) {
+    elDatang.textContent = fmtJam(kehadiranHariIni.datang);
+    elDatang.className = 'khi-nilai datang';
+  } else {
+    elDatang.textContent = 'Belum Datang';
+    elDatang.className = 'khi-nilai kosong';
+  }
+
+  if (kehadiranHariIni.pulang) {
+    elPulang.textContent = fmtJam(kehadiranHariIni.pulang);
+    elPulang.className = 'khi-nilai pulang';
+  } else {
+    elPulang.textContent = 'Belum Pulang';
+    elPulang.className = 'khi-nilai kosong';
+  }
+
+  const now = new Date();
+  setText('teksUpd', `Diperbarui ${fmtJam(now)} · ${semuaHari.length} hari`);
+}
+
+function filterTampil() { if (D.aktif) muatAbsen(); }
+
+
+function logout() {
+  D.aktif = null; D.absenAll = [];
+  hide('hAbsen'); show('hLogin');
+  document.getElementById('inpNISN').value = '';
+  document.getElementById('inpPw').value   = '';
+  document.getElementById('msgLogin').className = 'msg';
+}
+
+// ============================================================
+// UBAH PASSWORD via Apps Script
+// ============================================================
+function bukaUbahPw() {
+  ['uNISN','uLama','uBaru','uKonfirm'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('msgUbah').className='msg';
+  buka('mUbah');
+}
+async function ubahPw() {
+  const btn = document.querySelector('#mUbah .btn-simpan');
+  const el  = document.getElementById('msgUbah');
+
+  try {
+    const nisn=val('uNISN'), lama=val('uLama'), baru=val('uBaru'), konfirm=val('uKonfirm');
+    el.className='msg';
+    if(!nisn||!lama||!baru||!konfirm){pesan(el,'err','⚠️ Semua kolom wajib diisi.');return}
+    const user=D.users.find(u=>u.nisn===nisn);
+    if(!user)              {pesan(el,'err','❌ NISN tidak ditemukan.');return}
+    if(user.password!==lama){pesan(el,'err','❌ Password lama salah.');return}
+    if(baru.length<4)      {pesan(el,'err','⚠️ Password baru min. 4 karakter.');return}
+    if(baru!==konfirm)     {pesan(el,'err','❌ Konfirmasi tidak cocok.');return}
+
+    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('GANTI_DENGAN')) {
+      pesan(el,'err','⚠️ APPS_SCRIPT_URL belum diatur — password tidak bisa disimpan permanen. Hubungi admin aplikasi.');
+      return;
+    }
+
+    // Nonaktifkan tombol + tampilkan indikator proses yang JELAS,
+    // supaya tidak terlihat seperti "tidak merespon" saat menunggu server.
+    btn.disabled = true;
+    btn.textContent = '⏳ Menyimpan...';
+    pesan(el,'ok','⏳ Menghubungi server, mohon tunggu (bisa sampai ±20 detik)...');
+
+    const r = await apiFetch({ action:'ubahPassword', nisn, pwBaru: baru, nama: user.nama, kelas: user.kelas });
+
+    if (r && r.status === 'ok') {
+      user.password = baru; // sinkronkan data lokal supaya sesi ini tetap konsisten
+      user.belumTersimpanDiSheet6 = false;
+      pesan(el,'ok','✅ Password berhasil diubah & tersimpan di spreadsheet!');
+      setTimeout(()=>tutup('mUbah'),2000);
+    } else {
+      const detail = (r && (r.pesan || r.message)) ? (r.pesan || r.message) : 'Server tidak merespons / gagal terhubung.';
+      pesan(el,'err','❌ Gagal menyimpan password: ' + detail + ' Coba lagi.');
+    }
+  } catch (err) {
+    console.error('ubahPw error:', err);
+    pesan(el, 'err', '⚠️ Terjadi kesalahan tak terduga: ' + (err && err.message ? err.message : String(err)));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Simpan'; }
+  }
+}
+
+async function apiFetch(params, retry=0) {
+  try {
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),10000);
+    const res=await fetch(APPS_SCRIPT_URL+'?'+new URLSearchParams(params),{signal:ctrl.signal});
+    clearTimeout(tid);
+    return await res.json();
+  } catch(e) {
+    if(retry<2){await new Promise(r=>setTimeout(r,1000*(retry+1)));return apiFetch(params,retry+1);}
+    return null;
+  }
+}
+
+// ============================================================
+// QR SCANNER — kamera langsung, tanpa notifikasi
+// ============================================================
+let qrScanner = null;
+
+function bukaQR() {
+  // Reset elemen kamera
+  const box = document.getElementById('qr-box');
+  box.innerHTML = '';
+  setText('qrStatus','🔍 Arahkan ke QR Code kartu siswa...');
+  buka('modalQR');
+
+  setTimeout(() => {
+    try {
+      qrScanner = new Html5Qrcode('qr-box');
+      qrScanner.start(
+        { facingMode: 'environment' },
+        { fps: 15, qrbox: { width: 240, height: 240 } },
+        (text) => {
+          // QR berhasil — langsung isi & tutup
+          const nisn = text.trim();
+          stopQR();
+          document.getElementById('inpNISN').value = nisn;
+          document.getElementById('inpPw').focus();
+        },
+        () => {} // abaikan error frame
+      ).then(() => {
+        setText('qrStatus','🔍 Arahkan ke QR Code...');
+      }).catch(() => {
+        setText('qrStatus','❌ Kamera tidak bisa diakses. Periksa izin kamera.');
+      });
+    } catch(e) {
+      setText('qrStatus','❌ ' + e.message);
+    }
+  }, 400);
+}
+
+function stopQR() {
+  tutup('modalQR');
+  if (qrScanner) {
+    const tmp = qrScanner;
+    qrScanner = null;
+    tmp.stop().then(() => tmp.clear()).catch(() => {});
+  }
+  // Bersihkan elemen setelah modal tertutup
+  setTimeout(() => {
+    document.getElementById('qr-box').innerHTML = '';
+  }, 300);
+}
+
+// ============================================================
+// HELPER
+// ============================================================
+function val(id)    { return document.getElementById(id)?.value.trim()||''; }
+function setText(id,t){ const e=document.getElementById(id); if(e) e.textContent=t; }
+function pesan(el,t,s){ el.className='msg '+t; el.textContent=s; }
+function show(id)   { const e=document.getElementById(id); if(e) e.style.display='block'; }
+function hide(id)   { const e=document.getElementById(id); if(e) e.style.display='none'; }
+function buka(id)   { document.getElementById(id)?.classList.add('show'); }
+function tutup(id)  { document.getElementById(id)?.classList.remove('show'); }
+function tglPw(id,ico){
+  const i=document.getElementById(id);
+  i.type=i.type==='password'?'text':'password';
+  ico.textContent=i.type==='password'?'👁':'🙈';
+}
+document.addEventListener('keydown', e => { if(e.key==='Enter') login(); });
+
+// ============================================================
+// KARTU ABSEN
+// ============================================================
+function bukaHalamanKartu() {
+  if (!D.aktif) return;
+  const user = D.aktif;
+
+  // Isi data kartu
+  setText('kartuNamaSub', user.nama);
+  setText('kartuNISN',  String(user.nisn).padStart(10, '0')); // tampilan NISN 10 digit
+  setText('kartuNama',  user.nama);
+  setText('kartuKelas', 'Kelas ' + user.kelas);
+
+  // Warna footer sesuai tingkat: 7=hijau, 8=kuning, 9=merah
+  const tingkat = (String(user.kelas).match(/^\d+/) || [])[0] || '';
+  const footerEl = document.getElementById('kartuFooterAbsen');
+  footerEl.classList.remove('tingkat-7', 'tingkat-8', 'tingkat-9', 'tingkat-lain');
+  footerEl.classList.add(['7','8','9'].includes(tingkat) ? `tingkat-${tingkat}` : 'tingkat-lain');
+
+  // Buat URL QR Code — QR tetap memakai NISN asli sesuai data yang tersedia
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(user.nisn)}&bgcolor=ffffff&color=0d47a1&margin=4`;
+  document.getElementById('kartuQRImg').src = qrUrl;
+
+  // Tampilkan halaman kartu
+  hide('hAbsen');
+  show('hKartu');
+
+  // Scroll ke atas
+  window.scrollTo(0, 0);
+}
+
+function kembaliDashboard() {
+  hide('hKartu');
+  show('hAbsen');
+  window.scrollTo(0, 0);
+}
+
+async function downloadKartu(format) {
+  const kartu   = document.getElementById('kartuCetak');
+  const btnJpg  = document.querySelector('.btn-dl.jpg');
+  const btnPng  = document.querySelector('.btn-dl.png');
+
+  // Tampilkan loading
+  btnJpg.classList.add('loading');
+  btnPng.classList.add('loading');
+  btnJpg.textContent = '⏳ Memproses...';
+  btnPng.textContent = '⏳ Memproses...';
+
+  try {
+    // Tunggu QR image selesai load
+    const qrImg = document.getElementById('kartuQRImg');
+    if (!qrImg.complete) {
+      await new Promise(resolve => { qrImg.onload = resolve; });
+    }
+
+    // Render kartu ke canvas — skala tinggi untuk kualitas cetak
+    const canvas = await html2canvas(kartu, {
+      scale          : 6,       // 6x = kualitas cetak ~300dpi
+      useCORS        : true,
+      allowTaint     : true,
+      backgroundColor: '#ffffff',
+      logging        : false,
+      imageTimeout   : 10000,
+    });
+
+    // Konversi ke format yang dipilih
+    const user     = D.aktif;
+    const namaFile = `KartuAbsen_${user.nisn}_${user.nama.replace(/\s+/g,'_')}`;
+
+    if (format === 'jpg') {
+      // JPG: background putih
+      const canvasJpg = document.createElement('canvas');
+      canvasJpg.width  = canvas.width;
+      canvasJpg.height = canvas.height;
+      const ctx = canvasJpg.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvasJpg.width, canvasJpg.height);
+      ctx.drawImage(canvas, 0, 0);
+
+      unduhCanvas(canvasJpg, `${namaFile}.jpg`, 'image/jpeg', 0.95);
+    } else {
+      // PNG: transparan
+      unduhCanvas(canvas, `${namaFile}.png`, 'image/png');
+    }
+
+  } catch(e) {
+    console.error('Download gagal:', e);
+    alert('❌ Gagal membuat gambar. Pastikan koneksi internet aktif dan coba lagi.');
+  } finally {
+    // Kembalikan tombol
+    btnJpg.classList.remove('loading');
+    btnPng.classList.remove('loading');
+    btnJpg.innerHTML = '📥 Download JPG';
+    btnPng.innerHTML = '📥 Download PNG';
+  }
+}
+
+function unduhCanvas(canvas, namaFile, mimeType, kualitas) {
+  const link     = document.createElement('a');
+  link.download  = namaFile;
+  link.href      = kualitas
+    ? canvas.toDataURL(mimeType, kualitas)
+    : canvas.toDataURL(mimeType);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// ============================================================
+// TEMA KEMERDEKAAN — otomatis aktif sepanjang bulan Agustus
+// ============================================================
+function terapkanTemaAgustus() {
+  const now = new Date();
+  if (now.getMonth() !== 7) return; // 7 = Agustus (0-index), di luar Agustus: tema normal
+
+  const logoSekolah = document.getElementById('logoSekolah');
+  const logoBendera = document.getElementById('logoBendera');
+  const banner       = document.getElementById('dirgahayuBanner');
+  const nomor        = document.getElementById('diNomor');
+
+  if (logoSekolah) logoSekolah.style.display = 'none';
+  if (logoBendera) logoBendera.style.display = 'inline-block';
+  if (banner)       banner.style.display = 'block';
+  if (nomor)         nomor.textContent = now.getFullYear() - 1945;
+}
+terapkanTemaAgustus();
+
+init();
+</script>
+</body>
+</html>

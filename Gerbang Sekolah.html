@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a7f5a">
+<title>Gerbang Sekolah — SMPN 1 Kaliwedi</title>
+
+<!-- ICON APLIKASI (Home Screen / PWA) -->
+<link id="manifestLink" rel="manifest" href="">
+<script>
+(function(){
+  const ICON = "data:image/svg+xml;base64," + btoa(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+      <rect width="200" height="200" rx="40" fill="#1a7f5a"/>
+      <text x="100" y="130" font-size="110" text-anchor="middle" fill="#fff" font-family="Arial">🏫</text>
+    </svg>`);
+  const manifest = {
+    id: "portal-siswa-smpn1kaliwedi",
+    name: "Portal Siswa — SMP Negeri 1 Kaliwedi",
+    short_name: "Portal Siswa",
+    start_url: window.location.href.split('#')[0].split('?')[0],
+    scope: window.location.href.split('#')[0].split('?')[0].replace(/\/[^\/]*$/, '/'),
+    display: "standalone",
+    background_color: "#1a7f5a",
+    theme_color: "#1a7f5a",
+    icons: [{ src: ICON, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+  document.getElementById('manifestLink').setAttribute('href', URL.createObjectURL(blob));
+})();
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root {
+  --hijau:#1a7f5a; --hijau2:#27ae76; --hijau-bg:#e8f7f0;
+  --biru:#1565c0;  --putih:#fff;     --abu:#f4f6f8;
+  --abu2:#607080;  --teks:#1a2535;   --merah:#e53935;
+  --shadow:0 4px 24px rgba(26,127,90,0.13); --r:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#e8f7f0,#dceeff);min-height:100vh;display:flex;align-items:center;justify-content:center}
+
+#loading{position:fixed;inset:0;background:rgba(255,255,255,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
+.spin{width:50px;height:50px;border:5px solid #c8ead9;border-top-color:var(--hijau);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{color:var(--hijau);font-weight:700}
+
+.wrap{width:100%;max-width:440px;padding:16px}
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;animation:up .5s ease both}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+.hdr{background:linear-gradient(135deg,var(--hijau),var(--biru));padding:26px 22px 28px;text-align:center;color:#fff;position:relative}
+.hdr::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:22px;background:#fff;border-radius:50% 50% 0 0/100% 100% 0 0}
+.logo-ring{width:90px;height:90px;border-radius:50%;border:4px solid rgba(255,255,255,.85);background:#fff;padding:7px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.22);overflow:hidden}
+.logo-ring img{width:100%;height:100%;object-fit:contain}
+.s-nama{font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:3px}
+.s-alamat{font-size:.75rem;opacity:.85;line-height:1.4}
+.s-badge{display:inline-block;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.45);border-radius:30px;padding:4px 14px;font-size:.78rem;font-weight:700;margin-top:10px}
+
+.body{padding:26px 24px 22px}
+.f-title{text-align:center;font-size:1.02rem;font-weight:800;color:var(--teks);margin-bottom:18px}
+.f-title span{color:var(--hijau)}
+.msg{padding:10px 13px;border-radius:8px;font-size:.86rem;font-weight:700;margin-bottom:14px;display:none}
+.msg.err{background:#fdecea;color:var(--merah);border-left:4px solid var(--merah);display:block}
+.msg.ok{background:#e8f7f0;color:var(--hijau);border-left:4px solid var(--hijau);display:block}
+.fg{margin-bottom:14px}
+label{display:block;font-size:.78rem;font-weight:700;color:var(--abu2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.iw{position:relative}
+.iw .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:1rem;opacity:.45}
+input[type=text],input[type=password]{width:100%;padding:11px 38px;border:2px solid #d8e6f0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.96rem;color:var(--teks);background:var(--abu);outline:none;transition:.2s}
+input:focus{border-color:var(--hijau2);box-shadow:0 0 0 3px rgba(39,174,118,.12);background:#fff}
+.eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:1rem;opacity:.4;user-select:none}
+.btn-scan{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--hijau);border:none;color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:.9rem}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--hijau),var(--biru));color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;margin-top:6px;transition:.2s}
+.btn-login:hover{opacity:.9;transform:translateY(-1px)}
+
+/* MENU (setelah login) */
+.menu-user{text-align:center;padding:8px 0 20px}
+.menu-user .nm{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.05rem;color:var(--teks)}
+.menu-user .kl{font-size:.82rem;color:var(--abu2);margin-top:2px}
+.menu-item{display:flex;align-items:center;gap:14px;padding:16px;border:2px solid #eef2f5;border-radius:14px;margin-bottom:12px;cursor:pointer;transition:.2s;text-decoration:none;color:inherit}
+.menu-item:hover{border-color:var(--hijau2);background:var(--hijau-bg);transform:translateY(-1px)}
+.menu-item .ico{font-size:1.9rem;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:var(--abu);border-radius:12px;flex-shrink:0}
+.menu-item .tx b{display:block;font-family:'Poppins',sans-serif;font-size:.96rem;color:var(--teks)}
+.menu-item .tx span{font-size:.8rem;color:var(--abu2)}
+.btn-logout{width:100%;padding:11px;background:transparent;color:var(--merah);border:2px solid #fdecea;border-radius:10px;font-weight:700;font-size:.88rem;cursor:pointer;margin-top:6px}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:var(--r);padding:26px 22px;width:90%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.18);animation:up .3s ease}
+#qr-reader{width:100%;border-radius:12px;overflow:hidden}
+.qr-status{text-align:center;font-size:.82rem;color:var(--abu2);margin-top:10px}
+.btn-batal{width:100%;padding:11px;background:var(--abu);border:none;border-radius:10px;font-weight:700;color:var(--teks);cursor:pointer;margin-top:14px}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><p id="loadTeks">Memuat data...</p></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="hdr">
+      <div class="logo-ring">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo" onerror="this.style.display='none'">
+      </div>
+      <div class="s-nama">SMP NEGERI 1 KALIWEDI</div>
+      <div class="s-alamat">Jl. Raya Kigesang Prajawinangun Kulon - Kaliwedi</div>
+      <div class="s-badge">Gerbang Sekolah</div>
+    </div>
+
+    <!-- ===== LAYAR LOGIN ===== -->
+    <div class="body" id="viewLogin">
+      <div class="f-title">🔐 Masuk ke <span>Gerbang Sekolah</span></div>
+      <div id="msgLogin" class="msg"></div>
+      <div class="fg">
+        <label>NISN / No. ID Siswa</label>
+        <div class="iw">
+          <span class="ic">🪪</span>
+          <input type="text" id="inpID" placeholder="Ketik NISN atau scan QR" autocomplete="off" inputmode="numeric">
+          <button class="btn-scan" onclick="bukaQR()" title="Scan QR">📷</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <div class="iw">
+          <span class="ic">🔑</span>
+          <input type="password" id="inpPw" placeholder="Masukkan password">
+          <span class="eye" onclick="tglPw()">👁</span>
+        </div>
+      </div>
+      <button class="btn-login" onclick="login()">Masuk →</button>
+    </div>
+
+    <!-- ===== LAYAR MENU (setelah login) ===== -->
+    <div class="body" id="viewMenu" style="display:none">
+      <div class="menu-user">
+        <div class="nm" id="mnNama">—</div>
+        <div class="kl" id="mnKelas">—</div>
+      </div>
+
+      <a class="menu-item" id="linkAbsensi" href="kehadiran.html">
+        <div class="ico">📋</div>
+        <div class="tx"><b>Kehadiran</b><span>Lihat & catat kehadiran harian</span></div>
+      </a>
+
+      <a class="menu-item" id="linkUjian" href="asesmen.html">
+        <div class="ico">📝</div>
+        <div class="tx"><b>Asesmen</b><span>Kerjakan asesmen / ujian</span></div>
+      </a>
+
+      <button class="btn-logout" onclick="logoutPortal()">🚪 Keluar dari Portal</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: QR SCANNER -->
+<div class="modal-bg" id="modalQR">
+  <div class="modal">
+    <h3 style="text-align:center;margin-bottom:4px">📷 Scan QR Kartu Siswa</h3>
+    <p style="text-align:center;font-size:.82rem;color:var(--abu2);margin-bottom:14px">Arahkan kamera ke QR Code kartu siswa</p>
+    <div id="qr-reader"></div>
+    <div class="qr-status" id="qrStatus">Memulai kamera...</div>
+    <button class="btn-batal" onclick="tutupQR()">Tutup</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// Login diverifikasi secara lokal terhadap roster yang sama persis
+// dipakai oleh absensi.html (Sheet6 = akun tersimpan, Sheet1 = roster
+// utama untuk fallback password default "user123"). Ini supaya hasil
+// login portal SELALU konsisten dengan login di aplikasi Absensi.
+//
+// Saat masuk ke Portal Ujian, NISN & password yang sama akan diisi
+// otomatis di sana — tapi ujian tetap memvalidasi ulang ke Sheet2-nya
+// sendiri lewat Apps Script, jadi kalau suatu saat password di sistem
+// ujian belum sinkron, siswa cukup diminta mengetik ulang di layar itu
+// saja (tidak nge-block, tidak ada resiko keamanan berkurang).
+// ============================================================
+const SPREADSHEET_ID = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
+
+// Berapa lama sesi portal dianggap masih berlaku (menit) sebelum diminta login ulang
+const PORTAL_SESSION_MENIT = 30;
+
+let D = { users: [], siswaSemua: [] };
+
+function val(id){ return document.getElementById(id).value.trim(); }
+function pesan(el,t,s){ el.className='msg '+t; el.textContent=s; }
+function show(id){ document.getElementById(id).style.display = id==='loading'?'flex':'block'; }
+function hide(id){ document.getElementById(id).style.display='none'; }
+function setText(id,t){ const e=document.getElementById(id); if(e) e.textContent=t; }
+function tglPw(){
+  const i=document.getElementById('inpPw');
+  i.type = i.type==='password' ? 'text' : 'password';
+}
+
+async function bacaSheet(namaSheet){
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&t=${Date.now()}`;
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),12000);
+    const res=await fetch(url,{signal:ctrl.signal,cache:'no-store'});
+    clearTimeout(tid);
+    const txt=await res.text();
+    const s=txt.indexOf('{'), e=txt.lastIndexOf('}');
+    if(s<0) throw new Error('Format tidak dikenal');
+    return JSON.parse(txt.substring(s,e+1)).table;
+  }catch(err){
+    console.error('bacaSheet gagal:', namaSheet, err.message);
+    return null;
+  }
+}
+
+async function muatData(){
+  show('loading'); setText('loadTeks','Mengambil data pengguna...');
+  const [tbl, tblSiswa] = await Promise.all([ bacaSheet('Sheet6'), bacaSheet('Sheet1') ]);
+
+  const ambil=(row,col)=>{ const c=row.c[col]; return (c&&c.v!==null&&c.v!==undefined)?String(c.v).trim():''; };
+
+  D.users=[];
+  if(tbl){
+    for(let i=0;i<tbl.rows.length;i++){
+      const row=tbl.rows[i]; if(!row||!row.c) continue;
+      const nisn=ambil(row,0);
+      if(!nisn || nisn.toLowerCase()==='nisn') continue;
+      D.users.push({ nisn, nama:ambil(row,1), kelas:ambil(row,2), password:ambil(row,3) });
+    }
+  }
+
+  D.siswaSemua=[];
+  if(tblSiswa){
+    for(let i=0;i<tblSiswa.rows.length;i++){
+      const row=tblSiswa.rows[i]; if(!row||!row.c) continue;
+      const nisn=ambil(row,0);
+      if(!nisn || nisn.toLowerCase()==='nisn') continue;
+      D.siswaSemua.push({ nisn, nama:ambil(row,1), kelas:ambil(row,2) });
+    }
+  }
+  hide('loading');
+}
+
+// ============================================================
+// LOGIN — satu kali, dipakai bersama oleh Absensi & Ujian
+// ============================================================
+async function login(){
+  const nisn = val('inpID'), pw = val('inpPw');
+  const el = document.getElementById('msgLogin');
+  el.className='msg';
+
+  if(!nisn){ pesan(el,'err','⚠️ Ketik NISN atau scan QR kartu siswa.'); return; }
+  if(!pw){ pesan(el,'err','⚠️ Isi Password.'); return; }
+
+  if(!D.users.length && !D.siswaSemua.length){
+    show('loading'); setText('loadTeks','Menyiapkan ulang data...');
+    await muatData();
+  }
+
+  let user = D.users.find(u => u.nisn === nisn);
+  if(!user){
+    const siswaRoster = D.siswaSemua.find(s => s.nisn === nisn);
+    if(!siswaRoster){ pesan(el,'err','❌ NISN tidak ditemukan.'); return; }
+    if(pw !== 'user123'){ pesan(el,'err','❌ Password salah.'); return; }
+    user = { nisn:siswaRoster.nisn, nama:siswaRoster.nama, kelas:siswaRoster.kelas, password:'user123' };
+  } else {
+    if(user.password !== pw){ pesan(el,'err','❌ Password salah.'); return; }
+  }
+
+  simpanSesiPortal(user.nisn, pw, user.nama, user.kelas);
+  tampilkanMenu(user.nama, user.kelas);
+}
+
+function simpanSesiPortal(id, pw, nama, kelas){
+  sessionStorage.setItem('portalAuth', JSON.stringify({
+    id, pw, nama, kelas, ts: Date.now()
+  }));
+}
+
+function ambilSesiPortal(){
+  try{
+    const raw = sessionStorage.getItem('portalAuth');
+    if(!raw) return null;
+    const d = JSON.parse(raw);
+    if(Date.now() - d.ts > PORTAL_SESSION_MENIT*60*1000){
+      sessionStorage.removeItem('portalAuth');
+      return null;
+    }
+    return d;
+  }catch(e){ return null; }
+}
+
+function tampilkanMenu(nama, kelas){
+  document.getElementById('mnNama').textContent  = nama || 'Siswa';
+  document.getElementById('mnKelas').textContent = kelas ? ('Kelas '+kelas) : '';
+  hide('viewLogin');
+  show('viewMenu');
+}
+
+function logoutPortal(){
+  sessionStorage.removeItem('portalAuth');
+  document.getElementById('inpID').value='';
+  document.getElementById('inpPw').value='';
+  document.getElementById('msgLogin').className='msg';
+  hide('viewMenu');
+  show('viewLogin');
+}
+
+// ============================================================
+// QR SCANNER
+// ============================================================
+let qrScanner=null;
+function bukaQR(){
+  document.getElementById('modalQR').classList.add('show');
+  document.getElementById('qrStatus').textContent='Memulai kamera...';
+  setTimeout(()=>{
+    try{
+      qrScanner=new Html5Qrcode('qr-reader');
+      qrScanner.start(
+        { facingMode:'environment' },
+        { fps:10, qrbox:{width:220,height:220}, aspectRatio:1.0 },
+        (decodedText)=>{
+          document.getElementById('inpID').value = decodedText.trim();
+          document.getElementById('qrStatus').textContent = '✅ Terbaca: '+decodedText.trim();
+          setTimeout(tutupQR, 700);
+        },
+        ()=>{}
+      ).then(()=>{ document.getElementById('qrStatus').textContent='🔍 Arahkan ke QR Code...'; })
+       .catch(err=>{ document.getElementById('qrStatus').textContent='❌ Kamera tidak bisa diakses'; console.warn(err); });
+    }catch(e){ document.getElementById('qrStatus').textContent='❌ '+e.message; }
+  },300);
+}
+function tutupQR(){
+  if(qrScanner){ qrScanner.stop().catch(()=>{}); qrScanner.clear(); qrScanner=null; }
+  document.getElementById('modalQR').classList.remove('show');
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Enter' && document.getElementById('viewLogin').style.display!=='none') login(); });
+
+// ============================================================
+// INIT — kalau sesi portal masih berlaku, langsung tampilkan menu.
+// Kalau belum, muat roster (Sheet6+Sheet1) dulu supaya login instan.
+// ============================================================
+(async function init(){
+  const sesi = ambilSesiPortal();
+  if(sesi){ tampilkanMenu(sesi.nama, sesi.kelas); return; }
+  await muatData();
+})();
+</script>
+</body>
+</html>

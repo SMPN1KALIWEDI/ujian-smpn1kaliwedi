@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a7f5a">
+
+<!-- Keamanan browser -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="referrer" content="no-referrer">
+
+<!-- PWA Manifest -->
+
+
+<title>Asesmen — SMPN 1 Kaliwedi</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Library QR Scanner -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+/* Keamanan: blokir seleksi teks dan screenshot CSS */
+* {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+/* Izinkan seleksi hanya pada input */
+input, textarea {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+/* Blokir highlight teks */
+::selection { background: transparent; }
+
+:root {
+  --hijau:#1a7f5a; --hijau2:#27ae76; --hijau-bg:#e8f7f0;
+  --biru:#1565c0;  --putih:#fff;     --abu:#f4f6f8;
+  --abu2:#607080;  --teks:#1a2535;   --merah:#e53935;
+  --shadow:0 4px 24px rgba(26,127,90,0.13); --r:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#e8f7f0,#dceeff);min-height:100vh;display:flex;align-items:center;justify-content:center}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:rgba(255,255,255,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
+.spin{width:50px;height:50px;border:5px solid #c8ead9;border-top-color:var(--hijau);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{color:var(--hijau);font-weight:700}
+
+/* OVERLAY PELANGGARAN */
+#ovPelanggaran{position:fixed;inset:0;background:rgba(180,0,0,0.97);z-index:8888;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px}
+#ovPelanggaran .ikon{font-size:5rem;margin-bottom:16px;animation:guncang .3s infinite}
+@keyframes guncang{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+#ovPelanggaran h2{color:#fff;font-family:'Poppins',sans-serif;font-size:1.6rem;margin-bottom:10px}
+#ovPelanggaran p{color:rgba(255,255,255,0.9);font-size:1rem;margin-bottom:6px;line-height:1.5}
+#ovPelanggaran .hitung{color:#ffeb3b;font-size:2.5rem;font-weight:800;margin:16px 0;font-family:'Poppins',sans-serif}
+#ovPelanggaran small{color:rgba(255,255,255,0.7);font-size:.82rem}
+
+/* CARD & LAYOUT */
+.wrap{width:100%;max-width:460px;padding:16px}
+.wrap2{width:100%;max-width:520px;padding:16px}
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;animation:up .5s ease both}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* HEADER SEKOLAH */
+.hdr{background:linear-gradient(135deg,var(--hijau),var(--biru));padding:26px 22px 28px;text-align:center;color:#fff;position:relative}
+.hdr::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:22px;background:#fff;border-radius:50% 50% 0 0/100% 100% 0 0}
+.logo-ring{width:100px;height:100px;border-radius:50%;border:4px solid rgba(255,255,255,.85);background:#fff;padding:7px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.22);overflow:hidden}
+.logo-ring img{width:100%;height:100%;object-fit:contain}
+.s-nama{font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:700;margin-bottom:3px}
+.s-alamat{font-size:.78rem;opacity:.85;margin-bottom:10px;line-height:1.4}
+.s-badge{display:inline-block;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.45);border-radius:30px;padding:4px 14px;font-size:.8rem;font-weight:700;letter-spacing:.4px}
+.s-tahun{font-size:.76rem;opacity:.8;margin-top:5px}
+
+/* FORM */
+.body{padding:28px 26px 22px}
+.f-title{text-align:center;font-size:1.05rem;font-weight:800;color:var(--teks);margin-bottom:20px}
+.f-title span{color:var(--hijau)}
+.msg{padding:10px 13px;border-radius:8px;font-size:.87rem;font-weight:700;margin-bottom:14px;display:none}
+.msg.err{background:#fdecea;color:var(--merah);border-left:4px solid var(--merah);display:block}
+.msg.ok{background:#e8f7f0;color:var(--hijau);border-left:4px solid var(--hijau);display:block}
+.fg{margin-bottom:14px}
+label{display:block;font-size:.8rem;font-weight:700;color:var(--abu2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.iw{position:relative}
+.iw .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:1rem;opacity:.45}
+input[type=text],input[type=password]{width:100%;padding:11px 38px;border:2px solid #d8e6f0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.98rem;color:var(--teks);background:var(--abu);outline:none;transition:.2s}
+input:focus{border-color:var(--hijau2);box-shadow:0 0 0 3px rgba(39,174,118,.12);background:#fff}
+.eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:1rem;opacity:.4;user-select:none}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--hijau),var(--biru));color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;margin-top:6px;transition:.2s}
+.btn-login:hover{opacity:.9;transform:translateY(-1px)}
+.link-ubah{display:block;text-align:center;margin-top:12px;font-size:.84rem;color:var(--hijau);font-weight:700;cursor:pointer}
+.link-ubah:hover{text-decoration:underline}
+
+/* DASHBOARD */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.ibox{background:var(--hijau-bg);border-radius:12px;padding:13px;border-left:4px solid var(--hijau2)}
+.ibox .lb{font-size:.7rem;font-weight:700;color:var(--hijau);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.ibox .vl{font-size:1.05rem;font-weight:800;color:var(--teks)}
+.sec-title{font-size:.8rem;font-weight:700;color:var(--abu2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+table.tn{width:100%;border-collapse:collapse;font-size:.87rem;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:18px}
+table.tn thead tr{background:linear-gradient(135deg,var(--hijau),var(--biru));color:#fff}
+table.tn th{padding:9px 11px;text-align:left;font-size:.76rem;font-weight:700;letter-spacing:.3px}
+table.tn td{padding:8px 11px;border-bottom:1px solid #eef2f6}
+table.tn tbody tr:last-child td{border-bottom:none}
+table.tn tbody tr:nth-child(even){background:#f8fbff}
+.bdg{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:700}
+/* Status Sudah/Belum */
+.bdg.sdh{background:#e8f7f0;color:#1a7f5a}
+.bdg.blm{background:#f4f6f8;color:#90a4ae}
+/* Keterangan nilai */
+.bdg.k{background:#fdecea;color:#e53935}       /* Kurang    < 75  */
+.bdg.c{background:#fff8e1;color:#f57f17}       /* Cukup    75-80  */
+.bdg.m{background:#e3f2fd;color:#1565c0}       /* Memuaskan 80-90 */
+.bdg.i{background:#f3e5f5;color:#6a1b9a}       /* Istimewa 90-100 */
+.bdg.b{background:#f4f6f8;color:#90a4ae}       /* Belum ujian     */
+
+.btn-row2{display:flex;gap:10px;margin-top:4px}
+.btn-kel{flex:1;padding:11px;background:var(--abu);color:var(--abu2);border:2px solid #d8e6f0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer}
+.btn-kel:hover{background:#fdecea;color:var(--merah);border-color:#ffcdd2}
+.btn-ujian{flex:2;padding:11px;background:linear-gradient(135deg,var(--hijau),var(--biru));color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer;line-height:1.4;text-align:center}
+.btn-ujian:hover{opacity:.9}
+.btn-ujian small{display:block;font-size:.7rem;opacity:.85}
+
+/* TOMBOL SUSULAN */
+#areaSusulan{margin-top:12px;display:none}
+.susulan-title{font-size:.78rem;font-weight:700;color:#e65100;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.btn-susulan{width:100%;padding:12px 14px;margin-bottom:8px;
+  background:linear-gradient(135deg,#ff6f00,#f57c00);
+  color:#fff;border:none;border-radius:10px;
+  font-family:'Poppins',sans-serif;font-size:.9rem;font-weight:700;
+  cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 3px 10px rgba(255,111,0,.3);transition:.2s}
+.btn-susulan:hover{opacity:.9;transform:translateY(-1px)}
+.btn-susulan .sn{font-size:.75rem;opacity:.85;margin-top:2px;font-family:'Nunito',sans-serif;font-weight:600}
+.btn-susulan .arr{font-size:1.2rem}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:var(--r);padding:28px 26px;width:90%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,.18);animation:up .3s ease}
+.modal h3{font-family:'Poppins',sans-serif;font-size:1.02rem;margin-bottom:16px}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn-batal{flex:1;padding:11px;background:var(--abu);color:var(--abu2);border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer}
+.btn-simpan{flex:1;padding:11px;background:var(--hijau);color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer}
+.token-ic{font-size:2.4rem;text-align:center;margin-bottom:8px}
+.token-sub{text-align:center;font-size:.84rem;color:var(--abu2);margin-bottom:14px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="spin"></div>
+  <p id="loadTeks">Memuat data sekolah...</p>
+  <p style="font-size:.75rem;color:#90a4ae;margin-top:6px" id="loadSub"></p>
+</div>
+
+<!-- OVERLAY PELANGGARAN -->
+<div id="ovPelanggaran">
+  <div class="ikon">🚨</div>
+  <h2>PELANGGARAN TERDETEKSI!</h2>
+  <p id="ovJenis">Anda meninggalkan halaman ujian</p>
+  <p>Pelanggaran ini telah <strong>dicatat</strong> dan dilaporkan ke pengawas.</p>
+  <div class="hitung" id="ovHitung">5</div>
+  <small>Halaman akan kembali ke login secara otomatis...</small>
+</div>
+
+<!-- ===== HALAMAN 1: LOGIN ===== -->
+<div class="wrap" id="h1">
+  <div class="card">
+    <div class="hdr">
+      <div class="logo-ring">
+        <img id="logoImg" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo" onerror="this.style.display='none'">
+      </div>
+      <div class="s-nama"   id="s1Nama">SMP NEGERI 1 KALIWEDI</div>
+      <div class="s-alamat" id="s1Alamat">Jl. Raya Kigesang Prajawinangun Kulon - Kaliwedi</div>
+      <div class="s-badge"  id="s1Judul">Asesmen Sumatif Akhir Tahun</div>
+      <div class="s-tahun"  id="s1Tahun">Tahun Pelajaran 2026/2027</div>
+    </div>
+    <div class="body">
+      <div class="f-title">🔐 Masuk ke <span>Portal Ujian</span></div>
+      <div id="msgLogin" class="msg"></div>
+      <div class="fg">
+        <label>Nomor ID Siswa</label>
+        <div class="iw">
+          <span class="ic">🪪</span>
+          <input type="text" id="inpID" placeholder="Masukkan No. ID atau scan QR" autocomplete="off">
+          <button class="btn-scan" onclick="bukaQR()" title="Scan QR Code">📷</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <div class="iw">
+          <span class="ic">🔑</span>
+          <input type="password" id="inpPw" placeholder="Masukkan password Anda">
+          <span class="eye" onclick="tglPw('inpPw',this)">👁</span>
+        </div>
+      </div>
+      <!-- Info biometrik -->
+      <div class="bio-wrap" id="bioWrap" style="display:none">
+        <button class="btn-bio" id="btnBio" onclick="loginBiometrik()" title="Login dengan sidik jari">
+          👆
+        </button>
+        <div class="bio-info">
+          <b>Sidik Jari Tersimpan</b><br>
+          Tap untuk login tanpa password
+        </div>
+      </div>
+
+      <button class="btn-login" onclick="login()">Masuk →</button>
+      <a class="link-ubah" onclick="bukaUbahPw()">🔄 Ubah Password</a>
+      <a class="link-ubah" href="gerbang-sekolah.html" style="display:block;margin-top:4px">⬅️ Kembali ke Gerbang Sekolah</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HALAMAN 2: DASHBOARD ===== -->
+<div class="wrap2" id="h2" style="display:none">
+  <div class="card">
+    <div class="hdr">
+      <div class="logo-ring">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png" alt="Logo" onerror="this.style.display='none'">
+      </div>
+      <div class="s-nama"  id="s2Nama"></div>
+      <div class="s-badge" id="s2Judul"></div>
+      <div class="s-tahun" id="s2Tahun"></div>
+    </div>
+    <div class="body">
+      <p style="color:var(--abu2);font-size:.9rem;margin-bottom:4px">👋 Selamat datang,</p>
+      <p style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;color:var(--teks);margin-bottom:16px" id="p2Nama"></p>
+      <div class="info-grid">
+        <div class="ibox"><div class="lb">No. ID</div><div class="vl" id="p2ID"></div></div>
+        <div class="ibox"><div class="lb">Kelas</div><div class="vl" id="p2Kelas"></div></div>
+      </div>
+      <div class="sec-title">📊 Rekap Nilai Ujian</div>
+      <table class="tn">
+        <thead><tr><th>#</th><th>Mata Pelajaran</th><th>Status</th><th>Keterangan</th></tr></thead>
+        <tbody id="tbNilai"><tr><td colspan="4" style="text-align:center;padding:14px;color:#b0bec5">⏳ Memuat...</td></tr></tbody>
+      </table>
+      <div class="btn-row2">
+        <button class="btn-kel" onclick="logout()">⬅ Keluar</button>
+        <button class="btn-ujian" onclick="bukaToken()">
+          📝 Ikuti Ujian
+          <small id="p2Mapel"></small>
+        </button>
+      </div>
+
+      <!-- AREA SUSULAN -->
+      <div id="areaSusulan">
+        <div style="height:1px;background:#eee;margin:16px 0"></div>
+        <div class="susulan-title">⚠️ Ujian Susulan Tersedia</div>
+        <div id="listSusulan"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: QR SCANNER -->
+<div class="modal-bg" id="modalQR">
+  <div class="modal" style="max-width:340px">
+    <h3 style="text-align:center;margin-bottom:4px">📷 Scan QR Code</h3>
+    <p style="text-align:center;font-size:.82rem;color:var(--abu2);margin-bottom:14px">
+      Arahkan kamera ke QR Code kartu ujian siswa
+    </p>
+    <div id="qr-reader"></div>
+    <div class="qr-status" id="qrStatus">Memulai kamera...</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn-batal" onclick="tutupQR()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOTIFIKASI GANTI PASSWORD (muncul otomatis jika masih default) -->
+<div class="modal-bg" id="mGantiPw">
+  <div class="modal">
+    <div style="text-align:center;font-size:2.2rem;margin-bottom:8px">🔑</div>
+    <h3 style="text-align:center;color:var(--hijau)">Ganti Password</h3>
+    <p style="font-size:.85rem;color:var(--abu2);text-align:center;margin:8px 0 16px;line-height:1.5">
+      Anda masih menggunakan <strong>password default</strong>.<br>Silakan buat password baru untuk keamanan akun Anda.
+    </p>
+    <div id="msgGantiPw" class="msg"></div>
+    <div class="fg">
+      <label>Password Baru</label>
+      <div class="iw">
+        <span class="ic">✨</span>
+        <input type="password" id="gpBaru" placeholder="Min. 4 karakter">
+        <span class="eye" onclick="tglPw('gpBaru',this)">👁</span>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Konfirmasi Password Baru</label>
+      <div class="iw">
+        <span class="ic">✅</span>
+        <input type="password" id="gpKonfirm" placeholder="Ulangi password baru">
+        <span class="eye" onclick="tglPw('gpKonfirm',this)">👁</span>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-batal" onclick="lewatiGantiPw()">Nanti</button>
+      <button class="btn-simpan" onclick="simpanGantiPw()">Simpan →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: UBAH PASSWORD -->
+<div class="modal-bg" id="mUbah">
+  <div class="modal">
+    <h3>🔄 Ubah Password</h3>
+    <div id="msgUbah" class="msg"></div>
+    <div class="fg"><label>No. ID Siswa</label><div class="iw"><span class="ic">🪪</span><input type="text" id="uID" placeholder="No. ID Anda" autocomplete="off"></div></div>
+    <div class="fg"><label>Password Lama</label><div class="iw"><span class="ic">🔑</span><input type="password" id="uLama" placeholder="Password saat ini"><span class="eye" onclick="tglPw('uLama',this)">👁</span></div></div>
+    <div class="fg"><label>Password Baru</label><div class="iw"><span class="ic">✨</span><input type="password" id="uBaru" placeholder="Min. 4 karakter"><span class="eye" onclick="tglPw('uBaru',this)">👁</span></div></div>
+    <div class="fg"><label>Konfirmasi Baru</label><div class="iw"><span class="ic">✅</span><input type="password" id="uKonfirm" placeholder="Ulangi password baru"><span class="eye" onclick="tglPw('uKonfirm',this)">👁</span></div></div>
+    <div class="btn-row">
+      <button class="btn-batal" onclick="tutup('mUbah')">Batal</button>
+      <button class="btn-simpan" onclick="ubahPw()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TOKEN SUSULAN — SCAN QR SAJA -->
+<div class="modal-bg" id="mTokenSusulan">
+  <div class="modal" style="max-width:340px">
+    <div class="token-ic">📷</div>
+    <h3 style="text-align:center">Scan QR Token Susulan</h3>
+    <div class="token-sub">Arahkan kamera ke QR Token pengawas untuk<br><strong id="tkSusulanMapel" style="color:#e65100"></strong></div>
+    <div id="msgTokenSusulan" class="msg"></div>
+    <div id="qr-susulan-reader" style="border-radius:12px;overflow:hidden;background:#000;width:100%"></div>
+    <div class="qr-status" id="qrSusulanStatus">Memulai kamera...</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn-batal" onclick="tutupSusulanQR()">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TOKEN UJIAN — SCAN QR SAJA -->
+<div class="modal-bg" id="mToken">
+  <div class="modal" style="max-width:340px">
+    <div class="token-ic">📷</div>
+    <h3 style="text-align:center">Scan QR Token</h3>
+    <div class="token-sub">Arahkan kamera ke QR Token dari pengawas ujian<br><strong id="tkMapel"></strong></div>
+    <div id="msgToken" class="msg"></div>
+    <div id="qr-token-reader" style="border-radius:12px;overflow:hidden;background:#000;width:100%"></div>
+    <div class="qr-status" id="qrTokenStatus">Memulai kamera...</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn-batal" onclick="tutupTokenQR()">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: PERINGATAN KELUAR FULLSCREEN -->
+<div id="ovFullscreen">
+  <div class="fs-ikon">⛶</div>
+  <h2>Layar Penuh Diperlukan!</h2>
+  <p>
+    Ujian harus dijalankan dalam mode <strong>layar penuh</strong>.<br>
+    Keluar dari layar penuh dianggap sebagai pelanggaran.<br>
+    Klik tombol di bawah untuk kembali ke mode layar penuh.
+  </p>
+  <div class="hitung-fs" id="fsHitung"></div>
+  <button class="btn-fs" onclick="mintaFullscreen()">⛶ Kembali ke Layar Penuh</button>
+</div>
+
+<!-- TOMBOL FULLSCREEN (muncul saat bukan fullscreen) -->
+<button id="btnFullscreen" onclick="mintaFullscreen()">⛶ Aktifkan Layar Penuh</button>
+
+<!-- ===== HALAMAN SOAL — fullscreen iframe ===== -->
+<div id="hSoal">
+  <!-- Bar tipis di atas iframe -->
+  <div id="soalBar">
+    <div class="info">
+      <span><span class="dot-hijau"></span>Ujian Berlangsung — <b id="s3Nama2"></b></span>
+      <small id="s3Info">Dilarang: pindah tab · layar belah · jendela lain · kursor di luar soal</small>
+    </div>
+    <div style="font-size:.78rem;opacity:.85;text-align:right">🔒 Pengawas Aktif<br>
+      <span style="font-size:.68rem;opacity:.75" id="s3Ukuran"></span>
+    </div>
+  </div>
+  <!-- Google Form tampil di sini, fullscreen -->
+  <iframe id="soalIframe" src="" allow="camera; microphone" allowfullscreen></iframe>
+</div>
+
+<style>
+@keyframes denyut{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes kedip{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* MODAL QR SCANNER */
+#modalQR { z-index: 2000; }
+#qr-reader {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+#qr-reader video {
+  border-radius: 12px;
+  width: 100% !important;
+}
+.qr-status {
+  text-align: center;
+  font-size: .85rem;
+  color: var(--abu2);
+  margin-top: 10px;
+  min-height: 20px;
+}
+.btn-scan {
+  position: absolute;
+  right: 42px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 4px;
+  opacity: .6;
+  transition: opacity .2s;
+}
+.btn-scan:hover { opacity: 1; }
+
+/* BIOMETRIC */
+.bio-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.btn-bio {
+  flex-shrink: 0;
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  border: 2px solid #d8e6f0;
+  background: var(--abu);
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: .2s;
+}
+.btn-bio:hover { border-color: var(--hijau); background: var(--hijau-bg); }
+.btn-bio.aktif { border-color: var(--hijau); background: var(--hijau-bg); }
+.bio-info {
+  font-size: .75rem;
+  color: var(--abu2);
+  line-height: 1.4;
+}
+.bio-info b { color: var(--teks); }
+
+/* TOMBOL FULLSCREEN */
+#btnFullscreen {
+  position:fixed; bottom:20px; right:20px; z-index:600;
+  background:var(--hijau); color:#fff;
+  border:none; border-radius:50px; padding:10px 18px;
+  font-family:'Poppins',sans-serif; font-size:.85rem; font-weight:700;
+  cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.25);
+  display:none; align-items:center; gap:8px;
+  animation:denyut 1.5s ease-in-out infinite;
+}
+
+/* PERINGATAN FULLSCREEN */
+#ovFullscreen {
+  position:fixed; inset:0; z-index:700;
+  background:rgba(21,101,192,0.97);
+  display:none; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center; padding:30px;
+}
+#ovFullscreen .fs-ikon { font-size:4rem; margin-bottom:16px; }
+#ovFullscreen h2 { color:#fff; font-family:'Poppins',sans-serif; font-size:1.5rem; margin-bottom:10px; }
+#ovFullscreen p  { color:rgba(255,255,255,.88); font-size:.95rem; line-height:1.7; margin-bottom:20px; }
+#ovFullscreen .btn-fs {
+  background:#fff; color:var(--biru);
+  border:none; border-radius:12px; padding:13px 32px;
+  font-family:'Poppins',sans-serif; font-size:1rem; font-weight:700;
+  cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.2);
+}
+#ovFullscreen .btn-fs:hover { background:#e8f7f0; }
+#ovFullscreen .hitung-fs {
+  font-size:2rem; font-weight:800; color:#ffeb3b;
+  margin:10px 0; font-family:'Poppins',sans-serif;
+}
+
+/* HALAMAN SOAL — fullscreen iframe */
+#hSoal {
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:500;
+  flex-direction:column;
+  background:#000;
+}
+#soalBar {
+  background:linear-gradient(135deg,var(--hijau),var(--biru));
+  color:#fff;
+  padding:8px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+  gap:10px;
+}
+#soalBar .info { font-size:.82rem; font-weight:700; }
+#soalBar .info small { display:block; font-size:.72rem; opacity:.8; font-weight:400; }
+.dot-hijau {
+  width:10px; height:10px; border-radius:50%;
+  background:#4caf50; display:inline-block;
+  animation:kedip 1s infinite; margin-right:6px;
+}
+#soalIframe {
+  flex:1;
+  border:none;
+  width:100%;
+  height:100%;
+}
+/* Blokir interaksi dengan bar saat ujian */
+#soalBar { user-select:none; }
+</style>
+
+<script>
+// ============================================================
+// KONFIGURASI — sesuaikan dengan akun Anda
+// ============================================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIt_mQr0dNbEr5sa0mCL4BmuS7z4fnZX-FDyAvR2-tjvu13_nz9W9LuZ-M983fNBPmnA/exec';
+// Apps Script actions yang dibutuhkan:
+// login          → cek Sheet2 (id, pw); jika pw Sheet2 kosong → validasi dgn PW_DEFAULT; return {status, isDefault}
+// ubahPassword   → tulis Sheet7!A:B (NISN | PASSWORD)
+// catatWaktuToken→ tulis Sheet2!G[baris siswa] waktu scan token pertama
+// catatPelanggaran→ tulis Sheet6 (id, nama, kelas, jenis, ke, waktu)
+// setStatus      → update kolom status Sheet2
+
+// URL raw CSV di GitHub — diakses langsung, tanpa Apps Script
+// Setelah upload ke GitHub, format URL:
+// https://raw.githubusercontent.com/[USER]/[REPO]/main/data/[FILE].csv
+const GITHUB_RAW = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data';
+
+// Timestamp agar CSV tidak terkena cache browser
+function csvUrl(nama) {
+  return `${GITHUB_RAW}/${nama}.csv?t=${Math.floor(Date.now()/60000)}`;
+}
+
+// Baca file CSV dari URL
+async function bacaCSV(url) {
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 10000);
+    const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+    clearTimeout(tid);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    return parseCSV(text);
+  } catch(e) {
+    console.error('Gagal baca CSV:', url, e.message);
+    return null;
+  }
+}
+
+// Parse teks CSV jadi array 2D
+function parseCSV(text) {
+  const baris = [];
+  const lines = text.trim().split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cols = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim());
+    baris.push(cols);
+  }
+  return baris;
+}
+
+// CSV key,value → objek JS
+function csvKVtoObj(rows) {
+  const obj = {};
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0]) obj[rows[i][0]] = rows[i][1] || '';
+  }
+  return obj;
+}
+
+// CSV siswa → array objek
+function csvToSiswa(rows) {
+  const siswa = [];
+  for (let i = 1; i < rows.length; i++) {
+    const id = (rows[i][0] || '').trim();
+    if (!id) continue;
+    siswa.push({
+      id      : id,
+      nama    : (rows[i][1] || '').trim(),
+      kelas   : (rows[i][2] || '').trim(),
+      linkSoal: (rows[i][3] || '').trim(),
+      status  : (rows[i][4] || '').trim(),
+      password: '',
+    });
+  }
+  return siswa;
+}
+
+const LOGO_URL = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png';
+
+let D = {
+  sekolah:{namaSekolah:'SMP NEGERI 1 KALIWEDI',alamat:'Jl. Raya Kigesang Prajawinangun Kulon - Kaliwedi',judul:'Asesmen Sumatif Akhir Tahun',tahun:'2026/2027',mapelKls7:'IPS',mapelKls8:'IPS',mapelKls9:'IPS',linkKls7:'',linkKls8:'',linkKls9:'',token:'PANTI70'},
+  siswa:[],
+  aktif:null,
+  susulanList:[]
+};
+
+// Status pengawasan ujian
+let sedangUjian      = false;
+let sudahPelanggaran = false;
+let susulanAktif     = null;   // {mapel, linkSoal} susulan yang sedang dibuka
+let winUjian         = null;
+let pengawasTimer    = null;
+let alarmCtx         = null;   // AudioContext untuk alarm
+
+// Pelanggaran — kembali ke halaman token setelah 5x
+const MAX_PELANGGARAN  = 5;
+let   jmlPelanggaran   = 0;    // counter pelanggaran per sesi token
+let   waktuScanToken   = 0;    // ms saat token pertama kali di-scan (untuk tulis Sheet2)
+const TOLERANSI_MS     = 2 * 60 * 1000; // 2 menit kelonggaran setelah scan token
+
+// QR Scanner instance
+let qrTokenScanner   = null;
+let qrSusulanScanner = null;
+
+// Password default
+const PW_DEFAULT = 'user123';
+
+// ============================================================
+// FETCH Apps Script
+// ============================================================
+// apiFetch: retry otomatis + timeout 12 detik
+async function apiFetch(params, _retry = 0) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('GANTI')) return null;
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 12000);
+    const url  = APPS_SCRIPT_URL + '?' + new URLSearchParams(params);
+    const res  = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error && _retry < 2) {
+      await new Promise(r => setTimeout(r, 1000 * (_retry + 1)));
+      return apiFetch(params, _retry + 1);
+    }
+    return data;
+  } catch(e) {
+    if (_retry < 2) {
+      await new Promise(r => setTimeout(r, 1000 * (_retry + 1)));
+      return apiFetch(params, _retry + 1);
+    }
+    console.error('apiFetch gagal:', params.action, e.message);
+    return null;
+  }
+}
+
+// apiFetchCached: cache di memori browser, hindari fetch berulang
+const _cache = {};
+async function apiFetchCached(params, ttl = 120) {
+  const k = JSON.stringify(params);
+  if (_cache[k] && Date.now() - _cache[k].t < ttl * 1000) return _cache[k].v;
+  const v = await apiFetch(params);
+  if (v && !v.error) _cache[k] = { v, t: Date.now() };
+  return v;
+}
+
+// ============================================================
+// INIT — baca dari CSV GitHub (tanpa limit concurrent)
+// ============================================================
+async function init() {
+  show('loading');
+  setText('loadTeks', 'Memuat data...');
+  setText('loadSub',  'Mengambil dari GitHub...');
+
+  // Kedua CSV dibaca BERSAMAAN — 1000 user serentak tidak masalah
+  const [rowsSekolah, rowsSiswa] = await Promise.all([
+    bacaCSV(csvUrl('sekolah')),
+    bacaCSV(csvUrl('siswa')),
+  ]);
+
+  if (rowsSekolah) {
+    D.sekolah = { ...D.sekolah, ...csvKVtoObj(rowsSekolah) };
+    console.log('✅ Data sekolah dari CSV');
+  }
+  if (rowsSiswa) {
+    D.siswa = csvToSiswa(rowsSiswa);
+    console.log('✅ Siswa dari CSV:', D.siswa.length, 'orang');
+  } else {
+    // Fallback ke Apps Script bila GitHub tidak terjangkau
+    setText('loadSub', 'Mencoba server cadangan...');
+    const fb = await apiFetch({action:'getSiswa'});
+    if (fb && fb.siswa) D.siswa = fb.siswa;
+  }
+
+  isiHeader();
+  hide('loading');
+  cobaAutoLoginDariPortal();
+}
+
+// ============================================================
+// AUTO-LOGIN DARI PORTAL — kalau siswa datang dari portal.html dan
+// baru saja login di sana, isi otomatis ID & password lalu login.
+// Kalau password ternyata belum sinkron dengan sistem ujian, login()
+// akan gagal seperti biasa dan siswa tinggal mengetik ulang di sini.
+// ============================================================
+function cobaAutoLoginDariPortal() {
+  try {
+    const raw = sessionStorage.getItem('portalAuth');
+    if (!raw) return;
+    const sesi = JSON.parse(raw);
+    if (!sesi || !sesi.id || !sesi.pw) return;
+    if (Date.now() - sesi.ts > 30 * 60 * 1000) return; // sesi portal kedaluwarsa
+    document.getElementById('inpID').value = sesi.id;
+    document.getElementById('inpPw').value = sesi.pw;
+    login();
+  } catch (e) { /* abaikan, tampilkan layar login biasa */ }
+}
+
+function isiHeader() {
+  const s = D.sekolah;
+  setText('s1Nama', s.namaSekolah); setText('s1Alamat',s.alamat);
+  setText('s1Judul',s.judul);       setText('s1Tahun','Tahun Pelajaran '+s.tahun);
+  setText('s2Nama', s.namaSekolah); setText('s2Judul',s.judul);
+  setText('s2Tahun','Tahun Pelajaran '+s.tahun);
+  // bar soal tidak pakai isiHeader — diisi saat mulaiUjian
+}
+
+// ============================================================
+// LOGIN — QR scan kartu siswa, verifikasi ke Sheet2 via Apps Script
+// ============================================================
+async function login() {
+  const id = val('inpID'), pw = val('inpPw');
+  const el = document.getElementById('msgLogin');
+  el.className = 'msg';
+
+  if (!id) { pesan(el,'err','⚠️ Scan QR kartu siswa terlebih dahulu.'); return; }
+  if (!pw) { pesan(el,'err','⚠️ Isi Password.'); return; }
+  if (!D.siswa.length) { pesan(el,'err','⚠️ Data belum termuat. Refresh halaman.'); return; }
+
+  // Cek ID dari CSV lokal
+  const siswaLokal = D.siswa.find(s => s.id === id);
+  if (!siswaLokal) { pesan(el,'err','❌ No. ID tidak ditemukan.'); return; }
+
+  const status = (siswaLokal.status || '').toUpperCase();
+  if (status === 'AKTIF') {
+    pesan(el,'err','⛔ Akun sedang aktif digunakan. Hubungi pengawas.'); return;
+  }
+
+  setText('loadTeks','Memverifikasi...');
+  setText('loadSub', 'Memeriksa data ke server...');
+  show('loading');
+
+  // Kirim ke Apps Script — cek Sheet2 (id + password)
+  // Jika password di Sheet2 kosong → gunakan PW_DEFAULT
+  const rLogin = await apiFetch({ action:'login', id, pw });
+  hide('loading');
+
+  if (!rLogin) {
+    // Fallback: jika server tidak merespons, cek apakah pw === default
+    // (mode offline darurat)
+    const pwLokal = sessionStorage.getItem('pw_' + id) || PW_DEFAULT;
+    if (pw !== pwLokal) { pesan(el,'err','⚠️ Server tidak merespons & password salah.'); return; }
+  } else {
+    if (rLogin.status === 'salah') { pesan(el,'err','❌ Password salah.'); return; }
+    if (rLogin.status === 'aktif') { pesan(el,'err','⛔ Akun sedang aktif. Hubungi pengawas.'); return; }
+    if (rLogin.status === 'blokir') { pesan(el,'err','🚫 Akun diblokir. Hubungi pengawas.'); return; }
+    if (rLogin.status !== 'ok') { pesan(el,'err','❌ Login gagal: ' + (rLogin.status||'error')); return; }
+  }
+
+  // Login berhasil
+  siswaLokal.status = 'AKTIF';
+  D.aktif = siswaLokal;
+  sessionStorage.setItem('pwc_' + id, btoa(pw));
+
+  // Reset counter pelanggaran untuk sesi baru
+  jmlPelanggaran = 0;
+
+  tampilDashboard(siswaLokal);
+
+  // Cek apakah masih pakai password default → tampilkan notifikasi ganti password
+  const masihDefault = rLogin ? rLogin.isDefault : (pw === PW_DEFAULT);
+  if (masihDefault) {
+    setTimeout(() => tampilNotifGantiPw(), 800);
+  } else {
+    setTimeout(() => tawarBiometrik(siswaLokal), 2000);
+  }
+}
+
+// ============================================================
+// NOTIFIKASI GANTI PASSWORD
+// ============================================================
+function tampilNotifGantiPw() {
+  document.getElementById('gpBaru').value    = '';
+  document.getElementById('gpKonfirm').value = '';
+  document.getElementById('msgGantiPw').className = 'msg';
+  buka('mGantiPw');
+}
+
+function lewatiGantiPw() {
+  tutup('mGantiPw');
+  // Tetap tawarkan biometrik walau skip
+  if (D.aktif) setTimeout(() => tawarBiometrik(D.aktif), 500);
+}
+
+async function simpanGantiPw() {
+  const baru    = val('gpBaru');
+  const konfirm = val('gpKonfirm');
+  const el      = document.getElementById('msgGantiPw');
+  el.className  = 'msg';
+
+  if (!baru || !konfirm)  { pesan(el,'err','⚠️ Kedua kolom wajib diisi.'); return; }
+  if (baru.length < 4)    { pesan(el,'err','⚠️ Password min. 4 karakter.'); return; }
+  if (baru !== konfirm)   { pesan(el,'err','❌ Konfirmasi tidak cocok.'); return; }
+  if (baru === PW_DEFAULT){ pesan(el,'err','⚠️ Pilih password yang berbeda dari default.'); return; }
+
+  pesan(el,'ok','⏳ Menyimpan...');
+
+  // Tulis password baru ke Sheet7 kolom A:B (NISN | PASSWORD)
+  const siswa = D.aktif;
+  const r = await apiFetch({
+    action  : 'ubahPassword',
+    id      : siswa.id,
+    pwBaru  : baru
+  });
+
+  if (r && r.status === 'ok') {
+    // Simpan sementara di session
+    sessionStorage.setItem('pw_' + siswa.id, baru);
+    sessionStorage.setItem('pwc_' + siswa.id, btoa(baru));
+    pesan(el,'ok','✅ Password berhasil diubah!');
+    setTimeout(() => {
+      tutup('mGantiPw');
+      if (D.aktif) tawarBiometrik(D.aktif);
+    }, 1500);
+  } else {
+    pesan(el,'err','⚠️ Gagal simpan ke server. Coba lagi.');
+  }
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function tampilDashboard(siswa) {
+  setText('p2Nama',  siswa.nama);
+  setText('p2ID',    siswa.id);
+  setText('p2Kelas', 'Kelas ' + siswa.kelas);
+  const mapel = getMapel(siswa.kelas);
+  setText('p2Mapel', mapel);
+  setText('tkMapel', mapel ? 'Mata Pelajaran: '+mapel : '');
+  hide('h1'); show('h2');
+  await muatNilai(siswa);
+  await muatSusulan(siswa);
+}
+
+async function muatNilai(siswa) {
+  const tb = document.getElementById('tbNilai');
+  tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:14px;color:#b0bec5">⏳ Memuat nilai...</td></tr>';
+  // Baca nilai dari CSV GitHub (cepat, tanpa Apps Script)
+  const rowsNilai = await bacaCSV(csvUrl('nilai'));
+  let r = null;
+  if (rowsNilai && rowsNilai.length > 1) {
+    const header = rowsNilai[0];
+    for (let i = 1; i < rowsNilai.length; i++) {
+      if ((rowsNilai[i][0]||'').trim() !== siswa.id) continue;
+      const nilai = [];
+      for (let k = 3; k < header.length; k++) {
+        const mapel = (header[k]||'').trim();
+        if (!mapel) continue;
+        const v = rowsNilai[i][k];
+        nilai.push({ mapel, nilai: (v!==''&&v!==undefined) ? Number(v) : null });
+      }
+      r = { nilai };
+      break;
+    }
+    if (!r) r = { nilai: [] };
+  } else {
+    // Fallback ke Apps Script jika CSV gagal
+    r = await apiFetch({action:'getNilai', id:siswa.id});
+  }
+
+  if (!r || !r.nilai) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:14px;color:#e53935">Gagal memuat nilai.</td></tr>';
+    return;
+  }
+  if (r.nilai.length === 0) {
+    const mapel = getMapel(siswa.kelas);
+    tb.innerHTML = `<tr><td>1</td><td><b>${mapel||'-'}</b></td>
+      <td style="text-align:center"><span class="bdg blm">Belum</span></td>
+      <td><span class="bdg b"></span></td></tr>`;
+    return;
+  }
+  tb.innerHTML = r.nilai.map((item,i)=>{
+    const n = item.nilai;
+
+    let cls, ket, status;
+    if (n === null || n === '') {
+      cls    = 'b';
+      ket    = '';           // kosong jika belum ujian
+      status = 'Belum';
+    } else if (n < 75) {
+      cls    = 'k';
+      ket    = '⚠️ Kurang';
+      status = 'Sudah';
+    } else if (n < 80) {
+      cls    = 'c';
+      ket    = '👍 Cukup';
+      status = 'Sudah';
+    } else if (n < 90) {
+      cls    = 'm';
+      ket    = '🌟 Memuaskan';
+      status = 'Sudah';
+    } else {
+      cls    = 'i';
+      ket    = '🏆 Istimewa';
+      status = 'Sudah';
+    }
+
+    return `<tr>
+      <td>${i+1}</td>
+      <td><b>${item.mapel}</b></td>
+      <td style="text-align:center;font-weight:700">
+        <span class="bdg ${status==='Sudah'?'sdh':'blm'}">${status}</span>
+      </td>
+      <td><span class="bdg ${cls}">${ket}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// SUSULAN
+// ============================================================
+async function muatSusulan(siswa) {
+  // Baca susulan dari CSV GitHub
+  const rowsSusulan = await bacaCSV(csvUrl('susulan'));
+  let r = null;
+  if (rowsSusulan && rowsSusulan.length > 1) {
+    const susulan = rowsSusulan
+      .slice(1)
+      .filter(row => (row[0]||'').trim() === siswa.id)
+      .map(row => ({ mapel: (row[3]||'').trim(), linkSoal: (row[4]||'').trim() }));
+    r = { susulan };
+  } else {
+    r = await apiFetch({action:'getSusulan', id:siswa.id});
+  }
+  const area = document.getElementById('areaSusulan');
+  const list = document.getElementById('listSusulan');
+
+  if (!r || !r.susulan || r.susulan.length === 0) {
+    area.style.display = 'none';
+    return;
+  }
+
+  area.style.display = 'block';
+  list.innerHTML = r.susulan.map((s,i) => `
+    <button class="btn-susulan" onclick="bukaTokenSusulan(${i})">
+      <div>
+        <div>📋 Susulan: <b>${s.mapel}</b></div>
+        <div class="sn">Ketuk untuk memasukkan token & mulai</div>
+      </div>
+      <span class="arr">→</span>
+    </button>
+  `).join('');
+
+  // Simpan data susulan ke variabel lokal
+  D.susulanList = r.susulan;
+}
+
+let qrSusulanSudahScan = false;
+
+function bukaTokenSusulan(idx) {
+  susulanAktif = D.susulanList[idx];
+  document.getElementById('msgTokenSusulan').className = 'msg';
+  setText('tkSusulanMapel', susulanAktif.mapel);
+  qrSusulanSudahScan = false;
+  buka('mTokenSusulan');
+  setTimeout(() => mulaiScanSusulan(), 300);
+}
+
+function mulaiScanSusulan() {
+  setText('qrSusulanStatus', 'Memulai kamera...');
+  try {
+    qrSusulanScanner = new Html5Qrcode('qr-susulan-reader');
+    qrSusulanScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 200, height: 200 }, aspectRatio: 1.0 },
+      (decodedText) => {
+        if (qrSusulanSudahScan) return;
+        qrSusulanSudahScan = true;
+        const masuk = decodedText.trim().toUpperCase();
+        const benar = (D.sekolah.token || '').toUpperCase();
+        if (masuk !== benar) {
+          qrSusulanSudahScan = false;
+          setText('qrSusulanStatus', '❌ Token tidak valid. Coba lagi.');
+          setTimeout(() => { qrSusulanSudahScan = false; setText('qrSusulanStatus','🔍 Arahkan ke QR Token...'); }, 2000);
+          return;
+        }
+        tutupSusulanQR();
+        const link = susulanAktif ? susulanAktif.linkSoal : '';
+        if (!link) { alert('⚠️ Link soal susulan tidak tersedia. Hubungi pengawas.'); return; }
+        mintaFullscreen();
+        mulaiUjian(link);
+      },
+      () => {}
+    ).then(() => {
+      setText('qrSusulanStatus', '🔍 Arahkan ke QR Token dari pengawas...');
+    }).catch(err => {
+      setText('qrSusulanStatus', '❌ Kamera tidak bisa diakses: ' + err);
+    });
+  } catch(e) {
+    setText('qrSusulanStatus', '❌ ' + e.message);
+  }
+}
+
+function tutupSusulanQR() {
+  if (qrSusulanScanner) {
+    qrSusulanScanner.stop().catch(() => {});
+    qrSusulanScanner.clear();
+    qrSusulanScanner = null;
+  }
+  tutup('mTokenSusulan');
+}
+
+function logout() {
+  bersihkanPengawas();
+  if (D.aktif) apiFetch({action:'setStatus', id:D.aktif.id, status:''});
+  D.aktif        = null;
+  jmlPelanggaran = 0;
+  waktuScanToken = 0;
+  hide('h2');
+  document.getElementById('hSoal').style.display = 'none';
+  show('h1');
+  document.getElementById('inpID').value = '';
+  document.getElementById('inpPw').value = '';
+  document.getElementById('msgLogin').className = 'msg';
+}
+
+// ============================================================
+// TOKEN & BUKA SOAL — hanya via QR scan, token tidak tampak
+// ============================================================
+let qrTokenSudahScan = false; // debounce agar tidak double-trigger
+
+function bukaToken() {
+  document.getElementById('msgToken').className = 'msg';
+  qrTokenSudahScan = false;
+  buka('mToken');
+  setTimeout(() => mulaiScanToken(), 300);
+}
+
+function mulaiScanToken() {
+  setText('qrTokenStatus', 'Memulai kamera...');
+  try {
+    qrTokenScanner = new Html5Qrcode('qr-token-reader');
+    qrTokenScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 200, height: 200 }, aspectRatio: 1.0 },
+      (decodedText) => {
+        if (qrTokenSudahScan) return;
+        qrTokenSudahScan = true;
+        // Token dibaca tapi tidak ditampilkan ke layar
+        const masuk = decodedText.trim().toUpperCase();
+        const benar = (D.sekolah.token || '').toUpperCase();
+        if (masuk !== benar) {
+          qrTokenSudahScan = false;
+          setText('qrTokenStatus', '❌ Token tidak valid. Coba lagi.');
+          setTimeout(() => { qrTokenSudahScan = false; setText('qrTokenStatus','🔍 Arahkan ke QR Token...'); }, 2000);
+          return;
+        }
+        // Token benar — tutup scanner
+        tutupTokenQR();
+        const siswa  = D.aktif;
+        const link   = siswa.linkSoal || '';
+        if (!link) { alert('⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
+
+        // Catat waktu scan token ke Sheet2!G (hanya scan PERTAMA)
+        // Scan token ke-2 dst (setelah pelanggaran) tidak dicatat
+        if (jmlPelanggaran === 0) {
+          waktuScanToken = Date.now();
+          apiFetch({ action:'catatWaktuToken', id: siswa.id, waktu: new Date().toISOString() });
+        }
+
+        mintaFullscreen();
+        mulaiUjian(link);
+      },
+      () => {}
+    ).then(() => {
+      setText('qrTokenStatus', '🔍 Arahkan ke QR Token dari pengawas...');
+    }).catch(err => {
+      setText('qrTokenStatus', '❌ Kamera tidak bisa diakses: ' + err);
+    });
+  } catch(e) {
+    setText('qrTokenStatus', '❌ ' + e.message);
+  }
+}
+
+function tutupTokenQR() {
+  if (qrTokenScanner) {
+    qrTokenScanner.stop().catch(() => {});
+    qrTokenScanner.clear();
+    qrTokenScanner = null;
+  }
+  tutup('mToken');
+}
+
+// ============================================================
+// MULAI UJIAN — iframe fullscreen
+// Google Form tampil di dalam halaman portal sendiri.
+// Pengawas deteksi visibilitychange di halaman yang sama.
+// Soal hanya bisa diakses lewat portal — tidak ada tab terpisah.
+// ============================================================
+let timerKelonggaran = null;
+
+function mulaiUjian(link) {
+  const siswa = D.aktif;
+
+  setText('s3Nama2', siswa.nama);
+  setText('s3Ukuran', `${window.innerWidth}×${window.innerHeight}px`);
+
+  const iframe = document.getElementById('soalIframe');
+  iframe.src = link;
+
+  hide('h1'); hide('h2');
+  document.getElementById('hSoal').style.display = 'flex';
+
+  // Reset state
+  sedangUjian      = false;
+  sudahPelanggaran = false;
+  if (timerKelonggaran) clearTimeout(timerKelonggaran);
+
+  // Hitung sisa kelonggaran dari waktu scan token
+  // (jika sudah ada waktu scan, kurangi waktu yang telah berlalu)
+  const sudahBerlalu  = waktuScanToken ? Date.now() - waktuScanToken : 0;
+  const sisaKelonggaran = Math.max(0, TOLERANSI_MS - sudahBerlalu);
+
+  let iframeOk = false;
+  iframe.onload = () => { iframeOk = true; };
+
+  // Tampilkan pesan kelonggaran di info bar
+  const mntSisa = Math.ceil(sisaKelonggaran / 60000);
+  setText('s3Info', sisaKelonggaran > 0
+    ? `⏳ Pengawas aktif dalam ±${mntSisa} menit — silakan menuju tempat duduk`
+    : 'Dilarang: pindah tab · layar belah · jendela lain · kursor di luar soal');
+
+  setTimeout(() => {
+    if (!iframeOk) {
+      iframe.src = '';
+      document.getElementById('hSoal').style.display = 'none';
+      hide('h1'); show('h2');
+      document.getElementById('tbNilai').innerHTML =
+        `<tr><td colspan="4" style="padding:14px;text-align:center;color:var(--merah)">
+          ⚠️ Soal tidak dapat ditampilkan di sini.<br>
+          <a href="${link}" target="_blank" style="color:var(--biru);font-weight:700">
+            Klik di sini untuk membuka soal
+          </a>
+        </td></tr>`;
+      return;
+    }
+
+    // Setelah sisa kelonggaran habis → aktifkan pengawas
+    timerKelonggaran = setTimeout(() => {
+      if (document.getElementById('hSoal').style.display !== 'none') {
+        sedangUjian = true;
+        sudahPelanggaran = false;
+        aktifkanPengawas();
+        setText('s3Info', 'Dilarang: pindah tab · layar belah · jendela lain · kursor di luar soal');
+        console.log('✅ Pengawas aktif setelah kelonggaran');
+      }
+    }, sisaKelonggaran);
+
+    console.log(`⏳ Kelonggaran ${Math.round(sisaKelonggaran/1000)}d sebelum pengawas aktif`);
+  }, 5000);
+}
+
+// ============================================================
+// SISTEM PENGAWAS 6 LAPIS
+// L1 : Fullscreen API    — paksa layar penuh, deteksi keluar
+// L2 : visibilitychange  — ganti tab, minimize, buka app HP
+// L3 : window blur       — Alt+Tab ke aplikasi lain (PC)
+// L4 : Resize tracking   — layar belah, jendela mengambang
+// L5 : Mouse/touch zone  — kursor/jari di luar area soal
+// L6 : Picture-in-Picture— matikan PiP pada semua media
+// ============================================================
+
+// ============================================================
+// VARIABEL PENGAWAS
+// ============================================================
+const TOLERANSI_RESIZE = 80;   // px — pengecilan > ini = pelanggaran
+let fsHitungTimer      = null;
+let ukuranAwalW        = 0;
+let ukuranAwalH        = 0;
+let fsAktif            = false; // apakah fullscreen berhasil aktif
+
+// ============================================================
+// L1 — FULLSCREEN API
+// Dipanggil LANGSUNG dari event klik tombol (cekToken/cekTokenSusulan)
+// ============================================================
+function mintaFullscreen() {
+  const el  = document.documentElement;
+  const req = el.requestFullscreen       ||
+              el.webkitRequestFullscreen ||
+              el.mozRequestFullScreen    ||
+              el.msRequestFullscreen;
+  if (!req) { console.warn('Fullscreen tidak didukung'); return; }
+  req.call(el).then(() => {
+    fsAktif = true;
+    console.log('✅ Fullscreen aktif');
+  }).catch(err => {
+    console.warn('Fullscreen gagal:', err);
+    fsAktif = false;
+  });
+}
+
+function isFullscreen() {
+  return !!(document.fullscreenElement     ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement  ||
+            document.msFullscreenElement);
+}
+
+function keluar_fullscreen_handler() {
+  if (!sedangUjian) return;
+  if (!isFullscreen()) {
+    fsAktif = false;
+    tampilOvFullscreen();
+  } else {
+    fsAktif = true;
+    sembunyikanOvFullscreen();
+    // Update ukuran awal setelah kembali fullscreen
+    // (ukuran bisa berbeda karena taskbar dll)
+    setTimeout(() => {
+      ukuranAwalW = window.innerWidth;
+      ukuranAwalH = window.innerHeight;
+    }, 300);
+  }
+}
+
+function tampilOvFullscreen() {
+  if (sudahPelanggaran) return;
+  document.getElementById('ovFullscreen').style.display = 'flex';
+  let sisa = 8;
+  setText('fsHitung', `${sisa} detik untuk kembali...`);
+  fsHitungTimer = setInterval(() => {
+    sisa--;
+    setText('fsHitung', `${sisa} detik untuk kembali...`);
+    if (sisa <= 0) {
+      clearInterval(fsHitungTimer); fsHitungTimer = null;
+      sembunyikanOvFullscreen();
+      tangkapPelanggaran('Keluar dari mode layar penuh saat ujian berlangsung');
+    }
+  }, 1000);
+}
+
+function sembunyikanOvFullscreen() {
+  document.getElementById('ovFullscreen').style.display = 'none';
+  if (fsHitungTimer) { clearInterval(fsHitungTimer); fsHitungTimer = null; }
+}
+
+// ============================================================
+// L6 — PICTURE-IN-PICTURE
+// ============================================================
+function matikanPiP() {
+  if (document.pictureInPictureElement) {
+    document.exitPictureInPicture().catch(()=>{});
+  }
+  document.querySelectorAll('video').forEach(v => {
+    v.disablePictureInPicture = true;
+    v.addEventListener('enterpictureinpicture', ev => {
+      ev.target.exitPictureInPicture().catch(()=>{});
+      if (sedangUjian) tangkapPelanggaran('Menggunakan Picture-in-Picture saat ujian');
+    });
+  });
+}
+
+// ============================================================
+// AKTIFKAN SEMUA LAPIS PENGAWAS
+// (dipanggil setelah iframe selesai load)
+// ============================================================
+function aktifkanPengawas() {
+  nonaktifkanPengawas();
+
+  // Ukuran awal: pakai screen.width/height (resolusi layar fisik)
+  // ini TIDAK berubah saat split screen / floating window
+  // Bandingkan dengan window.innerWidth saat polling
+  ukuranAwalW = screen.width;
+  ukuranAwalH = screen.height;
+
+  // L1 — listener fullscreen change
+  document.addEventListener('fullscreenchange',       keluar_fullscreen_handler);
+  document.addEventListener('webkitfullscreenchange', keluar_fullscreen_handler);
+  document.addEventListener('mozfullscreenchange',    keluar_fullscreen_handler);
+
+  // L2 — Visibility (ganti tab, minimize, notifikasi HP)
+  document.addEventListener('visibilitychange', onVisibilityChange);
+
+  // L3 — Window blur (Alt+Tab ke app lain)
+  window.addEventListener('blur', onWindowBlur);
+
+  // L4 — Resize polling 500ms
+  // Pakai screen.width vs window.innerWidth
+  // Split screen: window.innerWidth << screen.width
+  // Floating: window.innerWidth << screen.width
+  pengawasTimer = setInterval(onCekResize, 500);
+
+  // L5 — Mouse/touch di luar iframe
+  document.addEventListener('mousemove',  onMousePortal);
+  document.addEventListener('touchstart', onTouchPortal, {passive:true});
+
+  // L6 — PiP
+  matikanPiP();
+
+  // Blokir klik kanan & shortcut
+  document.addEventListener('contextmenu', blokirMenu);
+  document.addEventListener('keydown',     onKeyBlokir);
+
+  console.log(`✅ Pengawas aktif | screen:${screen.width}×${screen.height} | window:${window.innerWidth}×${window.innerHeight}`);
+}
+
+function nonaktifkanPengawas() {
+  document.removeEventListener('fullscreenchange',       keluar_fullscreen_handler);
+  document.removeEventListener('webkitfullscreenchange', keluar_fullscreen_handler);
+  document.removeEventListener('mozfullscreenchange',    keluar_fullscreen_handler);
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  window.removeEventListener('blur',   onWindowBlur);
+  document.removeEventListener('mousemove',  onMousePortal);
+  document.removeEventListener('touchstart', onTouchPortal);
+  document.removeEventListener('contextmenu',blokirMenu);
+  document.removeEventListener('keydown',    onKeyBlokir);
+  if (pengawasTimer) { clearInterval(pengawasTimer); pengawasTimer = null; }
+  sembunyikanOvFullscreen();
+}
+
+// --- L2: Visibility ---
+function onVisibilityChange() {
+  if (!sedangUjian || sudahPelanggaran) return;
+  if (document.visibilityState === 'hidden') {
+    tangkapPelanggaran('Berpindah tab, minimize, atau membuka aplikasi lain');
+  }
+}
+
+// --- L3: Blur ---
+function onWindowBlur() {
+  if (!sedangUjian || sudahPelanggaran) return;
+  setTimeout(() => {
+    if (!sedangUjian || sudahPelanggaran) return;
+    if (document.visibilityState === 'visible') {
+      tangkapPelanggaran('Berpindah ke aplikasi lain saat ujian berlangsung');
+    }
+  }, 400);
+}
+
+// --- L4: Resize / split screen / floating ---
+// Kunci: bandingkan window.innerWidth dengan screen.width (layar fisik)
+// Fullscreen normal: window.innerWidth === screen.width
+// Split screen 50%:  window.innerWidth ≈ screen.width / 2  → selisih besar
+// Floating window:   window.innerWidth << screen.width      → selisih besar
+function onCekResize() {
+  if (!sedangUjian || sudahPelanggaran) return;
+
+  const rasioPersen = (window.innerWidth / screen.width) * 100;
+
+  // Jika lebar jendela < 85% lebar layar = kemungkinan split/floating
+  if (rasioPersen < 85) {
+    tangkapPelanggaran(
+      `Layar belah / jendela mengambang terdeteksi ` +
+      `(jendela ${window.innerWidth}px = ${Math.round(rasioPersen)}% dari layar ${screen.width}px)`
+    );
+  }
+}
+
+// --- L5: Mouse/touch di luar iframe ---
+let jedaMouse = null;
+function blokirMenu(e) { e.preventDefault(); }
+
+function onMousePortal(e) {
+  if (!sedangUjian || sudahPelanggaran) return;
+  const iframe = document.getElementById('soalIframe');
+  if (!iframe) return;
+  const r = iframe.getBoundingClientRect();
+  const luar = e.clientX < r.left || e.clientX > r.right ||
+               e.clientY < r.top  || e.clientY > r.bottom;
+  if (luar) {
+    if (jedaMouse) return;
+    jedaMouse = setTimeout(() => { jedaMouse = null; }, 1500);
+    tangkapPelanggaran('Kursor terdeteksi di luar area soal');
+  }
+}
+function onTouchPortal(e) {
+  if (!sedangUjian || sudahPelanggaran) return;
+  const iframe = document.getElementById('soalIframe');
+  if (!iframe) return;
+  const t = e.touches[0];
+  const r = iframe.getBoundingClientRect();
+  const luar = t.clientX < r.left || t.clientX > r.right ||
+               t.clientY < r.top  || t.clientY > r.bottom;
+  if (luar) tangkapPelanggaran('Sentuhan di luar area soal terdeteksi');
+}
+
+// --- BLOKIR SHORTCUT BERBAHAYA ---
+const KEY_BLOKIR = [
+  'F5','F11','F12',                        // refresh, fullscreen toggle, devtools
+  'Tab',                                   // Alt+Tab (sebagian)
+  'Escape',                                // keluar fullscreen
+  'PrintScreen',                           // screenshot
+];
+function onKeyBlokir(e) {
+  const blokir = KEY_BLOKIR.includes(e.key) ||
+    (e.ctrlKey && ['w','t','n','r','l','u','s'].includes(e.key.toLowerCase())) || // Ctrl+W/T/N/R/L/U/S
+    (e.altKey  && e.key === 'Tab') ||      // Alt+Tab
+    (e.metaKey && e.key === 'Tab');        // Cmd+Tab (Mac)
+
+  if (blokir) {
+    e.preventDefault();
+    e.stopPropagation();
+    // Esc khusus: sudah ditangani fullscreen handler, tidak perlu double-tangkap
+    if (e.key !== 'Escape' && e.key !== 'F11' && sedangUjian && !sudahPelanggaran) {
+      tangkapPelanggaran(`Shortcut terlarang ditekan: ${e.ctrlKey?'Ctrl+':''}${e.altKey?'Alt+':''}${e.key}`);
+    }
+  }
+}
+
+// ============================================================
+// TANGKAP & PROSES PELANGGARAN
+// Setelah 5x pelanggaran → kembali ke halaman token (tidak logout)
+// ============================================================
+async function tangkapPelanggaran(jenis) {
+  if (!sedangUjian || sudahPelanggaran) return;
+  sudahPelanggaran = true;
+  sedangUjian      = false;
+  nonaktifkanPengawas();
+  if (timerKelonggaran) { clearTimeout(timerKelonggaran); timerKelonggaran = null; }
+
+  jmlPelanggaran++;
+  const siswa    = D.aktif;
+  const sisaIzin = MAX_PELANGGARAN - jmlPelanggaran;
+
+  // Bunyikan alarm
+  bunyikanAlarm();
+
+  // Matikan iframe soal
+  const iframe = document.getElementById('soalIframe');
+  if (iframe) iframe.src = '';
+  document.getElementById('hSoal').style.display = 'none';
+
+  // Pesan di overlay
+  const pesanTambahan = sisaIzin > 0
+    ? `Pelanggaran ke-${jmlPelanggaran} dari ${MAX_PELANGGARAN}. Sisa toleransi: ${sisaIzin}x.`
+    : `Pelanggaran ke-${jmlPelanggaran}. Batas pelanggaran habis — sesi ujian diakhiri!`;
+
+  setText('ovJenis', '⚠️ ' + jenis);
+
+  // Update teks countdown overlay
+  const ovEl = document.getElementById('ovPelanggaran');
+  // Tambahkan info pelanggaran ke-N
+  let pEl = document.getElementById('ovPelanggaranInfo');
+  if (!pEl) {
+    pEl = document.createElement('p');
+    pEl.id = 'ovPelanggaranInfo';
+    pEl.style.cssText = 'color:#ffeb3b;font-size:1rem;font-weight:700;margin-top:4px';
+    ovEl.querySelector('p').after(pEl);
+  }
+  pEl.textContent = pesanTambahan;
+  ovEl.style.display = 'flex';
+
+  // Countdown 10 detik
+  let sisa = 10;
+  setText('ovHitung', sisa);
+  const tim = setInterval(() => {
+    sisa--;
+    setText('ovHitung', sisa);
+    if (sisa <= 0) clearInterval(tim);
+  }, 1000);
+
+  // Catat pelanggaran ke Sheet6
+  if (siswa && siswa.id) {
+    apiFetch({
+      action : 'catatPelanggaran',
+      id     : siswa.id,
+      nama   : siswa.nama,
+      kelas  : siswa.kelas,
+      jenis  : jenis,
+      ke     : jmlPelanggaran
+    });
+  }
+
+  setTimeout(() => {
+    hentikanAlarm();
+    ovEl.style.display = 'none';
+    sudahPelanggaran   = false;
+
+    if (sisaIzin > 0) {
+      // Belum habis batas → kembali ke halaman token (scan QR token lagi)
+      // Siswa tetap login, tidak perlu input ID & password ulang
+      hide('h1'); hide('h2');
+      document.getElementById('hSoal').style.display = 'none';
+      show('h2'); // tampilkan dashboard dulu lalu buka modal token
+      const el = document.getElementById('msgToken');
+      el.className = 'msg';
+      pesan(document.getElementById('msgToken'), 'err',
+        `⚠️ Pelanggaran ke-${jmlPelanggaran}. Scan QR token lagi untuk lanjutkan ujian.`);
+      bukaToken();
+    } else {
+      // Batas pelanggaran habis → kembali ke login penuh
+      D.aktif        = null;
+      jmlPelanggaran = 0;
+      hide('h2');
+      show('h1');
+      document.getElementById('inpID').value = '';
+      document.getElementById('inpPw').value = '';
+      pesan(document.getElementById('msgLogin'), 'err',
+        '🚫 Sesi diakhiri. Pelanggaran melebihi batas. Hubungi pengawas.');
+    }
+  }, 10000);
+}
+
+function bersihkanPengawas() {
+  sedangUjian = false;
+  nonaktifkanPengawas();
+  hentikanAlarm();
+  if (timerKelonggaran) { clearTimeout(timerKelonggaran); timerKelonggaran = null; }
+  const iframe = document.getElementById('soalIframe');
+  if (iframe) iframe.src = '';
+  document.getElementById('hSoal').style.display = 'none';
+}
+
+// ============================================================
+// ALARM — Web Audio API, volume maks, ~12 detik
+// ============================================================
+function bunyikanAlarm() {
+  try {
+    alarmCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const gain = alarmCtx.createGain();
+    gain.gain.value = 1.0;
+    gain.connect(alarmCtx.destination);
+    function nada(f, t, d) {
+      const o = alarmCtx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.value = f;
+      o.connect(gain);
+      o.start(alarmCtx.currentTime + t);
+      o.stop(alarmCtx.currentTime + t + d);
+    }
+    for (let i = 0; i < 24; i++) nada(i%2===0?960:720, i*0.5, 0.45);
+  } catch(e) { console.warn('Audio gagal:', e); }
+}
+
+function hentikanAlarm() {
+  try { if (alarmCtx) { alarmCtx.close(); alarmCtx = null; } } catch(e){}
+}
+
+// ============================================================
+// UBAH PASSWORD
+// ============================================================
+function bukaUbahPw() {
+  ['uID','uLama','uBaru','uKonfirm'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('msgUbah').className='msg';
+  buka('mUbah');
+}
+function ubahPw() {
+  const id=val('uID'),lama=val('uLama'),baru=val('uBaru'),konfirm=val('uKonfirm');
+  const el=document.getElementById('msgUbah'); el.className='msg';
+  if(!id||!lama||!baru||!konfirm){pesan(el,'err','⚠️ Semua kolom wajib diisi.');return}
+  const siswa=D.siswa.find(s=>s.id===id);
+  if(!siswa)             {pesan(el,'err','❌ No. ID tidak ditemukan.');return}
+  if(siswa.password!==lama){pesan(el,'err','❌ Password lama salah.');return}
+  if(baru.length<4)      {pesan(el,'err','⚠️ Password baru min. 4 karakter.');return}
+  if(baru!==konfirm)     {pesan(el,'err','❌ Konfirmasi tidak cocok.');return}
+  siswa.password=baru;
+  pesan(el,'ok','✅ Berhasil diubah! Berlaku di sesi ini. Minta admin update di Spreadsheet.');
+}
+
+// ============================================================
+// HELPER
+// ============================================================
+function getMapel(kelas) {
+  const k = String(kelas).replace(/[^0-9]/g,'').charAt(0);
+  return k==='7'?D.sekolah.mapelKls7:k==='8'?D.sekolah.mapelKls8:D.sekolah.mapelKls9;
+}
+function val(id)      { return document.getElementById(id).value.trim(); }
+function setText(id,t){ const e=document.getElementById(id); if(e) e.textContent=t; }
+function show(id)     { const e=document.getElementById(id); if(!e)return; e.style.display=id==='loading'?'flex':'block'; }
+function hide(id)     { const e=document.getElementById(id); if(e) e.style.display='none'; }
+function buka(id)     { document.getElementById(id).classList.add('show'); }
+function tutup(id)    { document.getElementById(id).classList.remove('show'); }
+function pesan(el,t,s){ el.className='msg '+t; el.textContent=s; }
+function tglPw(id,ico){ const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; ico.textContent=i.type==='password'?'👁':'🙈'; }
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('h1').style.display!=='none') login(); });
+
+// ============================================================
+// QR CODE SCANNER — Html5Qrcode
+// ============================================================
+let qrScanner = null;
+
+function bukaQR() {
+  buka('modalQR');
+  setText('qrStatus', 'Memulai kamera...');
+  setTimeout(() => {
+    try {
+      qrScanner = new Html5Qrcode('qr-reader');
+      qrScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const id = decodedText.trim();
+          document.getElementById('inpID').value = id;
+          setText('qrStatus', '✅ ID terbaca: ' + id);
+          cekBiometrikTersimpan(id);
+          setTimeout(() => tutupQR(), 800);
+        },
+        () => {} // abaikan error frame kosong
+      ).then(() => {
+        setText('qrStatus', '🔍 Arahkan ke QR Code siswa...');
+      }).catch(err => {
+        setText('qrStatus', '❌ Kamera tidak bisa diakses');
+        console.warn(err);
+      });
+    } catch(e) {
+      setText('qrStatus', '❌ ' + e.message);
+    }
+  }, 300);
+}
+
+function tutupQR() {
+  if (qrScanner) {
+    qrScanner.stop().catch(() => {});
+    qrScanner.clear();
+    qrScanner = null;
+  }
+  tutup('modalQR');
+}
+
+// ============================================================
+// BIOMETRIK — WebAuthn (sidik jari / face ID)
+// Data TIDAK dikirim ke server — tersimpan lokal di HP
+// ============================================================
+function dukungBiometrik() {
+  return window.PublicKeyCredential !== undefined &&
+         navigator.credentials     !== undefined;
+}
+
+function cekBiometrikTersimpan(idSiswa) {
+  if (!dukungBiometrik()) return;
+  const ada = localStorage.getItem('bio_' + idSiswa);
+  document.getElementById('bioWrap').style.display = ada ? 'flex' : 'none';
+}
+
+// Update ikon sidik jari saat ID diketik manual
+document.getElementById('inpID').addEventListener('input', function() {
+  cekBiometrikTersimpan(this.value.trim());
+});
+
+async function loginBiometrik() {
+  const id = val('inpID');
+  const el = document.getElementById('msgLogin');
+  el.className = 'msg';
+  if (!id) { pesan(el,'err','⚠️ Isi No. ID dulu.'); return; }
+
+  const raw = localStorage.getItem('bio_' + id);
+  if (!raw) { pesan(el,'err','⚠️ Sidik jari belum didaftarkan di HP ini.'); return; }
+
+  try {
+    const { credentialId } = JSON.parse(raw);
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge       : crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{
+          id  : Uint8Array.from(atob(credentialId), c => c.charCodeAt(0)),
+          type: 'public-key',
+        }],
+        userVerification: 'required',
+        timeout         : 30000,
+      }
+    });
+
+    if (assertion) {
+      // Biometrik sukses — ambil password dari cache lokal lalu login
+      const siswa = D.siswa.find(s => s.id === id);
+      if (!siswa) { pesan(el,'err','❌ ID tidak ditemukan.'); return; }
+
+      const pwCache = sessionStorage.getItem('pwc_' + id);
+      if (!pwCache) { pesan(el,'err','⚠️ Sesi habis. Login manual sekali lagi lalu coba lagi.'); return; }
+
+      setText('loadTeks','Memverifikasi...');
+      show('loading');
+      const r = await apiFetch({ action:'login', id, pw: atob(pwCache) });
+      hide('loading');
+
+      if (r && r.status === 'ok') {
+        siswa.status = 'AKTIF';
+        D.aktif = siswa;
+        tampilDashboard(siswa);
+        setTimeout(() => tawarBiometrik(siswa), 1500);
+      } else {
+        pesan(el,'err','❌ Login gagal. Coba dengan password.');
+      }
+    }
+  } catch(e) {
+    if (e.name === 'NotAllowedError') {
+      pesan(el,'err','❌ Sidik jari tidak cocok atau dibatalkan.');
+    } else {
+      pesan(el,'err','⚠️ Biometrik tidak tersedia. Gunakan password.');
+    }
+  }
+}
+
+async function tawarBiometrik(siswa) {
+  if (!dukungBiometrik()) return;
+  if (localStorage.getItem('bio_' + siswa.id)) return;
+
+  const mau = confirm(
+    '👆 Daftarkan Sidik Jari?\n\n' +
+    'Berikutnya login cukup tap sidik jari — tanpa ketik password.\n\n' +
+    '⚠️ Hanya berlaku di HP ini. Sidik jari tidak dikirim ke server.'
+  );
+  if (!mau) return;
+
+  try {
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: {
+          name: 'Portal Ujian SMPN1',
+          id  : location.hostname,
+        },
+        user: {
+          id         : new TextEncoder().encode(siswa.id),
+          name       : siswa.id,
+          displayName: siswa.nama,
+        },
+        pubKeyCredParams   : [{ alg: -7, type: 'public-key' }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification       : 'required',
+        },
+        timeout: 30000,
+      }
+    });
+
+    if (cred) {
+      const credId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+      localStorage.setItem('bio_' + siswa.id, JSON.stringify({
+        credentialId: credId,
+        nama        : siswa.nama,
+        terdaftar   : new Date().toISOString(),
+      }));
+      alert('✅ Sidik jari berhasil didaftarkan!\nLogin berikutnya cukup tap 👆');
+    }
+  } catch(e) {
+    if (e.name !== 'NotAllowedError') console.warn('Daftar biometrik:', e.message);
+  }
+}
+
+
+init();
+
+// PWA dihapus — app akan dibungkus ke APK Android
+
+// ============================================================
+// KEAMANAN TAMBAHAN ANDROID / MOBILE
+// ============================================================
+
+// 1. Blokir zoom dengan pinch (double tap zoom)
+document.addEventListener('touchstart', function(e) {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+let lastTap = 0;
+document.addEventListener('touchend', function(e) {
+  const now = Date.now();
+  if (now - lastTap < 300) e.preventDefault();
+  lastTap = now;
+}, { passive: false });
+
+// 2. Blokir drag & drop
+document.addEventListener('dragstart', e => e.preventDefault());
+document.addEventListener('drop',      e => e.preventDefault());
+
+// 3. Deteksi developer tools dibuka (PC)
+// Jika console terbuka, window size berubah signifikan
+let devtoolsTimer = null;
+function cekDevTools() {
+  const threshold = 160;
+  const terbuka =
+    window.outerWidth  - window.innerWidth  > threshold ||
+    window.outerHeight - window.innerHeight > threshold;
+  if (terbuka && sedangUjian && !sudahPelanggaran) {
+    tangkapPelanggaran('Developer tools / inspect element terdeteksi terbuka');
+  }
+}
+setInterval(cekDevTools, 1000);
+
+// 4. Blokir Print Screen via clipboard (sebagian browser)
+document.addEventListener('keyup', e => {
+  if (e.key === 'PrintScreen') {
+    navigator.clipboard?.writeText('').catch(()=>{});
+    if (sedangUjian) tangkapPelanggaran('Tombol Print Screen ditekan');
+  }
+});
+
+// 5. Deteksi screen capture API (jika didukung browser)
+if (navigator.mediaDevices) {
+  const asliGetDisplayMedia = navigator.mediaDevices.getDisplayMedia;
+  navigator.mediaDevices.getDisplayMedia = function(...args) {
+    if (sedangUjian) {
+      tangkapPelanggaran('Percobaan screen recording / screen share terdeteksi');
+      return Promise.reject(new Error('Diblokir oleh portal ujian'));
+    }
+    return asliGetDisplayMedia.apply(this, args);
+  };
+}
+
+// Tombol install PWA dihapus
+
+// 7. Cegah back button saat ujian berlangsung (Android)
+history.pushState(null, '', location.href);
+window.addEventListener('popstate', () => {
+  if (sedangUjian) {
+    history.pushState(null, '', location.href);
+    tangkapPelanggaran('Tombol Back ditekan saat ujian berlangsung');
+  } else {
+    history.pushState(null, '', location.href);
+  }
+});
+</script>
+</body>
+</html>

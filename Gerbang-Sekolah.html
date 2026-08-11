@@ -312,7 +312,9 @@ function logoutPortal(){
 // QR SCANNER
 // ============================================================
 let qrScanner=null;
+let qrSudahDapat=false;
 function bukaQR(){
+  qrSudahDapat=false;
   document.getElementById('modalQR').classList.add('show');
   document.getElementById('qrStatus').textContent='Memulai kamera...';
   setTimeout(()=>{
@@ -322,8 +324,12 @@ function bukaQR(){
         { facingMode:'environment' },
         { fps:10, qrbox:{width:220,height:220}, aspectRatio:1.0 },
         (decodedText)=>{
-          document.getElementById('inpID').value = decodedText.trim();
-          document.getElementById('qrStatus').textContent = '✅ Terbaca: '+decodedText.trim();
+          if(qrSudahDapat) return; // abaikan pembacaan tambahan setelah hasil pertama
+          qrSudahDapat=true;
+          const teks = decodedText.trim();
+          document.getElementById('inpID').value = teks;
+          document.getElementById('qrStatus').textContent = '✅ Terbaca: '+teks;
+          if(qrScanner){ try{ qrScanner.pause(true); }catch(e){} } // hentikan pembacaan lebih lanjut segera
           setTimeout(tutupQR, 700);
         },
         ()=>{}
@@ -333,7 +339,9 @@ function bukaQR(){
   },300);
 }
 function tutupQR(){
-  if(qrScanner){ qrScanner.stop().catch(()=>{}); qrScanner.clear(); qrScanner=null; }
+  if(qrScanner){
+    qrScanner.stop().catch(()=>{}).finally(()=>{ try{ qrScanner.clear(); }catch(e){} qrScanner=null; });
+  }
   document.getElementById('modalQR').classList.remove('show');
 }
 

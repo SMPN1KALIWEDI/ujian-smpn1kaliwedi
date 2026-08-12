@@ -198,12 +198,35 @@
     white-space:nowrap;
   }
 
+  .qr-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    justify-content:center;
+    margin-bottom:20px;
+  }
+  .qr-grid.single{margin-bottom:20px;}
+  .qr-col{
+    flex:1 1 260px;
+    max-width:280px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .qr-col-label{
+    font-size:11px;
+    font-weight:700;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    margin-bottom:8px;
+  }
   .qr-stage{
     position:relative;
     width:100%;
     aspect-ratio:1/1;
     max-width:280px;
-    margin:0 auto 20px;
+    margin:0 auto;
     background:#fff;
     border-radius:var(--radius-md);
     border:2px solid var(--ring-track);
@@ -358,13 +381,29 @@
       </div>
     </div>
 
-    <div class="qr-stage" id="qrStage">
-      <div class="live-dot"><span class="pulse"></span><span>LIVE</span></div>
-      <div class="qr-loading" id="qrLoading">
-        <div class="spinner"></div>
-        <span>Memuat token…</span>
+    <div class="qr-grid single" id="qrGrid">
+      <div class="qr-col" id="qrCol1">
+        <div class="qr-col-label hidden" id="qrLabel1">Token 1</div>
+        <div class="qr-stage" id="qrStage">
+          <div class="live-dot"><span class="pulse"></span><span>LIVE</span></div>
+          <div class="qr-loading" id="qrLoading">
+            <div class="spinner"></div>
+            <span>Memuat token…</span>
+          </div>
+          <div id="qrCanvasWrap" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></div>
+        </div>
       </div>
-      <div id="qrCanvasWrap" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></div>
+      <div class="qr-col hidden" id="qrCol2">
+        <div class="qr-col-label" id="qrLabel2">Token 2</div>
+        <div class="qr-stage" id="qrStage2">
+          <div class="live-dot"><span class="pulse"></span><span>LIVE</span></div>
+          <div class="qr-loading" id="qrLoading2">
+            <div class="spinner"></div>
+            <span>Memuat token…</span>
+          </div>
+          <div id="qrCanvasWrap2" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></div>
+        </div>
+      </div>
     </div>
 
     <div class="refresh-row">
@@ -439,6 +478,8 @@ let refreshTimer = null;
 let countdownTimer = null;
 let secondsLeft = CONFIG.REFRESH_INTERVAL_MS / 1000;
 let qrObj = null;
+let qrObj2 = null;
+let modeGanda = false;
 
 const els = {
   inputRuang: document.getElementById('inputRuang'),
@@ -450,9 +491,17 @@ const els = {
   screenToken: document.getElementById('screenToken'),
   metaRuang: document.getElementById('metaRuang'),
   metaPengawas: document.getElementById('metaPengawas'),
+  qrGrid: document.getElementById('qrGrid'),
+  qrCol1: document.getElementById('qrCol1'),
+  qrCol2: document.getElementById('qrCol2'),
+  qrLabel1: document.getElementById('qrLabel1'),
+  qrLabel2: document.getElementById('qrLabel2'),
   qrStage: document.getElementById('qrStage'),
   qrLoading: document.getElementById('qrLoading'),
   qrCanvasWrap: document.getElementById('qrCanvasWrap'),
+  qrStage2: document.getElementById('qrStage2'),
+  qrLoading2: document.getElementById('qrLoading2'),
+  qrCanvasWrap2: document.getElementById('qrCanvasWrap2'),
   countdownText: document.getElementById('countdownText'),
   btnRefresh: document.getElementById('btnRefresh'),
   updatedAt: document.getElementById('updatedAt'),
@@ -499,6 +548,9 @@ els.btnBukaToken.addEventListener('click', async () => {
     els.metaRuang.title = ruang;
     els.metaPengawas.textContent = pengawas;
     els.metaPengawas.title = pengawas;
+
+    modeGanda = (ruang === '99') || (pengawas.trim().toLowerCase() === 'panitia');
+
     openTokenScreen();
   } catch (err) {
     els.entryStatus.textContent = 'Gagal menyimpan data. Periksa koneksi lalu coba lagi.';
@@ -518,12 +570,12 @@ async function ambilTokenValue(){
   const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=token', { method: 'GET' });
   const json = await res.json();
   if (json.status !== 'ok' || !json.value) throw new Error('Token tidak tersedia');
-  return json.value;
+  return { value: json.value, value2: json.value2 || null };
 }
 
-function renderQR(value){
-  els.qrCanvasWrap.innerHTML = '';
-  qrObj = new QRCode(els.qrCanvasWrap, {
+function renderQR(wrapEl, value){
+  wrapEl.innerHTML = '';
+  return new QRCode(wrapEl, {
     text: value,
     width: 260,
     height: 260,
@@ -537,24 +589,55 @@ function formatJam(d){
   return d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 }
 
+function applyGridMode(){
+  if (modeGanda){
+    els.qrGrid.classList.remove('single');
+    els.qrCol2.classList.remove('hidden');
+    els.qrLabel1.classList.remove('hidden');
+  } else {
+    els.qrGrid.classList.add('single');
+    els.qrCol2.classList.add('hidden');
+    els.qrLabel1.classList.add('hidden');
+  }
+}
+
 async function loadToken(showSpinnerOverlay){
+  applyGridMode();
+
   if (showSpinnerOverlay){
     els.qrLoading.classList.remove('hidden');
     els.qrCanvasWrap.style.opacity = '0.25';
+    if (modeGanda){
+      els.qrLoading2.classList.remove('hidden');
+      els.qrCanvasWrap2.style.opacity = '0.25';
+    }
   }
   els.btnRefresh.classList.add('spinning');
 
   try {
-    const value = await ambilTokenValue();
-    renderQR(value);
+    const { value, value2 } = await ambilTokenValue();
+
+    qrObj = renderQR(els.qrCanvasWrap, value);
     els.qrLoading.classList.add('hidden');
     els.qrCanvasWrap.style.opacity = '1';
+
+    if (modeGanda){
+      qrObj2 = renderQR(els.qrCanvasWrap2, value2);
+      els.qrLoading2.classList.add('hidden');
+      els.qrCanvasWrap2.style.opacity = '1';
+    }
+
     els.updatedAt.textContent = 'Diperbarui pukul ' + formatJam(new Date());
     resetCountdown();
   } catch (err) {
     els.qrCanvasWrap.innerHTML = '<div class="qr-error">Token belum bisa dimuat.<br>Coba refresh kembali.</div>';
     els.qrLoading.classList.add('hidden');
     els.qrCanvasWrap.style.opacity = '1';
+    if (modeGanda){
+      els.qrCanvasWrap2.innerHTML = '<div class="qr-error">Token belum bisa dimuat.<br>Coba refresh kembali.</div>';
+      els.qrLoading2.classList.add('hidden');
+      els.qrCanvasWrap2.style.opacity = '1';
+    }
     els.updatedAt.textContent = 'Gagal memuat pada ' + formatJam(new Date());
   } finally {
     els.btnRefresh.classList.remove('spinning');
@@ -603,6 +686,8 @@ function openTokenScreen(){
   els.screenToken.classList.remove('hidden');
   els.qrCanvasWrap.innerHTML = '';
   els.qrLoading.classList.remove('hidden');
+  els.qrCanvasWrap2.innerHTML = '';
+  els.qrLoading2.classList.remove('hidden');
   loadToken(true);
   startTimers();
 }

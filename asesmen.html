@@ -943,6 +943,8 @@ function mulaiScanToken() {
             apiFetch({ action:'catatWaktuToken', id: siswa.id, waktu: new Date().toISOString() });
           }
 
+          // Setelah pelanggaran, soal SELALU dimuat ulang dari awal
+          // (jawaban sebelumnya sengaja dihapus — siswa mulai dari 0).
           mintaFullscreen();
           mulaiUjian(link);
         },
@@ -1311,7 +1313,8 @@ async function tangkapPelanggaran(jenis) {
   // Bunyikan alarm
   bunyikanAlarm();
 
-  // Matikan iframe soal
+  // Kosongkan iframe soal — jawaban dihapus, siswa harus mulai ulang
+  // dari awal setelah pelanggaran.
   const iframe = document.getElementById('soalIframe');
   if (iframe) iframe.src = '';
   document.getElementById('hSoal').style.display = 'none';
@@ -1375,6 +1378,8 @@ async function tangkapPelanggaran(jenis) {
       bukaToken();
     } else {
       // Batas pelanggaran habis → sesi diakhiri, kembali ke Gerbang Sekolah
+      const iframeAkhir = document.getElementById('soalIframe');
+      if (iframeAkhir) iframeAkhir.src = '';
       D.aktif        = null;
       jmlPelanggaran = 0;
       sessionStorage.removeItem('portalAuth');

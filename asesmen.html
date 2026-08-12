@@ -177,39 +177,20 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
       <div class="s-badge"  id="s1Judul">Asesmen Sumatif Akhir Tahun</div>
       <div class="s-tahun"  id="s1Tahun">Tahun Pelajaran 2026/2027</div>
     </div>
-    <div class="body">
-      <div class="f-title">🔐 Masuk ke <span>Portal Ujian</span></div>
+    <div class="body" style="text-align:center">
       <div id="msgLogin" class="msg"></div>
-      <div class="fg">
-        <label>Nomor ID Siswa</label>
-        <div class="iw">
-          <span class="ic">🪪</span>
-          <input type="text" id="inpID" placeholder="Masukkan No. ID atau scan QR" autocomplete="off">
-          <button class="btn-scan" onclick="bukaQR()" title="Scan QR Code">📷</button>
-        </div>
-      </div>
-      <div class="fg">
-        <label>Password</label>
-        <div class="iw">
-          <span class="ic">🔑</span>
-          <input type="password" id="inpPw" placeholder="Masukkan password Anda">
-          <span class="eye" onclick="tglPw('inpPw',this)">👁</span>
-        </div>
-      </div>
-      <!-- Info biometrik -->
+      <input type="text" id="inpID" style="display:none">
+      <input type="password" id="inpPw" style="display:none">
       <div class="bio-wrap" id="bioWrap" style="display:none">
-        <button class="btn-bio" id="btnBio" onclick="loginBiometrik()" title="Login dengan sidik jari">
-          👆
-        </button>
-        <div class="bio-info">
-          <b>Sidik Jari Tersimpan</b><br>
-          Tap untuk login tanpa password
-        </div>
+        <button class="btn-bio" id="btnBio" onclick="loginBiometrik()" title="Login dengan sidik jari">👆</button>
+        <div class="bio-info"><b>Sidik Jari Tersimpan</b><br>Tap untuk login tanpa password</div>
       </div>
-
-      <button class="btn-login" onclick="login()">Masuk →</button>
-      <a class="link-ubah" onclick="bukaUbahPw()">🔄 Ubah Password</a>
-      <a class="link-ubah" href="Gerbang-Sekolah.html" style="display:block;margin-top:4px">⬅️ Kembali ke Gerbang Sekolah</a>
+      <div style="font-size:2.4rem;margin:6px 0 10px">🔒</div>
+      <p style="color:var(--abu2,#607080);font-size:.92rem;line-height:1.6;margin-bottom:18px">
+        Login untuk aplikasi ini sekarang lewat <b>Gerbang Sekolah</b>.<br>
+        Anda akan diarahkan otomatis...
+      </p>
+      <a class="btn-login" style="display:block;text-decoration:none;text-align:center" href="Gerbang-Sekolah.html">⬅️ Ke Gerbang Sekolah</a>
     </div>
   </div>
 </div>
@@ -238,7 +219,7 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
         <tbody id="tbNilai"><tr><td colspan="4" style="text-align:center;padding:14px;color:#b0bec5">⏳ Memuat...</td></tr></tbody>
       </table>
       <div class="btn-row2">
-        <button class="btn-kel" onclick="logout()">⬅ Keluar</button>
+        <button class="btn-kel" onclick="logout()">⬅ Kembali ke Gerbang Sekolah</button>
         <button class="btn-ujian" onclick="bukaToken()">
           📝 Ikuti Ujian
           <small id="p2Mapel"></small>
@@ -712,14 +693,16 @@ async function init() {
 function cobaAutoLoginDariPortal() {
   try {
     const raw = sessionStorage.getItem('portalAuth');
-    if (!raw) return;
-    const sesi = JSON.parse(raw);
-    if (!sesi || !sesi.id || !sesi.pw) return;
-    if (Date.now() - sesi.ts > 30 * 60 * 1000) return; // sesi portal kedaluwarsa
-    document.getElementById('inpID').value = sesi.id;
-    document.getElementById('inpPw').value = sesi.pw;
-    login();
-  } catch (e) { /* abaikan, tampilkan layar login biasa */ }
+    const sesi = raw ? JSON.parse(raw) : null;
+    if (sesi && sesi.id && sesi.pw && (Date.now() - sesi.ts <= 30 * 60 * 1000)) {
+      document.getElementById('inpID').value = sesi.id;
+      document.getElementById('inpPw').value = sesi.pw;
+      login();
+      return;
+    }
+  } catch (e) { /* lanjut ke redirect di bawah */ }
+  // Tidak ada sesi Gerbang Sekolah yang valid → arahkan ke sana
+  setTimeout(() => { window.location.href = 'Gerbang-Sekolah.html'; }, 1200);
 }
 
 function isiHeader() {
@@ -1032,12 +1015,7 @@ function logout() {
   D.aktif        = null;
   jmlPelanggaran = 0;
   waktuScanToken = 0;
-  hide('h2');
-  document.getElementById('hSoal').style.display = 'none';
-  show('h1');
-  document.getElementById('inpID').value = '';
-  document.getElementById('inpPw').value = '';
-  document.getElementById('msgLogin').className = 'msg';
+  window.location.href = 'Gerbang-Sekolah.html';
 }
 
 // ============================================================
@@ -1504,15 +1482,15 @@ async function tangkapPelanggaran(jenis) {
         `⚠️ Pelanggaran ke-${jmlPelanggaran}. Scan QR token lagi untuk lanjutkan ujian.`);
       bukaToken();
     } else {
-      // Batas pelanggaran habis → kembali ke login penuh
+      // Batas pelanggaran habis → sesi diakhiri, kembali ke Gerbang Sekolah
       D.aktif        = null;
       jmlPelanggaran = 0;
+      sessionStorage.removeItem('portalAuth');
       hide('h2');
       show('h1');
-      document.getElementById('inpID').value = '';
-      document.getElementById('inpPw').value = '';
       pesan(document.getElementById('msgLogin'), 'err',
         '🚫 Sesi diakhiri. Pelanggaran melebihi batas. Hubungi pengawas.');
+      setTimeout(() => { window.location.href = 'Gerbang-Sekolah.html'; }, 2500);
     }
   }, 10000);
 }

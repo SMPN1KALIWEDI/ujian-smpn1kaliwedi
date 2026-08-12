@@ -471,45 +471,20 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
         DIRGAHAYU REPUBLIK INDONESIA KE-<span id="diNomor"></span> — MERDEKA
       </div>
     </div>
-    <div class="body">
+    <div class="body" style="text-align:center">
       <div id="msgLogin" class="msg"></div>
-      <div class="fg">
-        <label>NISN Siswa</label>
-        <div class="iw">
-          <span class="ic">🪪</span>
-          <input type="text" id="inpNISN" placeholder="Ketik NISN atau scan QR" autocomplete="off" inputmode="numeric">
-          <button class="qr-btn" onclick="bukaQR()" title="Scan QR">📷</button>
-        </div>
-      </div>
-      <div class="fg">
-        <label>Password</label>
-        <div class="iw">
-          <span class="ic">🔑</span>
-          <input type="password" id="inpPw" placeholder="Masukkan password">
-          <span class="eye" onclick="tglPw('inpPw',this)">👁</span>
-        </div>
-      </div>
-      <button class="btn-login" onclick="login()">Lihat Absensi →</button>
-      <a class="link-ubah" onclick="bukaUbahPw()">🔄 Ubah Password</a>
-      <a class="link-ubah" href="Gerbang-Sekolah.html" style="display:block;margin-top:4px">⬅️ Kembali ke Gerbang Sekolah</a>
-
-      <!-- Catatan lupa password -->
-      <div style="
-        margin-top:18px;
-        background:#e3f2fd;
-        border-left:4px solid #1565c0;
-        border-radius:10px;
-        padding:11px 14px;
-        font-size:.80rem;
-        color:#1565c0;
-        line-height:1.6;
-      ">
-        <b>🔑 Lupa Password?</b><br>
-        Hubungi <b>guru petugas absen</b> di sekolah dengan membawa <b>Kartu QR</b> Anda.
-      </div>
+      <input type="text" id="inpNISN" style="display:none">
+      <input type="password" id="inpPw" style="display:none">
+      <div style="font-size:2.4rem;margin:6px 0 10px">🔒</div>
+      <p style="color:var(--abu2,#607080);font-size:.92rem;line-height:1.6;margin-bottom:18px">
+        Login untuk aplikasi ini sekarang lewat <b>Gerbang Sekolah</b>.<br>
+        Anda akan diarahkan otomatis...
+      </p>
+      <a class="btn-login" style="display:block;text-decoration:none;text-align:center" href="Gerbang-Sekolah.html">⬅️ Ke Gerbang Sekolah</a>
     </div>
   </div>
 </div>
+
 
 <!-- ===== ABSENSI ===== -->
 <div id="hAbsen">
@@ -617,7 +592,7 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
 
     <div style="padding:0 18px 18px">
       <button class="btn-kartu" onclick="bukaHalamanKartu()">🪪 Lihat Kartu Absen Saya</button>
-      <button class="btn-keluar" style="margin-top:10px" onclick="logout()">⬅ Keluar</button>
+      <button class="btn-keluar" style="margin-top:10px" onclick="kembaliKeGerbang()">⬅ Kembali ke Gerbang Sekolah</button>
     </div>
   </div>
 </div>
@@ -919,14 +894,16 @@ async function init() {
 function cobaAutoLoginDariPortal() {
   try {
     const raw = sessionStorage.getItem('portalAuth');
-    if (!raw) return;
-    const sesi = JSON.parse(raw);
-    if (!sesi || !sesi.id || !sesi.pw) return;
-    if (Date.now() - sesi.ts > 30 * 60 * 1000) return; // sesi portal kedaluwarsa
-    document.getElementById('inpNISN').value = sesi.id;
-    document.getElementById('inpPw').value   = sesi.pw;
-    login();
-  } catch (e) { /* abaikan, tampilkan layar login biasa */ }
+    const sesi = raw ? JSON.parse(raw) : null;
+    if (sesi && sesi.id && sesi.pw && (Date.now() - sesi.ts <= 30 * 60 * 1000)) {
+      document.getElementById('inpNISN').value = sesi.id;
+      document.getElementById('inpPw').value   = sesi.pw;
+      login();
+      return;
+    }
+  } catch (e) { /* lanjut ke redirect di bawah */ }
+  // Tidak ada sesi Gerbang Sekolah yang valid → arahkan ke sana
+  setTimeout(() => { window.location.href = 'Gerbang-Sekolah.html'; }, 1200);
 }
 
 // ============================================================
@@ -1506,6 +1483,11 @@ async function muatAbsen() {
 
 function filterTampil() { if (D.aktif) muatAbsen(); }
 
+
+function kembaliKeGerbang() {
+  D.aktif = null; D.absenAll = [];
+  window.location.href = 'Gerbang-Sekolah.html';
+}
 
 function logout() {
   D.aktif = null; D.absenAll = [];

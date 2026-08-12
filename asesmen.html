@@ -820,8 +820,9 @@ function bukaTokenSusulan(idx) {
   qrSusulanSudahScan = false;
   document.getElementById('btnUlangSusulan').style.display = 'none';
   buka('mTokenSusulan');
-  // Langsung nyalakan kamera — tanpa jeda, tanpa kotak input token.
-  mulaiScanSusulan();
+  // Beri jeda singkat supaya modal selesai tampil dulu sebelum kamera
+  // dinyalakan — kalau langsung, video kamera kadang gagal muncul.
+  requestAnimationFrame(() => setTimeout(mulaiScanSusulan, 120));
 }
 
 function mulaiScanSusulan() {
@@ -873,12 +874,13 @@ function mulaiScanSusulan() {
 }
 
 function tutupSusulanQR() {
-  if (qrSusulanScanner) {
-    qrSusulanScanner.stop().catch(() => {});
-    qrSusulanScanner.clear();
-    qrSusulanScanner = null;
-  }
+  // Tutup modal DULUAN — jangan sampai error kamera membuat modal macet
   tutup('mTokenSusulan');
+  const sc = qrSusulanScanner;
+  qrSusulanScanner = null;
+  if (sc) {
+    sc.stop().catch(() => {}).finally(() => { try { sc.clear(); } catch(e) {} });
+  }
 }
 
 function logout() {
@@ -900,8 +902,9 @@ function bukaToken() {
   qrTokenSudahScan = false;
   document.getElementById('btnUlangToken').style.display = 'none';
   buka('mToken');
-  // Langsung nyalakan kamera — tanpa jeda, tanpa kotak input token.
-  mulaiScanToken();
+  // Beri jeda singkat supaya modal selesai tampil dulu sebelum kamera
+  // dinyalakan — kalau langsung, video kamera kadang gagal muncul.
+  requestAnimationFrame(() => setTimeout(mulaiScanToken, 120));
 }
 
 function mulaiScanToken() {
@@ -965,12 +968,13 @@ function mulaiScanToken() {
 }
 
 function tutupTokenQR() {
-  if (qrTokenScanner) {
-    qrTokenScanner.stop().catch(() => {});
-    qrTokenScanner.clear();
-    qrTokenScanner = null;
-  }
+  // Tutup modal DULUAN — jangan sampai error kamera membuat modal macet
   tutup('mToken');
+  const sc = qrTokenScanner;
+  qrTokenScanner = null;
+  if (sc) {
+    sc.stop().catch(() => {}).finally(() => { try { sc.clear(); } catch(e) {} });
+  }
 }
 
 // ============================================================

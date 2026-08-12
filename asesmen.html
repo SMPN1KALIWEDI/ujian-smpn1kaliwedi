@@ -451,6 +451,36 @@ function csvUrl(nama) {
   return `${GITHUB_RAW}/${nama}.csv?t=${Math.floor(Date.now()/60000)}`;
 }
 
+// ============================================================
+// WAKTU JEDA PENGAMANAN — diambil langsung dari Google Spreadsheet
+// Sheet1!B18 (dalam DETIK), bukan nilai tetap di kode.
+// ============================================================
+const SPREADSHEET_ID_KONFIG = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
+
+async function ambilToleransiDariSheet() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID_KONFIG}/gviz/tq?tqx=out:json&sheet=Sheet1&range=B18&t=${Date.now()}`;
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 10000);
+    const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+    clearTimeout(tid);
+    const txt  = await res.text();
+    const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+    if (s < 0) throw new Error('Format tidak dikenal');
+    const json  = JSON.parse(txt.substring(s, e + 1));
+    const cell  = json.table && json.table.rows && json.table.rows[0] && json.table.rows[0].c && json.table.rows[0].c[0];
+    const detik = cell ? Number(cell.v) : NaN;
+    if (!isNaN(detik) && detik > 0) {
+      TOLERANSI_MS = detik * 1000;
+      console.log('✅ Jeda pengamanan dari Sheet1!B18:', detik, 'detik');
+    } else {
+      console.warn('⚠️ Sheet1!B18 kosong/tidak valid — pakai default', TOLERANSI_MS/1000, 'detik');
+    }
+  } catch(err) {
+    console.warn('⚠️ Gagal ambil Sheet1!B18 — pakai default', TOLERANSI_MS/1000, 'detik:', err.message);
+  }
+}
+
 // Baca file CSV dari URL
 async function bacaCSV(url) {
   try {
@@ -536,7 +566,7 @@ let alarmCtx         = null;   // AudioContext untuk alarm
 const MAX_PELANGGARAN  = 5;
 let   jmlPelanggaran   = 0;    // counter pelanggaran per sesi token
 let   waktuScanToken   = 0;    // ms saat token pertama kali di-scan (untuk tulis Sheet2)
-const TOLERANSI_MS     = 2 * 60 * 1000; // 2 menit kelonggaran setelah scan token
+let TOLERANSI_MS       = 2 * 60 * 1000; // default 2 menit — akan ditimpa oleh nilai dari Spreadsheet (Sheet1!B18, dalam detik)
 
 // QR Scanner instance
 let qrTokenScanner   = null;
@@ -592,10 +622,12 @@ async function init() {
   setText('loadTeks', 'Memuat data...');
   setText('loadSub',  'Mengambil dari GitHub...');
 
-  // Kedua CSV dibaca BERSAMAAN — 1000 user serentak tidak masalah
+  // Kedua CSV dibaca BERSAMAAN — 1000 user serentak tidak masalah.
+  // Nilai jeda pengamanan (Sheet1!B18) juga diambil bersamaan.
   const [rowsSekolah, rowsSiswa] = await Promise.all([
     bacaCSV(csvUrl('sekolah')),
     bacaCSV(csvUrl('siswa')),
+    ambilToleransiDariSheet(),
   ]);
 
   if (rowsSekolah) {

@@ -96,9 +96,20 @@
     text-transform:uppercase;
     letter-spacing:0.4px;
   }
-  .field input{
+  .select-wrap{position:relative;}
+  .select-wrap::after{
+    content:'';
+    position:absolute;
+    right:16px;top:50%;
+    width:10px;height:10px;
+    border-right:2.5px solid var(--ink-soft);
+    border-bottom:2.5px solid var(--ink-soft);
+    transform:translateY(-70%) rotate(45deg);
+    pointer-events:none;
+  }
+  .field select{
     width:100%;
-    padding:16px 16px;
+    padding:16px 40px 16px 16px;
     font-size:16px;
     font-family:'Inter',sans-serif;
     font-weight:500;
@@ -107,13 +118,19 @@
     background:#FAFBFD;
     color:var(--ink);
     outline:none;
+    appearance:none;
+    -webkit-appearance:none;
+    cursor:pointer;
     transition:border-color .15s ease, background .15s ease;
   }
-  .field input:focus{
+  .field select:focus{
     border-color:var(--teal-500);
     background:#fff;
   }
-  .field input::placeholder{color:#A7AEC0;}
+  .field select:disabled{
+    color:#A7AEC0;
+    cursor:not-allowed;
+  }
 
   .btn{
     width:100%;
@@ -356,11 +373,19 @@
   <div id="screenEntry" class="card">
     <div class="field">
       <label for="inputRuang">Ruang Asesmen</label>
-      <input id="inputRuang" type="text" placeholder="Contoh: Ruang 7A" autocomplete="off">
+      <div class="select-wrap">
+        <select id="inputRuang">
+          <option value="">Pilih ruang…</option>
+        </select>
+      </div>
     </div>
     <div class="field">
       <label for="inputPengawas">Nama Pengawas</label>
-      <input id="inputPengawas" type="text" placeholder="Nama lengkap pengawas" autocomplete="off">
+      <div class="select-wrap">
+        <select id="inputPengawas" disabled>
+          <option value="">Memuat daftar guru…</option>
+        </select>
+      </div>
     </div>
     <button id="btnBukaToken" class="btn btn-primary" disabled>
       <span id="btnBukaTokenLabel">Buka Token</span>
@@ -509,14 +534,61 @@ const els = {
 };
 
 /* =========================================================
-   VALIDASI FORM
+   ISI PILIHAN RUANG (Ruang 01 - Ruang 30, + Ruang 99 khusus)
 ========================================================= */
+function isiPilihanRuang(){
+  const frag = document.createDocumentFragment();
+  for (let i = 1; i <= 30; i++){
+    const kode = 'Ruang ' + String(i).padStart(2, '0');
+    const opt = document.createElement('option');
+    opt.value = kode;
+    opt.textContent = kode;
+    frag.appendChild(opt);
+  }
+  const optPanitia = document.createElement('option');
+  optPanitia.value = 'Ruang 99';
+  optPanitia.textContent = 'Ruang 99 (Panitia)';
+  frag.appendChild(optPanitia);
+  els.inputRuang.appendChild(frag);
+}
+isiPilihanRuang();
+
+/* =========================================================
+   MUAT DAFTAR NAMA GURU (Sheet2!A:A) via Apps Script
+========================================================= */
+async function muatDaftarGuru(){
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=guru', { method: 'GET' });
+    const json = await res.json();
+    if (json.status !== 'ok' || !Array.isArray(json.daftar)) throw new Error('Daftar guru tidak tersedia');
+
+    els.inputPengawas.innerHTML = '';
+    const optKosong = document.createElement('option');
+    optKosong.value = '';
+    optKosong.textContent = 'Pilih nama guru…';
+    els.inputPengawas.appendChild(optKosong);
+
+    json.daftar.forEach(nama => {
+      const opt = document.createElement('option');
+      opt.value = nama;
+      opt.textContent = nama;
+      els.inputPengawas.appendChild(opt);
+    });
+
+    els.inputPengawas.disabled = false;
+  } catch (err) {
+    els.inputPengawas.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
+    els.entryStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
+    els.entryStatus.className = 'status-msg err';
+  }
+}
+muatDaftarGuru();
 function validateForm(){
   const ok = els.inputRuang.value.trim().length > 0 && els.inputPengawas.value.trim().length > 0;
   els.btnBukaToken.disabled = !ok;
 }
-els.inputRuang.addEventListener('input', validateForm);
-els.inputPengawas.addEventListener('input', validateForm);
+els.inputRuang.addEventListener('change', validateForm);
+els.inputPengawas.addEventListener('change', validateForm);
 
 /* =========================================================
    SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
@@ -549,7 +621,7 @@ els.btnBukaToken.addEventListener('click', async () => {
     els.metaPengawas.textContent = pengawas;
     els.metaPengawas.title = pengawas;
 
-    modeGanda = (ruang === '99') || (pengawas.trim().toLowerCase() === 'panitia');
+    modeGanda = (ruang === 'Ruang 99') || (pengawas.trim().toLowerCase() === 'panitia');
 
     openTokenScreen();
   } catch (err) {

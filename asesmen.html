@@ -259,6 +259,28 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
       <button class="btn-batal" onclick="tutupTokenQR()">Batal</button>
       <button class="btn-simpan" id="btnUlangToken" style="display:none" onclick="mulaiScanToken()">🔄 Coba Lagi</button>
     </div>
+    <a onclick="bukaOtorisasiManual()" style="display:block;text-align:center;margin-top:14px;font-size:.8rem;color:var(--abu2);cursor:pointer;text-decoration:underline">Kamera tidak bisa dibuka? Minta bantuan pengawas</a>
+  </div>
+</div>
+
+<!-- MODAL: OTORISASI MANUAL — untuk HP yang kameranya tidak bisa dipakai.
+     Siswa MINTA pengawas mendekat dan mengonfirmasi lewat PengawasRuang.html
+     (scan kartu fisik siswa), lalu tekan tombol Cek Status di sini. -->
+<div class="modal-bg" id="mOtorisasi">
+  <div class="modal" style="max-width:340px">
+    <div class="token-ic">🧑‍🏫</div>
+    <h3 style="text-align:center">Bantuan Pengawas</h3>
+    <div class="token-sub">
+      Kamera HP tidak bisa scan QR? Minta pengawas ruang mendekat dan
+      konfirmasi kehadiran Anda lewat aplikasi <strong>PengawasRuang</strong>
+      (scan kartu ujian fisik Anda). Setelah dikonfirmasi, tekan tombol di
+      bawah ini.
+    </div>
+    <div id="msgOtorisasi" class="msg"></div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn-batal" onclick="tutup('mOtorisasi')">Tutup</button>
+      <button class="btn-simpan" onclick="cekOtorisasiManual()">🔄 Cek Status</button>
+    </div>
   </div>
 </div>
 
@@ -452,14 +474,20 @@ function csvUrl(nama) {
 }
 
 // ============================================================
-// WAKTU JEDA PENGAMANAN — diambil langsung dari Google Spreadsheet
-// Sheet1!B18 (dalam DETIK), bukan nilai tetap di kode.
+// KONFIGURASI DARI SPREADSHEET — satu kali panggilan gviz untuk
+// dua sel sekaligus (lebih ringan untuk 1000 siswa dibanding 2
+// panggilan terpisah):
+//   Sheet1!B15 = token ujian
+//   Sheet1!B18 = jeda pengamanan (DETIK) sebelum pengawas anti-
+//                kecurangan aktif setelah scan token
 // ============================================================
 const SPREADSHEET_ID_KONFIG = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
 
-async function ambilToleransiDariSheet() {
+async function ambilKonfigDariSheet() {
+  const hasil = { token: '', toleransiMs: null };
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID_KONFIG}/gviz/tq?tqx=out:json&sheet=Sheet1&range=B18&t=${Date.now()}`;
+    // range B15:B18 mengambil B15,B16,B17,B18 sekaligus dalam SATU request
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID_KONFIG}/gviz/tq?tqx=out:json&sheet=Sheet1&range=B15:B18&t=${Date.now()}`;
     const ctrl = new AbortController();
     const tid  = setTimeout(() => ctrl.abort(), 10000);
     const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
@@ -467,18 +495,28 @@ async function ambilToleransiDariSheet() {
     const txt  = await res.text();
     const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
     if (s < 0) throw new Error('Format tidak dikenal');
-    const json  = JSON.parse(txt.substring(s, e + 1));
-    const cell  = json.table && json.table.rows && json.table.rows[0] && json.table.rows[0].c && json.table.rows[0].c[0];
-    const detik = cell ? Number(cell.v) : NaN;
-    if (!isNaN(detik) && detik > 0) {
-      TOLERANSI_MS = detik * 1000;
-      console.log('✅ Jeda pengamanan dari Sheet1!B18:', detik, 'detik');
-    } else {
-      console.warn('⚠️ Sheet1!B18 kosong/tidak valid — pakai default', TOLERANSI_MS/1000, 'detik');
-    }
+    const json = JSON.parse(txt.substring(s, e + 1));
+    const rows = (json.table && json.table.rows) || [];
+
+    const ambilNilai = (idxBaris) => {
+      const c = rows[idxBaris] && rows[idxBaris].c && rows[idxBaris].c[0];
+      return c && c.v !== null && c.v !== undefined ? String(c.v).trim() : '';
+    };
+
+    // baris ke-0 = B15 (token), baris ke-3 = B18 (jeda, dalam detik)
+    hasil.token = ambilNilai(0);
+    const detik = Number(ambilNilai(3));
+    if (!isNaN(detik) && detik > 0) hasil.toleransiMs = detik * 1000;
+
+    if (hasil.token) console.log('✅ Token ujian dari Sheet1!B15 dimuat');
+    else console.warn('⚠️ Sheet1!B15 kosong — token ujian tidak tersedia.');
+
+    if (hasil.toleransiMs) console.log('✅ Jeda pengamanan dari Sheet1!B18:', detik, 'detik');
+    else console.warn('⚠️ Sheet1!B18 kosong/tidak valid — pakai default', TOLERANSI_MS/1000, 'detik');
   } catch(err) {
-    console.warn('⚠️ Gagal ambil Sheet1!B18 — pakai default', TOLERANSI_MS/1000, 'detik:', err.message);
+    console.warn('⚠️ Gagal ambil konfigurasi dari Sheet1!B15:B18:', err.message);
   }
+  return hasil;
 }
 
 // Baca file CSV dari URL
@@ -566,7 +604,7 @@ let alarmCtx         = null;   // AudioContext untuk alarm
 const MAX_PELANGGARAN  = 5;
 let   jmlPelanggaran   = 0;    // counter pelanggaran per sesi token
 let   waktuScanToken   = 0;    // ms saat token pertama kali di-scan (untuk tulis Sheet2)
-let TOLERANSI_MS       = 2 * 60 * 1000; // default 2 menit — akan ditimpa oleh nilai dari Spreadsheet (Sheet1!B18, dalam detik)
+let TOLERANSI_MS        = 2 * 60 * 1000; // default 2 menit — ditimpa oleh Sheet1!B18 (detik) kalau tersedia
 
 // QR Scanner instance
 let qrTokenScanner   = null;
@@ -623,17 +661,22 @@ async function init() {
   setText('loadSub',  'Mengambil dari GitHub...');
 
   // Kedua CSV dibaca BERSAMAAN — 1000 user serentak tidak masalah.
-  // Nilai jeda pengamanan (Sheet1!B18) juga diambil bersamaan.
-  const [rowsSekolah, rowsSiswa] = await Promise.all([
+  // Konfigurasi (token + jeda pengamanan) diambil bersamaan, dalam
+  // SATU panggilan gviz (B15:B18), bukan dua panggilan terpisah.
+  const [rowsSekolah, rowsSiswa, konfig] = await Promise.all([
     bacaCSV(csvUrl('sekolah')),
     bacaCSV(csvUrl('siswa')),
-    ambilToleransiDariSheet(),
+    ambilKonfigDariSheet(),
   ]);
 
   if (rowsSekolah) {
     D.sekolah = { ...D.sekolah, ...csvKVtoObj(rowsSekolah) };
     console.log('✅ Data sekolah dari CSV');
   }
+  // Token & jeda pengamanan dari Spreadsheet SELALU jadi sumber utama —
+  // timpa nilai dari CSV (kalau ada) supaya tidak pernah memakai data basi.
+  if (konfig.token) D.sekolah.token = konfig.token;
+  if (konfig.toleransiMs) TOLERANSI_MS = konfig.toleransiMs;
   if (rowsSiswa) {
     D.siswa = csvToSiswa(rowsSiswa);
     console.log('✅ Siswa dari CSV:', D.siswa.length, 'orang');
@@ -1008,6 +1051,44 @@ function tutupTokenQR() {
   qrTokenScanner = null;
   if (sc) {
     sc.stop().catch(() => {}).finally(() => { try { sc.clear(); } catch(e) {} });
+  }
+}
+
+// ============================================================
+// OTORISASI MANUAL — jalur cadangan untuk HP yang kameranya tidak
+// bisa dipakai. Pengawas mengonfirmasi siswa lewat PengawasRuang.html
+// (scan kartu fisik siswa), lalu siswa tekan "Cek Status" di sini.
+// Butuh action 'cekOtorisasiManual' di Apps Script (lihat catatan).
+// ============================================================
+function bukaOtorisasiManual() {
+  tutupTokenQR();
+  document.getElementById('msgOtorisasi').className = 'msg';
+  buka('mOtorisasi');
+}
+
+async function cekOtorisasiManual() {
+  const siswa = D.aktif;
+  const el = document.getElementById('msgOtorisasi');
+  if (!siswa) { pesan(el,'err','⚠️ Data siswa tidak ditemukan.'); return; }
+
+  pesan(el,'ok','⏳ Memeriksa status ke server...');
+  const r = await apiFetch({ action:'cekOtorisasiManual', id: siswa.id });
+
+  if (r && r.status === 'ok') {
+    pesan(el,'ok','✅ Sudah dikonfirmasi pengawas! Membuka soal...');
+    const link = siswa.linkSoal || '';
+    if (!link) { pesan(el,'err','⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
+    setTimeout(() => {
+      tutup('mOtorisasi');
+      if (jmlPelanggaran === 0) {
+        waktuScanToken = Date.now();
+        apiFetch({ action:'catatWaktuToken', id: siswa.id, waktu: new Date().toISOString() });
+      }
+      mintaFullscreen();
+      mulaiUjian(link);
+    }, 900);
+  } else {
+    pesan(el,'err','⌛ Belum dikonfirmasi pengawas. Minta pengawas scan kartu Anda di PengawasRuang, lalu coba lagi.');
   }
 }
 

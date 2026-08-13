@@ -394,6 +394,25 @@
     </div>
 
     <div class="updated-at" id="updatedAt">-</div>
+
+    <button id="btnBukaManual" class="btn btn-ghost" style="margin-top:16px">
+      🧑‍🎓 Kamera Siswa Gagal? Konfirmasi Manual
+    </button>
+  </div>
+
+  <!-- ===================== SCREEN 3 : KONFIRMASI MANUAL ===================== -->
+  <div id="screenManual" class="card hidden" style="margin-top:16px">
+    <div class="field">
+      <label for="inputNisnManual">NISN Siswa</label>
+      <input type="text" id="inputNisnManual" placeholder="Ketik NISN siswa yang kameranya gagal"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnKonfirmasiManual" class="btn btn-primary">
+      <span id="btnKonfirmasiManualLabel">✅ Konfirmasi Masuk</span>
+    </button>
+    <div id="manualStatus" class="status-msg"></div>
+
+    <div id="manualLog" style="margin-top:18px;max-height:200px;overflow-y:auto"></div>
   </div>
 
 </div>
@@ -468,6 +487,13 @@ const els = {
   countdownText: document.getElementById('countdownText'),
   btnRefresh: document.getElementById('btnRefresh'),
   updatedAt: document.getElementById('updatedAt'),
+  btnBukaManual: document.getElementById('btnBukaManual'),
+  screenManual: document.getElementById('screenManual'),
+  inputNisnManual: document.getElementById('inputNisnManual'),
+  btnKonfirmasiManual: document.getElementById('btnKonfirmasiManual'),
+  btnKonfirmasiManualLabel: document.getElementById('btnKonfirmasiManualLabel'),
+  manualStatus: document.getElementById('manualStatus'),
+  manualLog: document.getElementById('manualLog'),
 };
 
 /* =========================================================
@@ -660,6 +686,77 @@ function openTokenScreen(){
   loadToken(true);
   startTimers();
 }
+
+/* =========================================================
+   KONFIRMASI MANUAL — untuk siswa yang kamera HP-nya gagal
+   scan QR Token di aplikasi Asesmen. Menulis NISN + waktu ke
+   sheet "Otorisasi" (lewat Apps Script), yang nanti dibaca
+   langsung oleh asesmen.html.
+========================================================= */
+els.btnBukaManual.addEventListener('click', () => {
+  const buka = els.screenManual.classList.contains('hidden');
+  els.screenManual.classList.toggle('hidden');
+  els.btnBukaManual.textContent = buka
+    ? '⬆️ Tutup Panel Konfirmasi Manual'
+    : '🧑‍🎓 Kamera Siswa Gagal? Konfirmasi Manual';
+  if (buka) els.inputNisnManual.focus();
+});
+
+async function kirimOtorisasiManual(nisn){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      action: 'otorisasiManual',
+      nisn,
+      ruang: els.metaRuang.textContent,
+      pengawas: els.metaPengawas.textContent,
+    })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal mengonfirmasi');
+  return json;
+}
+
+function tambahLogManual(nisn){
+  const item = document.createElement('div');
+  item.style.cssText = 'display:flex;justify-content:space-between;padding:9px 4px;border-bottom:1px solid var(--ring-track);font-size:13px;';
+  item.innerHTML = `<span style="font-weight:700;color:var(--navy-950)">${nisn}</span><span style="color:var(--ink-soft)">${formatJam(new Date())}</span>`;
+  els.manualLog.prepend(item);
+}
+
+els.btnKonfirmasiManual.addEventListener('click', async () => {
+  const nisn = els.inputNisnManual.value.trim();
+  els.manualStatus.textContent = '';
+  els.manualStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.manualStatus.textContent = 'Ketik NISN siswa terlebih dahulu.';
+    els.manualStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnKonfirmasiManual.disabled = true;
+  els.btnKonfirmasiManualLabel.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.4);border-top-color:#fff;"></span>';
+
+  try {
+    await kirimOtorisasiManual(nisn);
+    els.manualStatus.textContent = `✅ ${nisn} dikonfirmasi. Minta siswa tekan "Cek Status" di HP-nya.`;
+    els.manualStatus.className = 'status-msg ok';
+    tambahLogManual(nisn);
+    els.inputNisnManual.value = '';
+  } catch (err) {
+    els.manualStatus.textContent = 'Gagal mengonfirmasi. Periksa koneksi lalu coba lagi.';
+    els.manualStatus.className = 'status-msg err';
+  } finally {
+    els.btnKonfirmasiManual.disabled = false;
+    els.btnKonfirmasiManualLabel.textContent = '✅ Konfirmasi Masuk';
+  }
+});
+
+els.inputNisnManual.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnKonfirmasiManual.click();
+});
 
 validateForm();
 </script>

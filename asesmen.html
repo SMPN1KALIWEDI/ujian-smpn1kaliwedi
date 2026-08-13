@@ -207,7 +207,10 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
         <div class="ibox"><div class="lb">No. ID</div><div class="vl" id="p2ID"></div></div>
         <div class="ibox"><div class="lb">Kelas</div><div class="vl" id="p2Kelas"></div></div>
       </div>
-      <div class="sec-title">📊 Rekap Nilai Ujian</div>
+      <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>📊 Rekap Nilai Ujian</span>
+        <button onclick="muatNilai(D.aktif,true)" style="background:none;border:1px solid #cfd8e3;border-radius:8px;padding:5px 10px;font-size:.72rem;color:var(--abu2);cursor:pointer">🔄 Nilai Terbaru</button>
+      </div>
       <table class="tn">
         <thead><tr><th>#</th><th>Mata Pelajaran</th><th>Status</th><th>Keterangan</th></tr></thead>
         <tbody id="tbNilai"><tr><td colspan="4" style="text-align:center;padding:14px;color:#b0bec5">⏳ Memuat...</td></tr></tbody>
@@ -264,17 +267,17 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
 </div>
 
 <!-- MODAL: OTORISASI MANUAL — untuk HP yang kameranya tidak bisa dipakai.
-     Siswa MINTA pengawas mendekat dan mengonfirmasi lewat PengawasRuang.html
-     (scan kartu fisik siswa), lalu tekan tombol Cek Status di sini. -->
+     Siswa MINTA pengawas mendekat dan konfirmasi lewat pengawas-ruang.html
+     (pengawas ketik NISN siswa di sana), lalu tekan tombol Cek Status di sini. -->
 <div class="modal-bg" id="mOtorisasi">
   <div class="modal" style="max-width:340px">
     <div class="token-ic">🧑‍🏫</div>
     <h3 style="text-align:center">Bantuan Pengawas</h3>
     <div class="token-sub">
-      Kamera HP tidak bisa scan QR? Minta pengawas ruang mendekat dan
-      konfirmasi kehadiran Anda lewat aplikasi <strong>PengawasRuang</strong>
-      (scan kartu ujian fisik Anda). Setelah dikonfirmasi, tekan tombol di
-      bawah ini.
+      Kamera HP tidak bisa scan QR? Panggil pengawas ruang, minta beliau
+      buka aplikasi <strong>Pengawas Ruang</strong> lalu konfirmasi NISN
+      Anda di panel "Konfirmasi Manual". Setelah dikonfirmasi, tekan
+      tombol di bawah ini.
     </div>
     <div id="msgOtorisasi" class="msg"></div>
     <div class="btn-row" style="margin-top:14px">
@@ -773,30 +776,39 @@ async function tampilDashboard(siswa) {
   await muatSusulan(siswa);
 }
 
-async function muatNilai(siswa) {
+async function muatNilai(siswa, paksaLive) {
   const tb = document.getElementById('tbNilai');
-  tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:14px;color:#b0bec5">⏳ Memuat nilai...</td></tr>';
-  // Baca nilai dari CSV GitHub (cepat, tanpa Apps Script)
-  const rowsNilai = await bacaCSV(csvUrl('nilai'));
+  tb.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:14px;color:#b0bec5">⏳ ${paksaLive ? 'Mengambil nilai terbaru...' : 'Memuat nilai...'}</td></tr>`;
+
   let r = null;
-  if (rowsNilai && rowsNilai.length > 1) {
-    const header = rowsNilai[0];
-    for (let i = 1; i < rowsNilai.length; i++) {
-      if ((rowsNilai[i][0]||'').trim() !== siswa.id) continue;
-      const nilai = [];
-      for (let k = 3; k < header.length; k++) {
-        const mapel = (header[k]||'').trim();
-        if (!mapel) continue;
-        const v = rowsNilai[i][k];
-        nilai.push({ mapel, nilai: (v!==''&&v!==undefined) ? Number(v) : null });
-      }
-      r = { nilai };
-      break;
-    }
-    if (!r) r = { nilai: [] };
-  } else {
-    // Fallback ke Apps Script jika CSV gagal
+  if (paksaLive) {
+    // Tombol "Nilai Terbaru" ditekan siswa sendiri (bukan otomatis) —
+    // aman untuk baca langsung ke server, tidak akan terjadi 1000
+    // permintaan bersamaan karena ini aksi manual per-orang.
     r = await apiFetch({action:'getNilai', id:siswa.id});
+  } else {
+    // Baca nilai dari CSV GitHub dulu (cepat, tanpa Apps Script,
+    // aman untuk diakses 1000 siswa sekaligus)
+    const rowsNilai = await bacaCSV(csvUrl('nilai'));
+    if (rowsNilai && rowsNilai.length > 1) {
+      const header = rowsNilai[0];
+      for (let i = 1; i < rowsNilai.length; i++) {
+        if ((rowsNilai[i][0]||'').trim() !== siswa.id) continue;
+        const nilai = [];
+        for (let k = 3; k < header.length; k++) {
+          const mapel = (header[k]||'').trim();
+          if (!mapel) continue;
+          const v = rowsNilai[i][k];
+          nilai.push({ mapel, nilai: (v!==''&&v!==undefined) ? Number(v) : null });
+        }
+        r = { nilai };
+        break;
+      }
+      if (!r) r = { nilai: [] };
+    } else {
+      // Fallback ke Apps Script jika CSV gagal
+      r = await apiFetch({action:'getNilai', id:siswa.id});
+    }
   }
 
   if (!r || !r.nilai) {
@@ -1056,10 +1068,13 @@ function tutupTokenQR() {
 
 // ============================================================
 // OTORISASI MANUAL — jalur cadangan untuk HP yang kameranya tidak
-// bisa dipakai. Pengawas mengonfirmasi siswa lewat PengawasRuang.html
-// (scan kartu fisik siswa), lalu siswa tekan "Cek Status" di sini.
-// Butuh action 'cekOtorisasiManual' di Apps Script (lihat catatan).
+// bisa dipakai. Pengawas mengonfirmasi lewat pengawas-ruang.html
+// (menulis NISN + waktu ke sheet "Otorisasi"), lalu siswa tekan
+// "Cek Status" di sini. Dibaca LANGSUNG lewat gviz (seperti token
+// B15) — tidak perlu action tambahan di Apps Script asesmen ini.
 // ============================================================
+const OTORISASI_BERLAKU_MENIT = 20; // konfirmasi dianggap kedaluwarsa setelah ini
+
 function bukaOtorisasiManual() {
   tutupTokenQR();
   document.getElementById('msgOtorisasi').className = 'msg';
@@ -1072,9 +1087,35 @@ async function cekOtorisasiManual() {
   if (!siswa) { pesan(el,'err','⚠️ Data siswa tidak ditemukan.'); return; }
 
   pesan(el,'ok','⏳ Memeriksa status ke server...');
-  const r = await apiFetch({ action:'cekOtorisasiManual', id: siswa.id });
 
-  if (r && r.status === 'ok') {
+  let terkonfirmasi = false;
+  try {
+    const nisnAman = siswa.id.replace(/'/g, "\\'");
+    const tq  = encodeURIComponent(`select A,B where A = '${nisnAman}' order by B desc limit 1`);
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID_KONFIG}/gviz/tq?tqx=out:json&sheet=Otorisasi&tq=${tq}&t=${Date.now()}`;
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 10000);
+    const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+    clearTimeout(tid);
+    const txt  = await res.text();
+    const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+    if (s >= 0) {
+      const json = JSON.parse(txt.substring(s, e + 1));
+      const row  = json.table && json.table.rows && json.table.rows[0];
+      const waktuStr = row && row.c && row.c[1] && row.c[1].v;
+      if (waktuStr) {
+        const waktuKonfirmasi = new Date(waktuStr);
+        const menitBerlalu = (Date.now() - waktuKonfirmasi.getTime()) / 60000;
+        if (!isNaN(menitBerlalu) && menitBerlalu >= 0 && menitBerlalu <= OTORISASI_BERLAKU_MENIT) {
+          terkonfirmasi = true;
+        }
+      }
+    }
+  } catch(err) {
+    console.warn('Gagal cek Otorisasi:', err.message);
+  }
+
+  if (terkonfirmasi) {
     pesan(el,'ok','✅ Sudah dikonfirmasi pengawas! Membuka soal...');
     const link = siswa.linkSoal || '';
     if (!link) { pesan(el,'err','⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
@@ -1088,7 +1129,7 @@ async function cekOtorisasiManual() {
       mulaiUjian(link);
     }, 900);
   } else {
-    pesan(el,'err','⌛ Belum dikonfirmasi pengawas. Minta pengawas scan kartu Anda di PengawasRuang, lalu coba lagi.');
+    pesan(el,'err','⌛ Belum dikonfirmasi pengawas. Minta pengawas konfirmasi lewat Pengawas Ruang, lalu coba lagi.');
   }
 }
 

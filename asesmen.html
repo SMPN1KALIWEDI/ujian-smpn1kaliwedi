@@ -486,39 +486,40 @@ function csvUrl(nama) {
 // ============================================================
 const SPREADSHEET_ID_KONFIG = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
 
+async function ambilSelSheet_(cellRef) {
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID_KONFIG}/gviz/tq?tqx=out:json&sheet=Sheet1&range=${cellRef}&t=${Date.now()}`;
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 10000);
+  const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+  clearTimeout(tid);
+  const txt  = await res.text();
+  const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+  if (s < 0) throw new Error('Format tidak dikenal');
+  const json = JSON.parse(txt.substring(s, e + 1));
+  const cell = json.table && json.table.rows && json.table.rows[0] && json.table.rows[0].c && json.table.rows[0].c[0];
+  return cell && cell.v !== null && cell.v !== undefined ? String(cell.v).trim() : '';
+}
+
 async function ambilKonfigDariSheet() {
   const hasil = { token: '', toleransiMs: null };
-  try {
-    // range B15:B18 mengambil B15,B16,B17,B18 sekaligus dalam SATU request
-    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID_KONFIG}/gviz/tq?tqx=out:json&sheet=Sheet1&range=B15:B18&t=${Date.now()}`;
-    const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), 10000);
-    const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
-    clearTimeout(tid);
-    const txt  = await res.text();
-    const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
-    if (s < 0) throw new Error('Format tidak dikenal');
-    const json = JSON.parse(txt.substring(s, e + 1));
-    const rows = (json.table && json.table.rows) || [];
+  // Dua permintaan TERPISAH (bukan satu range gabungan) — supaya kalau
+  // ada baris kosong di antara B15 dan B18 (mis. bekas baris terhapus),
+  // posisi tiap sel tetap dibaca dengan benar, tidak ikut bergeser.
+  const [token, detikStr] = await Promise.all([
+    ambilSelSheet_('B15').catch(err => { console.warn('⚠️ Gagal ambil B15:', err.message); return ''; }),
+    ambilSelSheet_('B18').catch(err => { console.warn('⚠️ Gagal ambil B18:', err.message); return ''; }),
+  ]);
 
-    const ambilNilai = (idxBaris) => {
-      const c = rows[idxBaris] && rows[idxBaris].c && rows[idxBaris].c[0];
-      return c && c.v !== null && c.v !== undefined ? String(c.v).trim() : '';
-    };
+  hasil.token = token;
+  const detik = Number(detikStr);
+  if (!isNaN(detik) && detik > 0) hasil.toleransiMs = detik * 1000;
 
-    // baris ke-0 = B15 (token), baris ke-3 = B18 (jeda, dalam detik)
-    hasil.token = ambilNilai(0);
-    const detik = Number(ambilNilai(3));
-    if (!isNaN(detik) && detik > 0) hasil.toleransiMs = detik * 1000;
+  if (hasil.token) console.log('✅ Token ujian dari Sheet1!B15 dimuat:', hasil.token);
+  else console.warn('⚠️ Sheet1!B15 kosong — token ujian TIDAK tersedia. Scan token akan selalu gagal sampai ini terisi.');
 
-    if (hasil.token) console.log('✅ Token ujian dari Sheet1!B15 dimuat');
-    else console.warn('⚠️ Sheet1!B15 kosong — token ujian tidak tersedia.');
+  if (hasil.toleransiMs) console.log('✅ Jeda pengamanan dari Sheet1!B18:', detik, 'detik');
+  else console.warn('⚠️ Sheet1!B18 kosong/tidak valid — pakai default', TOLERANSI_MS/1000, 'detik');
 
-    if (hasil.toleransiMs) console.log('✅ Jeda pengamanan dari Sheet1!B18:', detik, 'detik');
-    else console.warn('⚠️ Sheet1!B18 kosong/tidak valid — pakai default', TOLERANSI_MS/1000, 'detik');
-  } catch(err) {
-    console.warn('⚠️ Gagal ambil konfigurasi dari Sheet1!B15:B18:', err.message);
-  }
   return hasil;
 }
 
@@ -927,6 +928,11 @@ function mulaiScanSusulan() {
           qrSusulanSudahScan = true;
           const masuk = decodedText.trim().toUpperCase();
           const benar = (D.sekolah.token || '').toUpperCase();
+          if (!benar) {
+            qrSusulanSudahScan = false;
+            setText('qrSusulanStatus', '⚠️ Token belum termuat dari server. Refresh halaman lalu coba lagi.');
+            return;
+          }
           if (masuk !== benar) {
             qrSusulanSudahScan = false;
             setText('qrSusulanStatus', '❌ Token tidak valid. Coba lagi.');
@@ -1011,6 +1017,12 @@ function mulaiScanToken() {
           // Token dibaca tapi tidak ditampilkan ke layar
           const masuk = decodedText.trim().toUpperCase();
           const benar = (D.sekolah.token || '').toUpperCase();
+          if (!benar) {
+            qrTokenSudahScan = false;
+            setText('qrTokenStatus', '⚠️ Token belum termuat dari server. Refresh halaman lalu coba lagi.');
+            document.getElementById('btnUlangToken').style.display = 'inline-block';
+            return;
+          }
           if (masuk !== benar) {
             qrTokenSudahScan = false;
             setText('qrTokenStatus', '❌ Token tidak valid. Coba lagi.');

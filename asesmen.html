@@ -500,6 +500,45 @@ async function ambilSelSheet_(cellRef) {
   return cell && cell.v !== null && cell.v !== undefined ? String(cell.v).trim() : '';
 }
 
+// ============================================================
+// JUDUL ASESMEN & LINK PER KELAS — dibaca LANGSUNG dari
+// Sheet1!B11:C13 (bukan lewat CSV), supaya perubahan judul/link
+// asesmen langsung berlaku begitu tombol "Ikuti Ujian" ditekan,
+// tanpa menunggu jadwal export CSV ke GitHub.
+//   B11/C11 = judul & link kelas 7
+//   B12/C12 = judul & link kelas 8
+//   B13/C13 = judul & link kelas 9
+// ============================================================
+async function ambilMapelLinkDariSheet() {
+  const hasil = { mapelKls7:'', linkKls7:'', mapelKls8:'', linkKls8:'', mapelKls9:'', linkKls9:'' };
+  try {
+    const [b11,c11,b12,c12,b13,c13] = await Promise.all([
+      ambilSelSheet_('B11').catch(()=> ''),
+      ambilSelSheet_('C11').catch(()=> ''),
+      ambilSelSheet_('B12').catch(()=> ''),
+      ambilSelSheet_('C12').catch(()=> ''),
+      ambilSelSheet_('B13').catch(()=> ''),
+      ambilSelSheet_('C13').catch(()=> ''),
+    ]);
+    hasil.mapelKls7 = b11; hasil.linkKls7 = c11;
+    hasil.mapelKls8 = b12; hasil.linkKls8 = c12;
+    hasil.mapelKls9 = b13; hasil.linkKls9 = c13;
+    console.log('✅ Judul & link asesmen dari Sheet1!B11:C13 dimuat');
+  } catch(err) {
+    console.warn('⚠️ Gagal ambil B11:C13:', err.message);
+  }
+  return hasil;
+}
+
+// Ambil link soal yang berlaku untuk siswa: Sheet1!C11:C13 (live) SELALU
+// jadi prioritas utama, siswa.linkSoal (dari CSV per-siswa) jadi cadangan
+// kalau baris kelas siswa itu kosong di Sheet1.
+function ambilLinkAktif(siswa) {
+  const k = String(siswa.kelas).replace(/[^0-9]/g,'').charAt(0);
+  const linkKelas = k==='7' ? D.sekolah.linkKls7 : k==='8' ? D.sekolah.linkKls8 : D.sekolah.linkKls9;
+  return (linkKelas && linkKelas.trim()) ? linkKelas.trim() : (siswa.linkSoal || '');
+}
+
 async function ambilKonfigDariSheet() {
   const hasil = { token: '', toleransiMs: null };
   // Dua permintaan TERPISAH (bukan satu range gabungan) — supaya kalau
@@ -665,22 +704,30 @@ async function init() {
   setText('loadSub',  'Mengambil dari GitHub...');
 
   // Kedua CSV dibaca BERSAMAAN — 1000 user serentak tidak masalah.
-  // Konfigurasi (token + jeda pengamanan) diambil bersamaan, dalam
-  // SATU panggilan gviz (B15:B18), bukan dua panggilan terpisah.
-  const [rowsSekolah, rowsSiswa, konfig] = await Promise.all([
+  // Konfigurasi (token, jeda pengamanan, judul & link asesmen per
+  // kelas) diambil bersamaan langsung dari Spreadsheet.
+  const [rowsSekolah, rowsSiswa, konfig, mapelLink] = await Promise.all([
     bacaCSV(csvUrl('sekolah')),
     bacaCSV(csvUrl('siswa')),
     ambilKonfigDariSheet(),
+    ambilMapelLinkDariSheet(),
   ]);
 
   if (rowsSekolah) {
     D.sekolah = { ...D.sekolah, ...csvKVtoObj(rowsSekolah) };
     console.log('✅ Data sekolah dari CSV');
   }
-  // Token & jeda pengamanan dari Spreadsheet SELALU jadi sumber utama —
-  // timpa nilai dari CSV (kalau ada) supaya tidak pernah memakai data basi.
+  // Token, jeda pengamanan, judul & link asesmen dari Spreadsheet
+  // SELALU jadi sumber utama — timpa nilai dari CSV (kalau ada)
+  // supaya tidak pernah memakai data basi.
   if (konfig.token) D.sekolah.token = konfig.token;
   if (konfig.toleransiMs) TOLERANSI_MS = konfig.toleransiMs;
+  if (mapelLink.mapelKls7) D.sekolah.mapelKls7 = mapelLink.mapelKls7;
+  if (mapelLink.mapelKls8) D.sekolah.mapelKls8 = mapelLink.mapelKls8;
+  if (mapelLink.mapelKls9) D.sekolah.mapelKls9 = mapelLink.mapelKls9;
+  if (mapelLink.linkKls7)  D.sekolah.linkKls7  = mapelLink.linkKls7;
+  if (mapelLink.linkKls8)  D.sekolah.linkKls8  = mapelLink.linkKls8;
+  if (mapelLink.linkKls9)  D.sekolah.linkKls9  = mapelLink.linkKls9;
   if (rowsSiswa) {
     D.siswa = csvToSiswa(rowsSiswa);
     console.log('✅ Siswa dari CSV:', D.siswa.length, 'orang');
@@ -1032,7 +1079,7 @@ function mulaiScanToken() {
           // Token benar — tutup scanner, langsung masuk ke soal
           tutupTokenQR();
           const siswa  = D.aktif;
-          const link   = siswa.linkSoal || '';
+          const link   = ambilLinkAktif(siswa);
           if (!link) { alert('⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
 
           // Catat waktu scan token ke Sheet2!G (hanya scan PERTAMA)
@@ -1129,7 +1176,7 @@ async function cekOtorisasiManual() {
 
   if (terkonfirmasi) {
     pesan(el,'ok','✅ Sudah dikonfirmasi pengawas! Membuka soal...');
-    const link = siswa.linkSoal || '';
+    const link = ambilLinkAktif(siswa);
     if (!link) { pesan(el,'err','⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
     setTimeout(() => {
       tutup('mOtorisasi');

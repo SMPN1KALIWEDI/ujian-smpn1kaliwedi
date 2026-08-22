@@ -513,32 +513,63 @@ function isiPilihanRuang(){
 isiPilihanRuang();
 
 /* =========================================================
-   MUAT DAFTAR NAMA GURU (Sheet2!A:A) via Apps Script
+   MUAT DAFTAR NAMA GURU — dari GitHub CSV (cepat, lewat CDN)
+   karena datanya jarang berubah. Kalau file belum ada/gagal,
+   otomatis jatuh ke Apps Script (Sheet2!A:A) sebagai cadangan.
 ========================================================= */
+const GURU_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/guru.csv';
+
+function isiDropdownGuru(daftar){
+  els.inputPengawas.innerHTML = '';
+  const optKosong = document.createElement('option');
+  optKosong.value = '';
+  optKosong.textContent = 'Pilih nama guru…';
+  els.inputPengawas.appendChild(optKosong);
+
+  daftar.forEach(nama => {
+    const opt = document.createElement('option');
+    opt.value = nama;
+    opt.textContent = nama;
+    els.inputPengawas.appendChild(opt);
+  });
+  els.inputPengawas.disabled = false;
+}
+
+function parseCSVGuru(text){
+  return text.trim().split('\n')
+    .map(baris => baris.trim())
+    .filter(baris => baris && baris.toLowerCase() !== 'nama' && baris.toLowerCase() !== 'nama guru');
+}
+
+async function muatDaftarGuruDariCSV(){
+  const res = await fetch(GURU_CSV_URL + '?t=' + Math.floor(Date.now()/60000), { cache: 'no-store' });
+  if (!res.ok) throw new Error('guru.csv belum tersedia (HTTP ' + res.status + ')');
+  const daftar = parseCSVGuru(await res.text());
+  if (!daftar.length) throw new Error('guru.csv kosong');
+  return daftar;
+}
+
+async function muatDaftarGuruDariAppsScript(){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=guru', { method: 'GET' });
+  const json = await res.json();
+  if (json.status !== 'ok' || !Array.isArray(json.daftar)) throw new Error('Daftar guru tidak tersedia');
+  return json.daftar;
+}
+
 async function muatDaftarGuru(){
   try {
-    const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=guru', { method: 'GET' });
-    const json = await res.json();
-    if (json.status !== 'ok' || !Array.isArray(json.daftar)) throw new Error('Daftar guru tidak tersedia');
-
-    els.inputPengawas.innerHTML = '';
-    const optKosong = document.createElement('option');
-    optKosong.value = '';
-    optKosong.textContent = 'Pilih nama guru…';
-    els.inputPengawas.appendChild(optKosong);
-
-    json.daftar.forEach(nama => {
-      const opt = document.createElement('option');
-      opt.value = nama;
-      opt.textContent = nama;
-      els.inputPengawas.appendChild(opt);
-    });
-
-    els.inputPengawas.disabled = false;
-  } catch (err) {
-    els.inputPengawas.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
-    els.entryStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
-    els.entryStatus.className = 'status-msg err';
+    const daftar = await muatDaftarGuruDariCSV();
+    isiDropdownGuru(daftar);
+  } catch (errCSV) {
+    console.warn('⚠️ Gagal ambil guru.csv, coba Apps Script sebagai cadangan:', errCSV.message);
+    try {
+      const daftar = await muatDaftarGuruDariAppsScript();
+      isiDropdownGuru(daftar);
+    } catch (errAS) {
+      els.inputPengawas.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
+      els.entryStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
+      els.entryStatus.className = 'status-msg err';
+    }
   }
 }
 muatDaftarGuru();

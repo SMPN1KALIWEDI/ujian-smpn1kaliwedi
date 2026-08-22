@@ -120,6 +120,7 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
 .btn-ujian{flex:2;padding:11px;background:linear-gradient(135deg,var(--hijau),var(--biru));color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer;line-height:1.4;text-align:center}
 .btn-ujian:hover{opacity:.9}
 .btn-ujian small{display:block;font-size:.7rem;opacity:.85}
+.notice-jadwal{background:#fff8e1;border-left:4px solid #f9a825;border-radius:8px;padding:12px 14px;font-size:.85rem;color:#6d5300;line-height:1.5}
 
 /* TOMBOL SUSULAN */
 #areaSusulan{margin-top:12px;display:none}
@@ -217,11 +218,8 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
       </table>
       <div class="btn-row2">
         <button class="btn-kel" onclick="logout()">⬅ Kembali ke Gerbang Sekolah</button>
-        <button class="btn-ujian" onclick="bukaToken()">
-          📝 Ikuti Ujian
-          <small id="p2Mapel"></small>
-        </button>
       </div>
+      <div id="areaAsesmenAktif" style="margin-top:12px"></div>
 
       <!-- AREA SUSULAN -->
       <div id="areaSusulan">
@@ -501,82 +499,29 @@ async function ambilSelSheet_(cellRef) {
 }
 
 // ============================================================
-// JUDUL ASESMEN PER KELAS — dibaca LANGSUNG dari Sheet1!B11:B13
-// (bukan lewat CSV), supaya perubahan judul asesmen langsung
-// berlaku begitu tombol "Ikuti Ujian" ditekan, tanpa menunggu
-// jadwal export CSV ke GitHub.
-//   B11 = judul kelas 7, B12 = judul kelas 8, B13 = judul kelas 9
+// KONFIGURASI DARI SPREADSHEET — dua permintaan TERPISAH (bukan
+// satu range gabungan) supaya posisi tiap sel tetap benar walau
+// ada baris kosong di antaranya:
+//   Sheet1!B6 = token ujian
+//   Sheet1!B7 = jeda pengamanan (DETIK) sebelum pengawas anti-
+//               kecurangan aktif setelah scan token
 // ============================================================
-async function ambilMapelLinkDariSheet() {
-  const hasil = { mapelKls7:'', mapelKls8:'', mapelKls9:'' };
-  try {
-    const [b11,b12,b13] = await Promise.all([
-      ambilSelSheet_('B11').catch(()=> ''),
-      ambilSelSheet_('B12').catch(()=> ''),
-      ambilSelSheet_('B13').catch(()=> ''),
-    ]);
-    hasil.mapelKls7 = b11;
-    hasil.mapelKls8 = b12;
-    hasil.mapelKls9 = b13;
-    console.log('✅ Judul asesmen dari Sheet1!B11:B13 dimuat');
-  } catch(err) {
-    console.warn('⚠️ Gagal ambil B11:B13:', err.message);
-  }
-  return hasil;
-}
-
-// ============================================================
-// LINK SOAL — diambil LANGSUNG dari Sheet2 kolom E, dicocokkan
-// lewat NISN di kolom A. Ini dibaca live (bukan dari CSV) tepat
-// saat siswa mau mulai ujian, supaya kalau link diubah admin di
-// spreadsheet, siswa langsung dapat link terbaru tanpa menunggu
-// export CSV. Kalau gagal/kosong, jatuh ke siswa.linkSoal (CSV)
-// sebagai cadangan.
-// ============================================================
-async function ambilLinkAktif(siswa) {
-  try {
-    const nisnAman = siswa.id.replace(/'/g, "\\'");
-    const tq  = encodeURIComponent(`select E where A = '${nisnAman}'`);
-    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID_KONFIG}/gviz/tq?tqx=out:json&sheet=Sheet2&tq=${tq}&t=${Date.now()}`;
-    const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), 10000);
-    const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
-    clearTimeout(tid);
-    const txt  = await res.text();
-    const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
-    if (s >= 0) {
-      const json = JSON.parse(txt.substring(s, e + 1));
-      const row  = json.table && json.table.rows && json.table.rows[0];
-      const cell = row && row.c && row.c[0];
-      const link = cell && cell.v !== null && cell.v !== undefined ? String(cell.v).trim() : '';
-      if (link) return link;
-    }
-  } catch(err) {
-    console.warn('⚠️ Gagal ambil link soal live dari Sheet2!E:', err.message);
-  }
-  // Cadangan: pakai data dari CSV kalau live gagal/kosong
-  return siswa.linkSoal || '';
-}
-
 async function ambilKonfigDariSheet() {
   const hasil = { token: '', toleransiMs: null };
-  // Dua permintaan TERPISAH (bukan satu range gabungan) — supaya kalau
-  // ada baris kosong di antara B15 dan B18 (mis. bekas baris terhapus),
-  // posisi tiap sel tetap dibaca dengan benar, tidak ikut bergeser.
   const [token, detikStr] = await Promise.all([
-    ambilSelSheet_('B15').catch(err => { console.warn('⚠️ Gagal ambil B15:', err.message); return ''; }),
-    ambilSelSheet_('B18').catch(err => { console.warn('⚠️ Gagal ambil B18:', err.message); return ''; }),
+    ambilSelSheet_('B6').catch(err => { console.warn('⚠️ Gagal ambil B6:', err.message); return ''; }),
+    ambilSelSheet_('B7').catch(err => { console.warn('⚠️ Gagal ambil B7:', err.message); return ''; }),
   ]);
 
   hasil.token = token;
   const detik = Number(detikStr);
   if (!isNaN(detik) && detik > 0) hasil.toleransiMs = detik * 1000;
 
-  if (hasil.token) console.log('✅ Token ujian dari Sheet1!B15 dimuat:', hasil.token);
-  else console.warn('⚠️ Sheet1!B15 kosong — token ujian TIDAK tersedia. Scan token akan selalu gagal sampai ini terisi.');
+  if (hasil.token) console.log('✅ Token ujian dari Sheet1!B6 dimuat:', hasil.token);
+  else console.warn('⚠️ Sheet1!B6 kosong — token ujian TIDAK tersedia. Scan token akan selalu gagal sampai ini terisi.');
 
-  if (hasil.toleransiMs) console.log('✅ Jeda pengamanan dari Sheet1!B18:', detik, 'detik');
-  else console.warn('⚠️ Sheet1!B18 kosong/tidak valid — pakai default', TOLERANSI_MS/1000, 'detik');
+  if (hasil.toleransiMs) console.log('✅ Jeda pengamanan dari Sheet1!B7:', detik, 'detik');
+  else console.warn('⚠️ Sheet1!B7 kosong/tidak valid — pakai default', TOLERANSI_MS/1000, 'detik');
 
   return hasil;
 }
@@ -618,6 +563,29 @@ function parseCSV(text) {
   return baris;
 }
 
+// CSV → array objek berdasarkan NAMA KOLOM (header baris pertama),
+// bukan posisi/index — supaya tidak rawan salah kalau kolom digeser.
+function parseCSVObjects(rows) {
+  if (!rows || rows.length < 2) return [];
+  const header = rows[0].map(h => (h||'').trim().toUpperCase());
+  const data = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || !row.some(c => c && c.trim())) continue; // lewati baris kosong total
+    const obj = {};
+    header.forEach((h, idx) => { if (h) obj[h] = (row[idx] || '').trim(); });
+    data.push(obj);
+  }
+  return data;
+}
+function ambilKolom(obj, ...namaAlternatif) {
+  for (const n of namaAlternatif) {
+    const v = obj[n.toUpperCase()];
+    if (v !== undefined) return v;
+  }
+  return '';
+}
+
 // CSV key,value → objek JS
 function csvKVtoObj(rows) {
   const obj = {};
@@ -627,29 +595,114 @@ function csvKVtoObj(rows) {
   return obj;
 }
 
-// CSV siswa → array objek
+// CSV siswa → array objek (kolom dicari berdasarkan NAMA, bukan posisi)
 function csvToSiswa(rows) {
-  const siswa = [];
-  for (let i = 1; i < rows.length; i++) {
-    const id = (rows[i][0] || '').trim();
-    if (!id) continue;
-    siswa.push({
-      id      : id,
-      nama    : (rows[i][1] || '').trim(),
-      kelas   : (rows[i][2] || '').trim(),
-      linkSoal: (rows[i][3] || '').trim(),
-      status  : (rows[i][4] || '').trim(),
-      password: '',
-    });
+  const objs = parseCSVObjects(rows);
+  return objs.map(o => ({
+    id      : ambilKolom(o, 'NISN', 'ID'),
+    nama    : ambilKolom(o, 'NAMA'),
+    kelas   : ambilKolom(o, 'KLS', 'KELAS'),
+    kodeSoal: ambilKolom(o, 'KODE SOAL', 'KODE'),
+    status  : ambilKolom(o, 'STATUS LOGIN', 'STATUS'),
+    linkSoal: ambilKolom(o, 'LINK SOAL', 'LINK'), // cadangan lama, kalau masih ada
+    password: '',
+  })).filter(s => s.id);
+}
+
+// CSV jadwal → array objek (Sheet1 baris 10+: TANGGAL|KODE|PRIORITAS|
+// MULAI|SELESAI|TINGKAT|ASESMEN|LINK)
+function csvToJadwal(rows) {
+  const objs = parseCSVObjects(rows);
+  return objs.map(o => ({
+    tanggal  : ambilKolom(o, 'TANGGAL'),
+    kode     : ambilKolom(o, 'KODE'),
+    prioritas: ambilKolom(o, 'PRIORITAS'),
+    mulai    : ambilKolom(o, 'MULAI'),
+    selesai  : ambilKolom(o, 'SELESAI'),
+    tingkat  : ambilKolom(o, 'TINGKAT'),
+    asesmen  : ambilKolom(o, 'ASESMEN'),
+    link     : ambilKolom(o, 'LINK'),
+  })).filter(j => j.tanggal);
+}
+
+// ============================================================
+// PENCOCOKAN JADWAL AKTIF
+// Cocokkan: TANGGAL = hari ini, TINGKAT = kelas siswa, PRIORITAS
+// = rombel siswa (kalau kolom itu terisi; kosong = berlaku semua
+// rombel di tingkat itu), dan jam sekarang ada di antara MULAI-SELESAI.
+// ============================================================
+function parseTanggalFleksibel(str) {
+  if (!str) return null;
+  const parts = String(str).trim().split(/[\/\-]/).map(s => parseInt(s, 10));
+  if (parts.length !== 3 || parts.some(isNaN)) return null;
+  let [bulan, hari, tahun] = parts; // format M/D/YYYY seperti di spreadsheet
+  if (tahun < 100) tahun += 2000;
+  return { bulan, hari, tahun };
+}
+function tanggalSama(a, b) {
+  return !!a && !!b && a.bulan === b.bulan && a.hari === b.hari && a.tahun === b.tahun;
+}
+function parseJamMenit(str) {
+  if (!str) return null;
+  const m = String(str).trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+}
+
+function cariJadwalAktif(siswa) {
+  if (!siswa) return { status: 'kosong' };
+  const today = parseTanggalFleksibel(
+    `${new Date().getMonth()+1}/${new Date().getDate()}/${new Date().getFullYear()}`
+  );
+  const now = new Date();
+  const menitSekarang = now.getHours() * 60 + now.getMinutes();
+  const kelasSiswa = (siswa.kelas || '').trim().toUpperCase();
+  const tingkatSiswa = kelasSiswa.replace(/[^0-9]/g, '').charAt(0);
+
+  const kandidatHariIni = (D.jadwal || []).filter(j => {
+    if (!tanggalSama(parseTanggalFleksibel(j.tanggal), today)) return false;
+    if (String(j.tingkat).trim() !== tingkatSiswa) return false;
+    if (j.prioritas) {
+      const daftar = j.prioritas.split(',').map(s => s.trim().toUpperCase());
+      if (!daftar.includes(kelasSiswa)) return false;
+    }
+    return true;
+  });
+
+  if (kandidatHariIni.length === 0) return { status: 'kosong' };
+
+  for (const j of kandidatHariIni) {
+    const mulai = parseJamMenit(j.mulai);
+    const selesai = parseJamMenit(j.selesai);
+    if (mulai === null) continue;
+    if (menitSekarang < mulai) continue;
+    if (selesai !== null && menitSekarang > selesai) continue;
+    return { status: 'aktif', jadwal: j };
   }
-  return siswa;
+
+  const akanDatang = kandidatHariIni
+    .filter(j => { const m = parseJamMenit(j.mulai); return m !== null && menitSekarang < m; })
+    .sort((a,b) => parseJamMenit(a.mulai) - parseJamMenit(b.mulai))[0];
+  if (akanDatang) return { status: 'belum', jadwal: akanDatang };
+
+  return { status: 'lewat', jadwal: kandidatHariIni[kandidatHariIni.length - 1] };
+}
+
+// Susun link akhir: ganti placeholder literal "KODE" di link jadwal
+// dengan KODE SOAL milik siswa (dari CSV siswa, kolom D di Sheet2)
+function susunLinkAktif(siswa, jadwal) {
+  if (!jadwal || !jadwal.link) return '';
+  const kode = (siswa && siswa.kodeSoal) ? siswa.kodeSoal : '';
+  if (!kode) return jadwal.link; // tidak ada kode unik → pakai link apa adanya
+  return jadwal.link.replace(/KODE/g, kode);
 }
 
 const LOGO_URL = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_B7CwV-8fChbKdjVlBPyzW64K2ROcs4MLQfoZTxXrFG-fYMopVJWpISURDn0mIvbGtY6EqS2VYA1mizLD10nI104RiG2WvcP64AeSjDXW9C2_MxIEma_CsaT68v_yzY5MvSZE62eoeaPg_W3BuctXGM_iLnuYoIze6yS2di45nsiS9OFdvx0HtAj-xKs/s2145/logo_smp.png';
 
 let D = {
-  sekolah:{namaSekolah:'SMP NEGERI 1 KALIWEDI',alamat:'Jl. Raya Kigesang Prajawinangun Kulon - Kaliwedi',judul:'Asesmen Sumatif Akhir Tahun',tahun:'2026/2027',mapelKls7:'IPS',mapelKls8:'IPS',mapelKls9:'IPS',linkKls7:'',linkKls8:'',linkKls9:'',token:'PANTI70'},
+  sekolah:{namaSekolah:'SMP NEGERI 1 KALIWEDI',alamat:'Jl. Raya Kigesang Prajawinangun Kulon - Kaliwedi',judul:'Asesmen Sumatif Akhir Tahun',tahun:'2026/2027',token:'PANTI70'},
   siswa:[],
+  jadwal:[],
   aktif:null,
   susulanList:[]
 };
@@ -722,28 +775,29 @@ async function init() {
   setText('loadTeks', 'Memuat data...');
   setText('loadSub',  'Mengambil dari GitHub...');
 
-  // Kedua CSV dibaca BERSAMAAN — 1000 user serentak tidak masalah.
-  // Konfigurasi (token, jeda pengamanan, judul & link asesmen per
-  // kelas) diambil bersamaan langsung dari Spreadsheet.
-  const [rowsSekolah, rowsSiswa, konfig, mapelLink] = await Promise.all([
+  // Semua CSV dibaca BERSAMAAN — 1000 user serentak tidak masalah.
+  // Token & jeda pengamanan diambil langsung dari Spreadsheet (B6/B7).
+  const [rowsSekolah, rowsSiswa, rowsJadwal, konfig] = await Promise.all([
     bacaCSV(csvUrl('sekolah')),
     bacaCSV(csvUrl('siswa')),
+    bacaCSV(csvUrl('jadwal')),
     ambilKonfigDariSheet(),
-    ambilMapelLinkDariSheet(),
   ]);
 
   if (rowsSekolah) {
     D.sekolah = { ...D.sekolah, ...csvKVtoObj(rowsSekolah) };
     console.log('✅ Data sekolah dari CSV');
   }
-  // Token, jeda pengamanan, judul & link asesmen dari Spreadsheet
-  // SELALU jadi sumber utama — timpa nilai dari CSV (kalau ada)
-  // supaya tidak pernah memakai data basi.
+  // Token & jeda pengamanan dari Spreadsheet SELALU jadi sumber utama —
+  // timpa nilai dari CSV (kalau ada) supaya tidak pernah memakai data basi.
   if (konfig.token) D.sekolah.token = konfig.token;
   if (konfig.toleransiMs) TOLERANSI_MS = konfig.toleransiMs;
-  if (mapelLink.mapelKls7) D.sekolah.mapelKls7 = mapelLink.mapelKls7;
-  if (mapelLink.mapelKls8) D.sekolah.mapelKls8 = mapelLink.mapelKls8;
-  if (mapelLink.mapelKls9) D.sekolah.mapelKls9 = mapelLink.mapelKls9;
+  if (rowsJadwal) {
+    D.jadwal = csvToJadwal(rowsJadwal);
+    console.log('✅ Jadwal dari CSV:', D.jadwal.length, 'baris');
+  } else {
+    console.warn('⚠️ Gagal memuat jadwal.csv — tombol asesmen tidak akan aktif.');
+  }
   if (rowsSiswa) {
     D.siswa = csvToSiswa(rowsSiswa);
     console.log('✅ Siswa dari CSV:', D.siswa.length, 'orang');
@@ -832,13 +886,43 @@ async function tampilDashboard(siswa) {
   setText('p2Nama',  siswa.nama);
   setText('p2ID',    siswa.id);
   setText('p2Kelas', 'Kelas ' + siswa.kelas);
-  const mapel = getMapel(siswa.kelas);
-  setText('p2Mapel', mapel);
-  setText('tkMapel', mapel ? 'Mata Pelajaran: '+mapel : '');
+  renderAsesmenAktif();
   hide('h1'); show('h2');
   await muatNilai(siswa);
   await muatSusulan(siswa);
 }
+
+// ============================================================
+// RENDER TOMBOL/NOTIFIKASI ASESMEN — nama mata pelajaran JADI
+// tombol yang bisa ditap. Kalau di luar jadwal, tampilkan
+// notifikasi (belum waktunya / sudah lewat / tidak ada jadwal).
+// ============================================================
+let jadwalAktifSekarang = null; // dipakai lagi saat token dikonfirmasi
+
+function renderAsesmenAktif() {
+  const area = document.getElementById('areaAsesmenAktif');
+  const hasil = cariJadwalAktif(D.aktif);
+  jadwalAktifSekarang = hasil;
+
+  if (hasil.status === 'aktif') {
+    area.innerHTML = `
+      <button class="btn-ujian" onclick="bukaToken()" style="width:100%">
+        📝 ${escapeHtml(hasil.jadwal.asesmen || 'Ikuti Ujian')}
+        <small>Tap untuk mulai</small>
+      </button>`;
+    setText('tkMapel', hasil.jadwal.asesmen ? 'Mata Pelajaran: '+hasil.jadwal.asesmen : '');
+  } else if (hasil.status === 'belum') {
+    area.innerHTML = `
+      <div class="notice-jadwal">⏳ <b>Belum waktunya.</b><br>${escapeHtml(hasil.jadwal.asesmen)} dimulai pukul ${escapeHtml(hasil.jadwal.mulai)}.</div>`;
+  } else if (hasil.status === 'lewat') {
+    area.innerHTML = `
+      <div class="notice-jadwal">⌛ <b>Jadwal terlewat.</b><br>${escapeHtml(hasil.jadwal.asesmen)} sudah selesai pukul ${escapeHtml(hasil.jadwal.selesai || '-')}.</div>`;
+  } else {
+    area.innerHTML = `
+      <div class="notice-jadwal">📭 Tidak ada asesmen terjadwal untuk kelas Anda hari ini.</div>`;
+  }
+}
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
 async function muatNilai(siswa, paksaLive) {
   const tb = document.getElementById('tbNilai');
@@ -851,24 +935,24 @@ async function muatNilai(siswa, paksaLive) {
     // permintaan bersamaan karena ini aksi manual per-orang.
     r = await apiFetch({action:'getNilai', id:siswa.id});
   } else {
-    // Baca nilai dari CSV GitHub dulu (cepat, tanpa Apps Script,
-    // aman untuk diakses 1000 siswa sekaligus)
+    // Baca nilai dari CSV GitHub (sumbernya Sheet3: satu baris per
+    // submit ujian — TIME STAMP | MATA UJI | KODE | NILAI). Dicocokkan
+    // lewat KODE SOAL siswa (bukan NISN), karena itu yang tercatat di
+    // Google Form saat siswa mengumpulkan jawaban.
     const rowsNilai = await bacaCSV(csvUrl('nilai'));
     if (rowsNilai && rowsNilai.length > 1) {
-      const header = rowsNilai[0];
-      for (let i = 1; i < rowsNilai.length; i++) {
-        if ((rowsNilai[i][0]||'').trim() !== siswa.id) continue;
-        const nilai = [];
-        for (let k = 3; k < header.length; k++) {
-          const mapel = (header[k]||'').trim();
-          if (!mapel) continue;
-          const v = rowsNilai[i][k];
-          nilai.push({ mapel, nilai: (v!==''&&v!==undefined) ? Number(v) : null });
-        }
-        r = { nilai };
-        break;
-      }
-      if (!r) r = { nilai: [] };
+      const objs = parseCSVObjects(rowsNilai);
+      const kodeSiswa = (siswa.kodeSoal || '').trim().toUpperCase();
+      const nilaiPerMapel = {}; // dedupe: kalau ada beberapa baris utk mapel sama, ambil yang PALING TERAKHIR
+      objs.forEach(o => {
+        const kodeBaris = ambilKolom(o, 'KODE').trim().toUpperCase();
+        if (!kodeSiswa || kodeBaris !== kodeSiswa) return;
+        const mapel = ambilKolom(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN');
+        const nilaiStr = ambilKolom(o, 'NILAI');
+        if (!mapel) return;
+        nilaiPerMapel[mapel] = (nilaiStr !== '' && nilaiStr !== undefined) ? Number(nilaiStr) : null;
+      });
+      r = { nilai: Object.keys(nilaiPerMapel).map(mapel => ({ mapel, nilai: nilaiPerMapel[mapel] })) };
     } else {
       // Fallback ke Apps Script jika CSV gagal
       r = await apiFetch({action:'getNilai', id:siswa.id});
@@ -880,7 +964,7 @@ async function muatNilai(siswa, paksaLive) {
     return;
   }
   if (r.nilai.length === 0) {
-    const mapel = getMapel(siswa.kelas);
+    const mapel = (jadwalAktifSekarang && jadwalAktifSekarang.jadwal) ? jadwalAktifSekarang.jadwal.asesmen : '';
     tb.innerHTML = `<tr><td>1</td><td><b>${mapel||'-'}</b></td>
       <td style="text-align:center"><span class="bdg blm">Belum</span></td>
       <td><span class="bdg b"></span></td></tr>`;
@@ -1095,7 +1179,13 @@ function mulaiScanToken() {
           // Token benar — tutup scanner, langsung masuk ke soal
           tutupTokenQR();
           const siswa  = D.aktif;
-          const link   = await ambilLinkAktif(siswa);
+          const hasilJadwal = cariJadwalAktif(siswa);
+          if (hasilJadwal.status !== 'aktif') {
+            renderAsesmenAktif();
+            alert('⚠️ Jadwal asesmen untuk Anda sudah tidak aktif. Silakan cek kembali jadwal di dashboard.');
+            return;
+          }
+          const link = susunLinkAktif(siswa, hasilJadwal.jadwal);
           if (!link) { alert('⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
 
           // Catat waktu scan token ke Sheet2!G (hanya scan PERTAMA)
@@ -1192,7 +1282,12 @@ async function cekOtorisasiManual() {
 
   if (terkonfirmasi) {
     pesan(el,'ok','✅ Sudah dikonfirmasi pengawas! Membuka soal...');
-    const link = await ambilLinkAktif(siswa);
+    const hasilJadwal = cariJadwalAktif(siswa);
+    if (hasilJadwal.status !== 'aktif') {
+      pesan(el,'err','⚠️ Jadwal asesmen sudah tidak aktif. Hubungi pengawas.');
+      return;
+    }
+    const link = susunLinkAktif(siswa, hasilJadwal.jadwal);
     if (!link) { pesan(el,'err','⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
     setTimeout(() => {
       tutup('mOtorisasi');
@@ -1663,10 +1758,6 @@ function hentikanAlarm() {
 // UBAH PASSWORD
 // ============================================================
 
-function getMapel(kelas) {
-  const k = String(kelas).replace(/[^0-9]/g,'').charAt(0);
-  return k==='7'?D.sekolah.mapelKls7:k==='8'?D.sekolah.mapelKls8:D.sekolah.mapelKls9;
-}
 function val(id)      { return document.getElementById(id).value.trim(); }
 function setText(id,t){ const e=document.getElementById(id); if(e) e.textContent=t; }
 function show(id)     { const e=document.getElementById(id); if(!e)return; e.style.display=id==='loading'?'flex':'block'; }

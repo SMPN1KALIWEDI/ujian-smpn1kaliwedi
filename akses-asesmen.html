@@ -19,7 +19,7 @@
     --teal-400:#3FC7C1;
     --amber-500:#E2A63B;
     --red-500:#E15C5C;
-    --bg:#F3F5F9;
+    --bg:#EAF6EE;
     --card:#FFFFFF;
     --ink:#151A26;
     --ink-soft:#5B6478;
@@ -389,14 +389,14 @@
 <div id="app">
 
   <div class="brand">
-    <div class="brand-badge">
+    <div class="brand-badge" id="brandBadge">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M2 12C2 12 5.5 5.5 12 5.5C18.5 5.5 22 12 22 12C22 12 18.5 18.5 12 18.5C5.5 18.5 2 12 2 12Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
         <circle cx="12" cy="12" r="3.4" stroke="white" stroke-width="1.8"/>
         <circle cx="12" cy="12" r="1.1" fill="white"/>
       </svg>
     </div>
-    <h1>Akses Asesmen</h1>
+    <h1 id="brandTitle">Akses Asesmen</h1>
     <p>SMP Negeri 1 Kaliwedi</p>
   </div>
 
@@ -543,6 +543,12 @@
 
   <!-- ===================== SCREEN 4 : REKAP NILAI ===================== -->
   <div id="screenRekap" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnTutupRekap">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
     <div class="field">
       <label for="filterKelas">Filter Kelas</label>
       <div class="select-wrap">
@@ -567,13 +573,16 @@
     <button id="btnDownloadXLS" class="btn btn-ghost" style="margin-top:14px;width:100%" disabled>
       ⬇️ Download Excel (.xlsx)
     </button>
-    <button id="btnTutupRekap" class="btn btn-ghost" style="margin-top:10px;width:100%">
-      ← Kembali
-    </button>
   </div>
 
   <!-- ===================== SCREEN 5 : RESET PASSWORD SISWA ===================== -->
   <div id="screenResetPw" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnTutupResetPw">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
     <div class="field">
       <label for="inputNisnResetPw">NISN Siswa</label>
       <input type="text" id="inputNisnResetPw" placeholder="Ketik atau scan QR NISN siswa"
@@ -602,9 +611,6 @@
     <div style="margin-top:10px;font-size:12px;color:var(--ink-soft);line-height:1.5">
       Setelah direset, siswa login pakai NISN + password default <b>user123</b>, lalu akan diminta ganti password baru sendiri.
     </div>
-    <button id="btnTutupResetPw" class="btn btn-ghost" style="margin-top:14px;width:100%">
-      ← Kembali
-    </button>
   </div>
 
   <!-- ===================== POPUP: RESET BERHASIL ===================== -->
@@ -697,6 +703,8 @@ const els = {
   btnKonfirmasiManualLabel: document.getElementById('btnKonfirmasiManualLabel'),
   manualStatus: document.getElementById('manualStatus'),
   manualLog: document.getElementById('manualLog'),
+  brandBadge: document.getElementById('brandBadge'),
+  brandTitle: document.getElementById('brandTitle'),
   screenHome: document.getElementById('screenHome'),
   cardTokenAsesmen: document.getElementById('cardTokenAsesmen'),
   cardRekapNilai: document.getElementById('cardRekapNilai'),
@@ -1030,6 +1038,7 @@ els.inputNisnManual.addEventListener('keydown', (e) => {
    & Sheet2), gabungkan lewat KODE SISWA, kelompokkan per
    kelas, render tabel + tombol download Excel per kelas.
 ========================================================= */
+const SEKOLAH_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/sekolah.csv';
 const NILAI_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/nilai.csv';
 const SISWA_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/siswa.csv';
 
@@ -1219,7 +1228,24 @@ function downloadRekapXLS(){
   XLSX.writeFile(wb, `Rekap-Nilai-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
+/* =========================================================
+   HEADER DINAMIS PER LAYAR — badge/logo hanya di Menu Utama,
+   layar lain tampilkan judul sesuai fiturnya, tanpa ikon.
+========================================================= */
+const HEADER_LAYAR = {
+  home:    { judul: 'Akses Asesmen', tampilkanIkon: true  },
+  token:   { judul: 'Token Asesmen', tampilkanIkon: false },
+  rekap:   { judul: 'REKAP NILAI',   tampilkanIkon: false },
+  resetpw: { judul: 'Reset Password',tampilkanIkon: false },
+};
+function aturHeader(kunci){
+  const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
+  els.brandTitle.textContent = cfg.judul;
+  els.brandBadge.style.display = cfg.tampilkanIkon ? 'flex' : 'none';
+}
+
 els.cardRekapNilai.addEventListener('click', () => {
+  aturHeader('rekap');
   els.screenHome.classList.add('hidden');
   els.screenRekap.classList.remove('hidden');
   if (!rekapTerakhir) muatDataRekap();
@@ -1229,6 +1255,7 @@ els.filterKelas.addEventListener('change', muatDataRekap);
 els.filterMapel.addEventListener('change', muatDataRekap);
 els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
 els.btnTutupRekap.addEventListener('click', () => {
+  aturHeader('home');
   els.screenRekap.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
 });
@@ -1357,6 +1384,7 @@ function tutupPopupSukses(){
 els.btnTutupPopupSukses.addEventListener('click', tutupPopupSukses);
 
 els.cardResetPw.addEventListener('click', () => {
+  aturHeader('resetpw');
   els.screenHome.classList.add('hidden');
   els.screenResetPw.classList.remove('hidden');
 });
@@ -1369,6 +1397,7 @@ els.inputNisnResetPw.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') els.btnResetPwSubmit.click();
 });
 els.btnTutupResetPw.addEventListener('click', () => {
+  aturHeader('home');
   tutupQrResetPw();
   els.screenResetPw.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
@@ -1416,13 +1445,39 @@ function tutupQrResetPw(){
 els.btnScanQrResetPw.addEventListener('click', bukaQrResetPw);
 els.btnTutupQrResetPw.addEventListener('click', tutupQrResetPw);
 els.cardTokenAsesmen.addEventListener('click', () => {
+  aturHeader('token');
   els.screenHome.classList.add('hidden');
   els.screenEntry.classList.remove('hidden');
 });
 els.btnKembaliDariEntry.addEventListener('click', () => {
+  aturHeader('home');
   els.screenEntry.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
 });
+
+/* ---- Logo sekolah dari data/sekolah.csv (GitHub), tampil di Menu Utama ---- */
+async function muatLogoSekolah(){
+  try {
+    const t = Math.floor(Date.now() / 60000);
+    const res = await fetch(SEKOLAH_CSV_URL + '?t=' + t, { cache: 'no-store' });
+    if (!res.ok) return;
+    const baris = parseCSVGenerik(await res.text());
+    let logoUrl = '';
+    for (let i = 1; i < baris.length; i++) {
+      const [k, v] = baris[i];
+      if ((k || '').trim() === 'logo' && v) { logoUrl = v.trim(); break; }
+    }
+    if (logoUrl) {
+      els.brandBadge.style.background = '#fff';
+      els.brandBadge.style.borderRadius = '50%';
+      els.brandBadge.style.padding = '6px';
+      els.brandBadge.innerHTML = `<img src="${logoUrl}" alt="Logo SMP Negeri 1 Kaliwedi" style="width:100%;height:100%;object-fit:contain;border-radius:50%">`;
+    }
+  } catch (e) {
+    // biarkan pakai ikon bawaan kalau logo belum bisa dimuat
+  }
+}
+muatLogoSekolah();
 
 validateForm();
 </script>

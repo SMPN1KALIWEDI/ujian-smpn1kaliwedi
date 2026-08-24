@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
@@ -433,6 +434,14 @@
         </select>
       </div>
     </div>
+    <div class="field">
+      <label for="filterMapel">Filter Mapel</label>
+      <div class="select-wrap">
+        <select id="filterMapel">
+          <option value="">Semua Mapel</option>
+        </select>
+      </div>
+    </div>
     <button id="btnMuatRekap" class="btn btn-primary">
       <span id="btnMuatRekapLabel">🔄 Muat / Refresh Rekap</span>
     </button>
@@ -450,10 +459,16 @@
   <div id="screenResetPw" class="card hidden" style="margin-top:16px">
     <div class="field">
       <label for="inputNisnResetPw">NISN Siswa</label>
-      <input type="text" id="inputNisnResetPw" placeholder="Ketik NISN siswa yang gagal login"
+      <input type="text" id="inputNisnResetPw" placeholder="Ketik atau scan QR NISN siswa"
         style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
     </div>
-    <button id="btnResetPwSubmit" class="btn btn-primary">
+    <button id="btnScanQrResetPw" class="btn btn-ghost" style="width:100%">📷 Scan QR Kartu Siswa</button>
+    <div id="qrReaderResetPwWrap" style="margin-top:10px;display:none">
+      <div id="qr-reader-resetpw" style="border-radius:12px;overflow:hidden"></div>
+      <div id="qrStatusResetPw" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
+      <button id="btnTutupQrResetPw" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
+    </div>
+    <button id="btnResetPwSubmit" class="btn btn-primary" style="margin-top:12px">
       <span id="btnResetPwSubmitLabel">🔑 Reset ke Password Default</span>
     </button>
     <div id="resetPwStatus" class="status-msg"></div>
@@ -547,6 +562,7 @@ const els = {
   btnRekapNilai: document.getElementById('btnRekapNilai'),
   screenRekap: document.getElementById('screenRekap'),
   filterKelas: document.getElementById('filterKelas'),
+  filterMapel: document.getElementById('filterMapel'),
   btnMuatRekap: document.getElementById('btnMuatRekap'),
   btnMuatRekapLabel: document.getElementById('btnMuatRekapLabel'),
   rekapStatus: document.getElementById('rekapStatus'),
@@ -556,6 +572,10 @@ const els = {
   btnResetPw: document.getElementById('btnResetPw'),
   screenResetPw: document.getElementById('screenResetPw'),
   inputNisnResetPw: document.getElementById('inputNisnResetPw'),
+  btnScanQrResetPw: document.getElementById('btnScanQrResetPw'),
+  qrReaderResetPwWrap: document.getElementById('qrReaderResetPwWrap'),
+  qrStatusResetPw: document.getElementById('qrStatusResetPw'),
+  btnTutupQrResetPw: document.getElementById('btnTutupQrResetPw'),
   btnResetPwSubmit: document.getElementById('btnResetPwSubmit'),
   btnResetPwSubmitLabel: document.getElementById('btnResetPwSubmitLabel'),
   resetPwStatus: document.getElementById('resetPwStatus'),
@@ -666,7 +686,7 @@ els.btnBukaToken.addEventListener('click', async () => {
   if (!ruang || !pengawas) return;
 
   els.btnBukaToken.disabled = true;
-  els.btnBukaTokenLabel.innerHTML = '<span class="spinner"></span>';
+  els.btnBukaTokenLabel.innerHTML = '<span class="spinner"></span> Sedang membuat token...';
   els.entryStatus.textContent = '';
   els.entryStatus.className = 'status-msg';
 
@@ -943,18 +963,23 @@ async function muatDataRekap(){
     isiFilterKelas([...semuaKelas]);
 
     const kelasFilter = els.filterKelas.value.trim().toUpperCase();
+    const mapelFilter = els.filterMapel.value.trim().toUpperCase();
+    const semuaMapel = new Set();
     const rekap = {};
     objNilai.forEach(o => {
       const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
       if (!kode) return;
       const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
+      semuaMapel.add(mapel);
       const nilai = ambilKolomRekap(o, 'NILAI');
       const waktu = ambilKolomRekap(o, 'TIMESTAMP');
       const info = lookup[kode] || { nama: '(tidak dikenal — cek Sheet2)', kelas: '(tanpa kelas)' };
       if (kelasFilter && info.kelas.toUpperCase() !== kelasFilter) return;
+      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
       if (!rekap[info.kelas]) rekap[info.kelas] = [];
       rekap[info.kelas].push({ nama: info.nama, kode, mapel, nilai, waktu });
     });
+    isiFilterMapel([...semuaMapel]);
 
     // Urutkan tiap kelas berdasarkan nama
     Object.values(rekap).forEach(list => list.sort((a, b) => a.nama.localeCompare(b.nama)));
@@ -986,6 +1011,16 @@ function isiFilterKelas(daftarKelas){
     els.filterKelas.appendChild(opt);
   });
   els.filterKelas.value = nilaiSekarang;
+}
+function isiFilterMapel(daftarMapel){
+  const nilaiSekarang = els.filterMapel.value;
+  els.filterMapel.innerHTML = '<option value="">Semua Mapel</option>';
+  daftarMapel.filter(Boolean).sort().forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    els.filterMapel.appendChild(opt);
+  });
+  els.filterMapel.value = nilaiSekarang;
 }
 
 function renderRekap(rekap){
@@ -1042,6 +1077,7 @@ els.btnRekapNilai.addEventListener('click', () => {
 });
 els.btnMuatRekap.addEventListener('click', muatDataRekap);
 els.filterKelas.addEventListener('change', muatDataRekap);
+els.filterMapel.addEventListener('change', muatDataRekap);
 els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
 els.btnTutupRekap.addEventListener('click', () => {
   els.screenRekap.classList.add('hidden');
@@ -1103,9 +1139,51 @@ els.inputNisnResetPw.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') els.btnResetPwSubmit.click();
 });
 els.btnTutupResetPw.addEventListener('click', () => {
+  tutupQrResetPw();
   els.screenResetPw.classList.add('hidden');
   els.screenEntry.classList.remove('hidden');
 });
+
+/* ---- Scan QR NISN (kartu siswa) untuk Reset Password ---- */
+let qrScannerResetPw = null;
+
+function bukaQrResetPw(){
+  els.qrReaderResetPwWrap.style.display = 'block';
+  els.qrStatusResetPw.textContent = 'Memulai kamera...';
+  setTimeout(() => {
+    try {
+      qrScannerResetPw = new Html5Qrcode('qr-reader-resetpw');
+      qrScannerResetPw.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const teks = decodedText.trim();
+          els.inputNisnResetPw.value = teks;
+          els.qrStatusResetPw.textContent = '✅ Terbaca: ' + teks;
+          if (qrScannerResetPw) { try { qrScannerResetPw.pause(true); } catch(e){} }
+          setTimeout(tutupQrResetPw, 700);
+        },
+        () => {}
+      ).then(() => { els.qrStatusResetPw.textContent = '🔍 Arahkan ke QR Code kartu siswa...'; })
+       .catch(err => { els.qrStatusResetPw.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
+    } catch (e) {
+      els.qrStatusResetPw.textContent = '❌ ' + e.message;
+    }
+  }, 300);
+}
+
+function tutupQrResetPw(){
+  if (qrScannerResetPw){
+    qrScannerResetPw.stop().catch(() => {}).finally(() => {
+      try { qrScannerResetPw.clear(); } catch(e){}
+      qrScannerResetPw = null;
+    });
+  }
+  els.qrReaderResetPwWrap.style.display = 'none';
+}
+
+els.btnScanQrResetPw.addEventListener('click', bukaQrResetPw);
+els.btnTutupQrResetPw.addEventListener('click', tutupQrResetPw);
 
 validateForm();
 </script>

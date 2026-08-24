@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pengawas Ruang</title>
+<title>Akses Asesmen - SMP Negeri 1 Kaliwedi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -339,6 +339,50 @@
   will-change: transform, opacity;
 }
 #popupSuksesBox { animation: munculPop .35s ease-out; }
+  /* ---------- Menu Utama (Home) ---------- */
+  .menu-list{display:flex;flex-direction:column;gap:12px;}
+  .menu-card{
+    display:flex;align-items:center;gap:14px;
+    width:100%;padding:16px;
+    background:#FAFBFD;
+    border:1.5px solid var(--ring-track);
+    border-radius:var(--radius-md);
+    cursor:pointer;
+    font-family:inherit;
+    text-align:left;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .menu-card:hover{border-color:var(--accent, var(--teal-500));background:#fff;}
+  .menu-card:active{transform:scale(0.98);}
+  .menu-icon{
+    flex:none;
+    width:48px;height:48px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--accent, var(--teal-500));
+    box-shadow:0 6px 16px -6px var(--accent, var(--teal-500));
+  }
+  .menu-icon svg{width:24px;height:24px;}
+  .menu-text{flex:1;min-width:0;}
+  .menu-title{
+    font-family:'Poppins',sans-serif;
+    font-weight:700;font-size:15px;
+    color:var(--navy-950);
+    margin-bottom:2px;
+  }
+  .menu-desc{
+    font-size:12.5px;color:var(--ink-soft);
+    line-height:1.4;
+  }
+  .menu-chevron{flex:none;width:18px;height:18px;color:#B7BECF;}
+  .menu-back{
+    display:flex;align-items:center;gap:6px;
+    background:none;border:none;cursor:pointer;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+    color:var(--ink-soft);
+    padding:8px 2px;margin-bottom:14px;
+  }
+  .menu-back svg{width:16px;height:16px;}
+  .menu-back:hover{color:var(--navy-800);}
 </style>
 </head>
 <body>
@@ -352,12 +396,72 @@
         <circle cx="12" cy="12" r="1.1" fill="white"/>
       </svg>
     </div>
-    <h1>Pengawas Ruang</h1>
+    <h1>Akses Asesmen</h1>
     <p>SMP Negeri 1 Kaliwedi</p>
   </div>
 
-  <!-- ===================== SCREEN 1 : JENDELA MASUK ===================== -->
-  <div id="screenEntry" class="card">
+  <!-- ===================== SCREEN 0 : MENU UTAMA ===================== -->
+  <div id="screenHome" class="card">
+    <div class="menu-list">
+      <button type="button" id="cardTokenAsesmen" class="menu-card" style="--accent:var(--teal-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <path d="M14 14h3.2M14 18h7M20.5 14v7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Token Asesmen</div>
+          <div class="menu-desc">Tampilkan QR token untuk ruang ujian</div>
+        </div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <button type="button" id="cardRekapNilai" class="menu-card" style="--accent:var(--amber-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 20V10M12 20V4M20 20v-7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Rekap Nilai</div>
+          <div class="menu-desc">Lihat & unduh nilai siswa per kelas</div>
+        </div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <button type="button" id="cardResetPw" class="menu-card" style="--accent:var(--red-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+            <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Reset Password</div>
+          <div class="menu-desc">Bantu siswa yang gagal login</div>
+        </div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== SCREEN 1 : JENDELA MASUK (TOKEN ASESMEN) ===================== -->
+  <div id="screenEntry" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariEntry">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
     <div class="field">
       <label for="inputRuang">Ruang Asesmen</label>
       <div class="select-wrap">
@@ -378,13 +482,6 @@
       <span id="btnBukaTokenLabel">Buka Token</span>
     </button>
     <div id="entryStatus" class="status-msg"></div>
-
-    <button id="btnRekapNilai" class="btn btn-ghost" style="margin-top:12px;width:100%">
-      📊 Rekap Nilai Siswa
-    </button>
-    <button id="btnResetPw" class="btn btn-ghost" style="margin-top:10px;width:100%">
-      🔑 Reset Password Siswa
-    </button>
   </div>
 
   <!-- ===================== SCREEN 2 : TOKEN QR ===================== -->
@@ -547,8 +644,8 @@ const CONFIG = {
   const iconUrl = 'data:image/svg+xml;base64,' + btoa(iconSvg);
   const manifest = {
     id: 'pengawas-ruang-smpn1kaliwedi',
-    name: 'Pengawas Ruang - SMPN 1 Kaliwedi',
-    short_name: 'Pengawas Ruang',
+    name: 'Akses Asesmen - SMPN 1 Kaliwedi',
+    short_name: 'Akses Asesmen',
     start_url: '.',
     display: 'standalone',
     background_color: '#F3F5F9',
@@ -600,7 +697,11 @@ const els = {
   btnKonfirmasiManualLabel: document.getElementById('btnKonfirmasiManualLabel'),
   manualStatus: document.getElementById('manualStatus'),
   manualLog: document.getElementById('manualLog'),
-  btnRekapNilai: document.getElementById('btnRekapNilai'),
+  screenHome: document.getElementById('screenHome'),
+  cardTokenAsesmen: document.getElementById('cardTokenAsesmen'),
+  cardRekapNilai: document.getElementById('cardRekapNilai'),
+  cardResetPw: document.getElementById('cardResetPw'),
+  btnKembaliDariEntry: document.getElementById('btnKembaliDariEntry'),
   screenRekap: document.getElementById('screenRekap'),
   filterKelas: document.getElementById('filterKelas'),
   filterMapel: document.getElementById('filterMapel'),
@@ -610,7 +711,6 @@ const els = {
   rekapContainer: document.getElementById('rekapContainer'),
   btnDownloadXLS: document.getElementById('btnDownloadXLS'),
   btnTutupRekap: document.getElementById('btnTutupRekap'),
-  btnResetPw: document.getElementById('btnResetPw'),
   screenResetPw: document.getElementById('screenResetPw'),
   inputNisnResetPw: document.getElementById('inputNisnResetPw'),
   btnScanQrResetPw: document.getElementById('btnScanQrResetPw'),
@@ -1119,8 +1219,8 @@ function downloadRekapXLS(){
   XLSX.writeFile(wb, `Rekap-Nilai-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
-els.btnRekapNilai.addEventListener('click', () => {
-  els.screenEntry.classList.add('hidden');
+els.cardRekapNilai.addEventListener('click', () => {
+  els.screenHome.classList.add('hidden');
   els.screenRekap.classList.remove('hidden');
   if (!rekapTerakhir) muatDataRekap();
 });
@@ -1130,7 +1230,7 @@ els.filterMapel.addEventListener('change', muatDataRekap);
 els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
 els.btnTutupRekap.addEventListener('click', () => {
   els.screenRekap.classList.add('hidden');
-  els.screenEntry.classList.remove('hidden');
+  els.screenHome.classList.remove('hidden');
 });
 
 let daftarSiswaCache = null; // cache hasil siswa.csv, dipakai bareng utk preview & rekap
@@ -1256,8 +1356,8 @@ function tutupPopupSukses(){
 
 els.btnTutupPopupSukses.addEventListener('click', tutupPopupSukses);
 
-els.btnResetPw.addEventListener('click', () => {
-  els.screenEntry.classList.add('hidden');
+els.cardResetPw.addEventListener('click', () => {
+  els.screenHome.classList.add('hidden');
   els.screenResetPw.classList.remove('hidden');
 });
 els.btnResetPwSubmit.addEventListener('click', resetPasswordSiswa);
@@ -1271,7 +1371,7 @@ els.inputNisnResetPw.addEventListener('keydown', (e) => {
 els.btnTutupResetPw.addEventListener('click', () => {
   tutupQrResetPw();
   els.screenResetPw.classList.add('hidden');
-  els.screenEntry.classList.remove('hidden');
+  els.screenHome.classList.remove('hidden');
 });
 
 /* ---- Scan QR NISN (kartu siswa) untuk Reset Password ---- */
@@ -1315,6 +1415,14 @@ function tutupQrResetPw(){
 
 els.btnScanQrResetPw.addEventListener('click', bukaQrResetPw);
 els.btnTutupQrResetPw.addEventListener('click', tutupQrResetPw);
+els.cardTokenAsesmen.addEventListener('click', () => {
+  els.screenHome.classList.add('hidden');
+  els.screenEntry.classList.remove('hidden');
+});
+els.btnKembaliDariEntry.addEventListener('click', () => {
+  els.screenEntry.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
 
 validateForm();
 </script>

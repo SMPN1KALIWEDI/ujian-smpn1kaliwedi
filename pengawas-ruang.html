@@ -319,6 +319,26 @@
     font-weight:500;
     margin-top:16px;
   }
+@keyframes jatuhBintang {
+  0%   { transform: translateY(-30px) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(340px) rotate(360deg); opacity: 0; }
+}
+@keyframes munculPop {
+  0%   { transform: scale(.6); opacity: 0; }
+  60%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.bintang-jatuh {
+  position: absolute;
+  top: -20px;
+  font-size: 18px;
+  animation-name: jatuhBintang;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+#popupSuksesBox { animation: munculPop .35s ease-out; }
 </style>
 </head>
 <body>
@@ -468,6 +488,16 @@
       <div id="qrStatusResetPw" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
       <button id="btnTutupQrResetPw" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
     </div>
+
+    <div id="previewSiswaResetPw" style="display:none;margin-top:12px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px">Siswa ditemukan</div>
+      <div id="previewNamaResetPw" style="font-size:15px;font-weight:700;color:var(--navy-800)">-</div>
+      <div id="previewKelasResetPw" style="font-size:12.5px;color:var(--ink-soft)">-</div>
+    </div>
+    <div id="previewNotFoundResetPw" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF6E5;border:1.5px solid #F3DFA8;border-radius:var(--radius-md);font-size:12.5px;color:#8A6A17">
+      ⚠️ NISN belum ditemukan di data siswa — cek lagi penulisannya. Reset tetap bisa dicoba.
+    </div>
+
     <button id="btnResetPwSubmit" class="btn btn-primary" style="margin-top:12px">
       <span id="btnResetPwSubmitLabel">🔑 Reset ke Password Default</span>
     </button>
@@ -478,6 +508,17 @@
     <button id="btnTutupResetPw" class="btn btn-ghost" style="margin-top:14px;width:100%">
       ← Kembali
     </button>
+  </div>
+
+  <!-- ===================== POPUP: RESET BERHASIL ===================== -->
+  <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+      <div id="popupBintangLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
+      <div style="position:relative;font-size:46px;line-height:1">🎉</div>
+      <div style="position:relative;margin-top:10px;font-size:19px;font-weight:800;color:var(--navy-800);letter-spacing:.02em">RESET BERHASIL</div>
+      <div id="popupSuksesNama" style="position:relative;margin-top:4px;font-size:13.5px;color:var(--ink-soft)"></div>
+      <button id="btnTutupPopupSukses" class="btn btn-primary" style="position:relative;margin-top:18px">Oke</button>
+    </div>
   </div>
 
 </div>
@@ -580,6 +621,14 @@ const els = {
   btnResetPwSubmitLabel: document.getElementById('btnResetPwSubmitLabel'),
   resetPwStatus: document.getElementById('resetPwStatus'),
   btnTutupResetPw: document.getElementById('btnTutupResetPw'),
+  previewSiswaResetPw: document.getElementById('previewSiswaResetPw'),
+  previewNamaResetPw: document.getElementById('previewNamaResetPw'),
+  previewKelasResetPw: document.getElementById('previewKelasResetPw'),
+  previewNotFoundResetPw: document.getElementById('previewNotFoundResetPw'),
+  popupSuksesReset: document.getElementById('popupSuksesReset'),
+  popupBintangLayer: document.getElementById('popupBintangLayer'),
+  popupSuksesNama: document.getElementById('popupSuksesNama'),
+  btnTutupPopupSukses: document.getElementById('btnTutupPopupSukses'),
 };
 
 /* =========================================================
@@ -1084,6 +1133,45 @@ els.btnTutupRekap.addEventListener('click', () => {
   els.screenEntry.classList.remove('hidden');
 });
 
+let daftarSiswaCache = null; // cache hasil siswa.csv, dipakai bareng utk preview & rekap
+
+async function muatDaftarSiswaCache(){
+  if (daftarSiswaCache) return daftarSiswaCache;
+  try {
+    const t = Math.floor(Date.now() / 60000);
+    const res = await fetch(SISWA_CSV_URL + '?t=' + t, { cache: 'no-store' });
+    if (!res.ok) return [];
+    daftarSiswaCache = csvKeObjek(parseCSVGenerik(await res.text()));
+    return daftarSiswaCache;
+  } catch (e) {
+    return [];
+  }
+}
+
+function cariSiswaByNisn(daftar, nisn){
+  const nisnCari = String(nisn || '').trim();
+  if (!nisnCari) return null;
+  return daftar.find(o => ambilKolomRekap(o, 'NISN') === nisnCari) || null;
+}
+
+async function tampilkanPreviewSiswaResetPw(){
+  const nisn = els.inputNisnResetPw.value.trim();
+  els.previewSiswaResetPw.style.display = 'none';
+  els.previewNotFoundResetPw.style.display = 'none';
+  if (!nisn) return;
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+
+  if (siswa){
+    els.previewNamaResetPw.textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
+    els.previewKelasResetPw.textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
+    els.previewSiswaResetPw.style.display = 'block';
+  } else {
+    els.previewNotFoundResetPw.style.display = 'block';
+  }
+}
+
 /* =========================================================
    RESET PASSWORD SISWA — panggil Apps Script AbsensiKu
    (spreadsheet ROSTER, terpisah dari spreadsheet asesmen)
@@ -1103,6 +1191,10 @@ async function resetPasswordSiswa(){
     return;
   }
 
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+  const namaSiswa = siswa ? (ambilKolomRekap(siswa, 'NAMA') || '') : '';
+
   els.btnResetPwSubmit.disabled = true;
   els.btnResetPwSubmitLabel.innerHTML = '<span class="spinner"></span>';
 
@@ -1117,6 +1209,9 @@ async function resetPasswordSiswa(){
       els.resetPwStatus.textContent = '✅ ' + (data.pesan || 'Password berhasil direset.');
       els.resetPwStatus.className = 'status-msg ok';
       els.inputNisnResetPw.value = '';
+      els.previewSiswaResetPw.style.display = 'none';
+      els.previewNotFoundResetPw.style.display = 'none';
+      tampilkanPopupSukses(namaSiswa);
     } else {
       els.resetPwStatus.textContent = '❌ ' + (data.pesan || 'Gagal mereset password.');
       els.resetPwStatus.className = 'status-msg err';
@@ -1130,11 +1225,46 @@ async function resetPasswordSiswa(){
   }
 }
 
+/* ---- Popup "RESET BERHASIL" dengan bintang warna-warni ---- */
+const WARNA_BINTANG = ['#FFC93C', '#FF6B6B', '#4D96FF', '#6BCB77', '#C780FA', '#FF9F45'];
+const SIMBOL_BINTANG = ['⭐', '✨', '🌟', '💫'];
+
+function tampilkanPopupSukses(nama){
+  els.popupSuksesNama.textContent = nama ? `Password ${nama} sudah direset` : '';
+  els.popupBintangLayer.innerHTML = '';
+
+  const jumlah = 22;
+  for (let i = 0; i < jumlah; i++){
+    const b = document.createElement('span');
+    b.className = 'bintang-jatuh';
+    b.textContent = SIMBOL_BINTANG[Math.floor(Math.random() * SIMBOL_BINTANG.length)];
+    b.style.left = Math.random() * 100 + '%';
+    b.style.color = WARNA_BINTANG[Math.floor(Math.random() * WARNA_BINTANG.length)];
+    b.style.fontSize = (14 + Math.random() * 14) + 'px';
+    b.style.animationDuration = (1.4 + Math.random() * 1.6) + 's';
+    b.style.animationDelay = (Math.random() * 0.8) + 's';
+    els.popupBintangLayer.appendChild(b);
+  }
+
+  els.popupSuksesReset.classList.remove('hidden');
+}
+
+function tutupPopupSukses(){
+  els.popupSuksesReset.classList.add('hidden');
+  els.popupBintangLayer.innerHTML = '';
+}
+
+els.btnTutupPopupSukses.addEventListener('click', tutupPopupSukses);
+
 els.btnResetPw.addEventListener('click', () => {
   els.screenEntry.classList.add('hidden');
   els.screenResetPw.classList.remove('hidden');
 });
 els.btnResetPwSubmit.addEventListener('click', resetPasswordSiswa);
+els.inputNisnResetPw.addEventListener('input', () => {
+  clearTimeout(window._debounceLookupResetPw);
+  window._debounceLookupResetPw = setTimeout(tampilkanPreviewSiswaResetPw, 350);
+});
 els.inputNisnResetPw.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') els.btnResetPwSubmit.click();
 });
@@ -1160,6 +1290,7 @@ function bukaQrResetPw(){
           const teks = decodedText.trim();
           els.inputNisnResetPw.value = teks;
           els.qrStatusResetPw.textContent = '✅ Terbaca: ' + teks;
+          tampilkanPreviewSiswaResetPw();
           if (qrScannerResetPw) { try { qrScannerResetPw.pause(true); } catch(e){} }
           setTimeout(tutupQrResetPw, 700);
         },

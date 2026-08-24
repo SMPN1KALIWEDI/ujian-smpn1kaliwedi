@@ -361,6 +361,9 @@
     <button id="btnRekapNilai" class="btn btn-ghost" style="margin-top:12px;width:100%">
       📊 Rekap Nilai Siswa
     </button>
+    <button id="btnResetPw" class="btn btn-ghost" style="margin-top:10px;width:100%">
+      🔑 Reset Password Siswa
+    </button>
   </div>
 
   <!-- ===================== SCREEN 2 : TOKEN QR ===================== -->
@@ -439,6 +442,25 @@
       ⬇️ Download Excel (.xlsx)
     </button>
     <button id="btnTutupRekap" class="btn btn-ghost" style="margin-top:10px;width:100%">
+      ← Kembali
+    </button>
+  </div>
+
+  <!-- ===================== SCREEN 5 : RESET PASSWORD SISWA ===================== -->
+  <div id="screenResetPw" class="card hidden" style="margin-top:16px">
+    <div class="field">
+      <label for="inputNisnResetPw">NISN Siswa</label>
+      <input type="text" id="inputNisnResetPw" placeholder="Ketik NISN siswa yang gagal login"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnResetPwSubmit" class="btn btn-primary">
+      <span id="btnResetPwSubmitLabel">🔑 Reset ke Password Default</span>
+    </button>
+    <div id="resetPwStatus" class="status-msg"></div>
+    <div style="margin-top:10px;font-size:12px;color:var(--ink-soft);line-height:1.5">
+      Setelah direset, siswa login pakai NISN + password default <b>user123</b>, lalu akan diminta ganti password baru sendiri.
+    </div>
+    <button id="btnTutupResetPw" class="btn btn-ghost" style="margin-top:14px;width:100%">
       ← Kembali
     </button>
   </div>
@@ -531,6 +553,13 @@ const els = {
   rekapContainer: document.getElementById('rekapContainer'),
   btnDownloadXLS: document.getElementById('btnDownloadXLS'),
   btnTutupRekap: document.getElementById('btnTutupRekap'),
+  btnResetPw: document.getElementById('btnResetPw'),
+  screenResetPw: document.getElementById('screenResetPw'),
+  inputNisnResetPw: document.getElementById('inputNisnResetPw'),
+  btnResetPwSubmit: document.getElementById('btnResetPwSubmit'),
+  btnResetPwSubmitLabel: document.getElementById('btnResetPwSubmitLabel'),
+  resetPwStatus: document.getElementById('resetPwStatus'),
+  btnTutupResetPw: document.getElementById('btnTutupResetPw'),
 };
 
 /* =========================================================
@@ -1016,6 +1045,65 @@ els.filterKelas.addEventListener('change', muatDataRekap);
 els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
 els.btnTutupRekap.addEventListener('click', () => {
   els.screenRekap.classList.add('hidden');
+  els.screenEntry.classList.remove('hidden');
+});
+
+/* =========================================================
+   RESET PASSWORD SISWA — panggil Apps Script AbsensiKu
+   (spreadsheet ROSTER, terpisah dari spreadsheet asesmen)
+   untuk menghapus password custom siswa yang gagal login,
+   sehingga otomatis balik ke password default "user123".
+========================================================= */
+const APPS_SCRIPT_URL_PW = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
+
+async function resetPasswordSiswa(){
+  const nisn = els.inputNisnResetPw.value.trim();
+  els.resetPwStatus.textContent = '';
+  els.resetPwStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.resetPwStatus.textContent = 'Ketik NISN siswa terlebih dahulu.';
+    els.resetPwStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnResetPwSubmit.disabled = true;
+  els.btnResetPwSubmitLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 12000);
+    const res = await fetch(APPS_SCRIPT_URL_PW + '?' + new URLSearchParams({ action: 'resetPassword', nisn }), { signal: ctrl.signal });
+    clearTimeout(tid);
+    const data = await res.json();
+
+    if (data.status === 'ok'){
+      els.resetPwStatus.textContent = '✅ ' + (data.pesan || 'Password berhasil direset.');
+      els.resetPwStatus.className = 'status-msg ok';
+      els.inputNisnResetPw.value = '';
+    } else {
+      els.resetPwStatus.textContent = '❌ ' + (data.pesan || 'Gagal mereset password.');
+      els.resetPwStatus.className = 'status-msg err';
+    }
+  } catch (err){
+    els.resetPwStatus.textContent = '❌ Gagal menghubungi server: ' + err.message;
+    els.resetPwStatus.className = 'status-msg err';
+  } finally {
+    els.btnResetPwSubmit.disabled = false;
+    els.btnResetPwSubmitLabel.textContent = '🔑 Reset ke Password Default';
+  }
+}
+
+els.btnResetPw.addEventListener('click', () => {
+  els.screenEntry.classList.add('hidden');
+  els.screenResetPw.classList.remove('hidden');
+});
+els.btnResetPwSubmit.addEventListener('click', resetPasswordSiswa);
+els.inputNisnResetPw.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnResetPwSubmit.click();
+});
+els.btnTutupResetPw.addEventListener('click', () => {
+  els.screenResetPw.classList.add('hidden');
   els.screenEntry.classList.remove('hidden');
 });
 

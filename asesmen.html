@@ -117,6 +117,18 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
 .btn-row2{display:flex;gap:10px;margin-top:4px}
 .btn-kel{flex:1;padding:11px;background:var(--abu);color:var(--abu2);border:2px solid #d8e6f0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer}
 .btn-kel:hover{background:#fdecea;color:var(--merah);border-color:#ffcdd2}
+.top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.btn-kel-inline{background:none;border:none;padding:0;margin:0;color:var(--abu2);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px}
+.btn-kel-inline:hover{color:var(--merah)}
+.top-row-sapa{font-size:.9rem;color:var(--abu2)}
+.jadwal-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;background:var(--hijau-bg);border-radius:10px;border-left:4px solid var(--hijau2);margin-bottom:8px}
+.jadwal-info{min-width:0}
+.jadwal-mapel{font-weight:700;font-size:.9rem;color:var(--teks)}
+.jadwal-waktu{font-size:.76rem;color:var(--abu2);margin-top:1px}
+.jadwal-aksi-btn{flex:none;width:38px;height:38px;border-radius:10px;border:none;cursor:pointer;font-size:1.05rem;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--hijau),var(--biru));color:#fff}
+.jadwal-aksi-btn:hover{opacity:.9}
+.jadwal-aksi-selesai{flex:none;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;background:#fbe9e7;color:var(--merah)}
+.jadwal-aksi-belum{flex:none;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;background:#eceff1;color:var(--abu2)}
 .btn-ujian{flex:2;padding:11px;background:linear-gradient(135deg,var(--hijau),var(--biru));color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer;line-height:1.4;text-align:center}
 .btn-ujian:hover{opacity:.9}
 .btn-ujian small{display:block;font-size:.7rem;opacity:.85}
@@ -202,11 +214,16 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
       <div class="s-tahun" id="s2Tahun"></div>
     </div>
     <div class="body">
-      <p style="color:var(--abu2);font-size:.9rem;margin-bottom:4px">👋 Selamat datang,</p>
+      <div class="top-row">
+        <button class="btn-kel-inline" onclick="logout()">⬅ Kembali ke Gerbang</button>
+        <span class="top-row-sapa">👋 Selamat datang,</span>
+      </div>
       <p style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;color:var(--teks);margin-bottom:2px" id="p2Nama"></p>
       <p style="font-size:.78rem;color:var(--abu2);text-transform:lowercase;letter-spacing:.02em;margin-bottom:18px">
         <span id="p2ID"></span> &middot; <span id="p2Kelas"></span>
       </p>
+      <div class="sec-title">🗓️ Jadwal Asesmen Hari Ini</div>
+      <div id="areaAsesmenAktif" style="margin-bottom:20px"></div>
       <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
         <span>📊 Rekap Nilai Ujian</span>
         <button onclick="muatNilai(D.aktif,true)" style="background:none;border:1px solid #cfd8e3;border-radius:8px;padding:5px 10px;font-size:.72rem;color:var(--abu2);cursor:pointer">🔄 Nilai Terbaru</button>
@@ -215,10 +232,6 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
         <thead><tr><th>#</th><th>Mata Pelajaran</th><th>Status</th><th>Keterangan</th></tr></thead>
         <tbody id="tbNilai"><tr><td colspan="4" style="text-align:center;padding:14px;color:#b0bec5">⏳ Memuat...</td></tr></tbody>
       </table>
-      <div class="btn-row2">
-        <button class="btn-kel" onclick="logout()">⬅ Kembali ke Gerbang Sekolah</button>
-      </div>
-      <div id="areaAsesmenAktif" style="margin-top:12px"></div>
 
       <!-- AREA SUSULAN -->
       <div id="areaSusulan">
@@ -662,30 +675,43 @@ function prioritasMengizinkan(prioritasMentah, kelasSiswa, tingkatSiswa) {
   });
 }
 
-function cariJadwalAktif(siswa) {
-  if (!siswa) return { status: 'kosong' };
+// Ambil SEMUA baris jadwal hari ini yang berlaku untuk siswa ini
+// (tanggal = hari ini + lolos aturan PRIORITAS), diurutkan jam mulai.
+function jadwalHariIniUntukSiswa(siswa) {
+  if (!siswa) return [];
   const today = parseTanggalFleksibel(
     `${new Date().getMonth()+1}/${new Date().getDate()}/${new Date().getFullYear()}`
   );
-  const now = new Date();
-  const menitSekarang = now.getHours() * 60 + now.getMinutes();
   const kelasSiswa = (siswa.kelas || '').trim().toUpperCase();
   const tingkatSiswa = kelasSiswa.replace(/[^0-9]/g, '').charAt(0);
 
   debugTulis('🔍 [Jadwal] Total baris jadwal termuat:', (D.jadwal||[]).length);
-  debugTulis('🔍 [Jadwal] Tanggal hari ini (device):', today, '| Kelas siswa:', kelasSiswa, '| Tingkat:', tingkatSiswa, '| Jam sekarang (menit):', menitSekarang);
-  if ((D.jadwal||[]).length > 0) {
-    debugTulis('🔍 [Jadwal] Contoh baris pertama (mentah):', D.jadwal[0]);
-  }
+  debugTulis('🔍 [Jadwal] Tanggal hari ini (device):', today, '| Kelas siswa:', kelasSiswa, '| Tingkat:', tingkatSiswa);
 
-  const kandidatHariIni = (D.jadwal || []).filter(j => {
+  const kandidat = (D.jadwal || []).filter(j => {
     const tglParsed = parseTanggalFleksibel(j.tanggal);
-    const cocokTgl = tanggalSama(tglParsed, today);
-    if (!cocokTgl) return false;
+    if (!tanggalSama(tglParsed, today)) return false;
     return prioritasMengizinkan(j.prioritas, kelasSiswa, tingkatSiswa);
   });
 
-  debugTulis('🔍 [Jadwal] Kandidat cocok tanggal+kelas hari ini:', kandidatHariIni.length, kandidatHariIni);
+  debugTulis('🔍 [Jadwal] Kandidat cocok tanggal+kelas hari ini:', kandidat.length, kandidat);
+  return kandidat.sort((a, b) => (parseJamMenit(a.mulai) ?? 0) - (parseJamMenit(b.mulai) ?? 0));
+}
+
+// Status satu baris jadwal RELATIF terhadap jam sekarang.
+function statusJadwalItem(j, menitSekarang) {
+  const mulai = parseJamMenit(j.mulai);
+  const selesai = parseJamMenit(j.selesai);
+  if (mulai !== null && menitSekarang < mulai) return 'belum';
+  if (selesai !== null && menitSekarang > selesai) return 'lewat';
+  return 'aktif';
+}
+
+function cariJadwalAktif(siswa) {
+  if (!siswa) return { status: 'kosong' };
+  const now = new Date();
+  const menitSekarang = now.getHours() * 60 + now.getMinutes();
+  const kandidatHariIni = jadwalHariIniUntukSiswa(siswa);
 
   if (kandidatHariIni.length === 0) return { status: 'kosong' };
 
@@ -913,34 +939,63 @@ async function tampilDashboard(siswa) {
 }
 
 // ============================================================
-// RENDER TOMBOL/NOTIFIKASI ASESMEN — nama mata pelajaran JADI
-// tombol yang bisa ditap. Kalau di luar jadwal, tampilkan
-// notifikasi (belum waktunya / sudah lewat / tidak ada jadwal).
+// RENDER DAFTAR JADWAL ASESMEN HARI INI — tiap baris tampilkan
+// mapel + jam mulai-selesai, dan ikon status di kanan:
+//  📝 tombol hijau  = bisa dikerjakan sekarang (tap utk mulai)
+//  ✖  merah          = sudah berakhir
+//  🕐 abu-abu        = belum waktunya
 // ============================================================
 let jadwalAktifSekarang = null; // dipakai lagi saat token dikonfirmasi
 
 function renderAsesmenAktif() {
   const area = document.getElementById('areaAsesmenAktif');
-  const hasil = cariJadwalAktif(D.aktif);
-  jadwalAktifSekarang = hasil;
+  const now = new Date();
+  const menitSekarang = now.getHours() * 60 + now.getMinutes();
+  const daftar = jadwalHariIniUntukSiswa(D.aktif);
 
-  if (hasil.status === 'aktif') {
-    area.innerHTML = `
-      <button class="btn-ujian" onclick="bukaToken()" style="width:100%">
-        📝 ${escapeHtml(hasil.jadwal.asesmen || 'Ikuti Ujian')}
-        <small>Tap untuk mulai</small>
-      </button>`;
-    setText('tkMapel', hasil.jadwal.asesmen ? 'Mata Pelajaran: '+hasil.jadwal.asesmen : '');
-  } else if (hasil.status === 'belum') {
-    area.innerHTML = `
-      <div class="notice-jadwal">⏳ <b>Belum waktunya.</b><br>${escapeHtml(hasil.jadwal.asesmen)} dimulai pukul ${escapeHtml(hasil.jadwal.mulai)}.</div>`;
-  } else if (hasil.status === 'lewat') {
-    area.innerHTML = `
-      <div class="notice-jadwal">⌛ <b>Jadwal terlewat.</b><br>${escapeHtml(hasil.jadwal.asesmen)} sudah selesai pukul ${escapeHtml(hasil.jadwal.selesai || '-')}.</div>`;
-  } else {
-    area.innerHTML = `
-      <div class="notice-jadwal">📭 Tidak ada asesmen terjadwal untuk kelas Anda hari ini.</div>`;
+  // tetap simpan hasil "terbaik" (aktif > belum > lewat) untuk alur
+  // token yang sudah ada (bukaToken() baca jadwalAktifSekarang)
+  jadwalAktifSekarang = cariJadwalAktif(D.aktif);
+  if (jadwalAktifSekarang.status === 'aktif') {
+    setText('tkMapel', jadwalAktifSekarang.jadwal.asesmen ? 'Mata Pelajaran: '+jadwalAktifSekarang.jadwal.asesmen : '');
   }
+
+  if (daftar.length === 0) {
+    area.innerHTML = `<div class="notice-jadwal">📭 Tidak ada asesmen terjadwal untuk Anda hari ini.</div>`;
+    return;
+  }
+
+  area.innerHTML = daftar.map((j, idx) => {
+    const status = statusJadwalItem(j, menitSekarang);
+    const waktu = `${escapeHtml(j.mulai || '-')} – ${escapeHtml(j.selesai || '-')}`;
+    let aksi;
+    if (status === 'aktif') {
+      aksi = `<button class="jadwal-aksi-btn" data-idx="${idx}" title="Tap untuk mengerjakan">📝</button>`;
+    } else if (status === 'lewat') {
+      aksi = `<div class="jadwal-aksi-selesai" title="Sudah berakhir">✖</div>`;
+    } else {
+      aksi = `<div class="jadwal-aksi-belum" title="Belum waktunya">🕐</div>`;
+    }
+    return `
+      <div class="jadwal-item">
+        <div class="jadwal-info">
+          <div class="jadwal-mapel">${escapeHtml(j.asesmen || '(tanpa nama)')}</div>
+          <div class="jadwal-waktu">${waktu}</div>
+        </div>
+        ${aksi}
+      </div>`;
+  }).join('');
+
+  // Delegasi klik tombol 📝 — set jadwal yang dipilih lalu buka token
+  area.querySelectorAll('.jadwal-aksi-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const j = daftar[parseInt(btn.dataset.idx, 10)];
+      if (!j) return;
+      jadwalAktifSekarang = { status: 'aktif', jadwal: j };
+      setText('tkMapel', j.asesmen ? 'Mata Pelajaran: '+j.asesmen : '');
+      bukaToken();
+    });
+  });
 }
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 

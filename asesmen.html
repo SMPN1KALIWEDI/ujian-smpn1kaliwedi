@@ -203,11 +203,10 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
     </div>
     <div class="body">
       <p style="color:var(--abu2);font-size:.9rem;margin-bottom:4px">👋 Selamat datang,</p>
-      <p style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;color:var(--teks);margin-bottom:16px" id="p2Nama"></p>
-      <div class="info-grid">
-        <div class="ibox"><div class="lb">No. ID</div><div class="vl" id="p2ID"></div></div>
-        <div class="ibox"><div class="lb">Kelas</div><div class="vl" id="p2Kelas"></div></div>
-      </div>
+      <p style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;color:var(--teks);margin-bottom:2px" id="p2Nama"></p>
+      <p style="font-size:.78rem;color:var(--abu2);text-transform:lowercase;letter-spacing:.02em;margin-bottom:18px">
+        <span id="p2ID"></span> &middot; <span id="p2Kelas"></span>
+      </p>
       <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
         <span>📊 Rekap Nilai Ujian</span>
         <button onclick="muatNilai(D.aktif,true)" style="background:none;border:1px solid #cfd8e3;border-radius:8px;padding:5px 10px;font-size:.72rem;color:var(--abu2);cursor:pointer">🔄 Nilai Terbaru</button>
@@ -220,7 +219,6 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
         <button class="btn-kel" onclick="logout()">⬅ Kembali ke Gerbang Sekolah</button>
       </div>
       <div id="areaAsesmenAktif" style="margin-top:12px"></div>
-      <div id="debugJadwal" style="margin-top:14px;padding:10px 12px;background:#1a1a2e;color:#0f0;font-family:monospace;font-size:.68rem;border-radius:8px;white-space:pre-wrap;word-break:break-all;max-height:260px;overflow-y:auto"></div>
 
       <!-- AREA SUSULAN -->
       <div id="areaSusulan">
@@ -906,7 +904,7 @@ function loginTanpaPassword(id) {
 // ============================================================
 async function tampilDashboard(siswa) {
   setText('p2Nama',  siswa.nama);
-  setText('p2ID',    siswa.id);
+  setText('p2ID',    'No. ID ' + siswa.id);
   setText('p2Kelas', 'Kelas ' + siswa.kelas);
   renderAsesmenAktif();
   hide('h1'); show('h2');
@@ -1780,18 +1778,10 @@ function hentikanAlarm() {
 // UBAH PASSWORD
 // ============================================================
 
-// Tulis ke console DAN ke panel debug di layar (supaya kelihatan
-// langsung tanpa perlu buka DevTools — berguna kalau diakses dari HP).
+// Tulis ke console saja (buka DevTools kalau perlu telusuri) —
+// tidak lagi ditampilkan di layar supaya tidak terlihat siswa.
 function debugTulis(...args) {
   console.log(...args);
-  const el = document.getElementById('debugJadwal');
-  if (!el) return;
-  const teks = args.map(a => {
-    if (a === null || a === undefined) return String(a);
-    if (typeof a === 'object') { try { return JSON.stringify(a); } catch(e) { return String(a); } }
-    return String(a);
-  }).join(' ');
-  el.textContent += teks + '\n\n';
 }
 
 function val(id)      { return document.getElementById(id).value.trim(); }

@@ -220,6 +220,7 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
         <button class="btn-kel" onclick="logout()">⬅ Kembali ke Gerbang Sekolah</button>
       </div>
       <div id="areaAsesmenAktif" style="margin-top:12px"></div>
+      <div id="debugJadwal" style="margin-top:14px;padding:10px 12px;background:#1a1a2e;color:#0f0;font-family:monospace;font-size:.68rem;border-radius:8px;white-space:pre-wrap;word-break:break-all;max-height:260px;overflow-y:auto"></div>
 
       <!-- AREA SUSULAN -->
       <div id="areaSusulan">
@@ -610,7 +611,7 @@ function csvToSiswa(rows) {
 }
 
 // CSV jadwal → array objek (Sheet1 baris 10+: TANGGAL|KODE|PRIORITAS|
-// MULAI|SELESAI|TINGKAT|ASESMEN|LINK)
+// MULAI|SELESAI|MAPEL|LINK)
 function csvToJadwal(rows) {
   const objs = parseCSVObjects(rows);
   return objs.map(o => ({
@@ -619,17 +620,19 @@ function csvToJadwal(rows) {
     prioritas: ambilKolom(o, 'PRIORITAS'),
     mulai    : ambilKolom(o, 'MULAI'),
     selesai  : ambilKolom(o, 'SELESAI'),
-    tingkat  : ambilKolom(o, 'TINGKAT'),
-    asesmen  : ambilKolom(o, 'ASESMEN'),
+    asesmen  : ambilKolom(o, 'MAPEL', 'ASESMEN'), // MAPEL = nama baru, ASESMEN dukungan lama
     link     : ambilKolom(o, 'LINK'),
   })).filter(j => j.tanggal);
 }
 
 // ============================================================
 // PENCOCOKAN JADWAL AKTIF
-// Cocokkan: TANGGAL = hari ini, TINGKAT = kelas siswa, PRIORITAS
-// = rombel siswa (kalau kolom itu terisi; kosong = berlaku semua
-// rombel di tingkat itu), dan jam sekarang ada di antara MULAI-SELESAI.
+// Cocokkan: TANGGAL = hari ini, jam sekarang di antara MULAI-SELESAI,
+// dan kolom PRIORITAS menentukan siapa yang boleh akses:
+//   - PRIORITAS kosong         → berlaku untuk SEMUA kelas semua tingkat
+//   - PRIORITAS angka saja (mis. "7")     → berlaku untuk SELURUH kelas di tingkat itu (7A,7B,7C,...)
+//   - PRIORITAS sebut kelas (mis. "7A")   → hanya kelas itu yang bisa akses
+//   - Boleh lebih dari satu, pisah koma (mis. "7A,8" → kelas 7A + seluruh tingkat 8)
 // ============================================================
 function parseTanggalFleksibel(str) {
   if (!str) return null;
@@ -649,6 +652,18 @@ function parseJamMenit(str) {
   return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
 }
 
+// Cek apakah satu baris jadwal (kolom PRIORITAS-nya) mengizinkan siswa ini.
+function prioritasMengizinkan(prioritasMentah, kelasSiswa, tingkatSiswa) {
+  const prioritas = String(prioritasMentah || '').trim();
+  if (!prioritas) return true; // kosong = semua kelas semua tingkat
+
+  const daftar = prioritas.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+  return daftar.some(kode => {
+    if (/^\d+$/.test(kode)) return kode === tingkatSiswa; // angka saja = seluruh tingkat itu
+    return kode === kelasSiswa; // ada hurufnya = kode kelas spesifik
+  });
+}
+
 function cariJadwalAktif(siswa) {
   if (!siswa) return { status: 'kosong' };
   const today = parseTanggalFleksibel(
@@ -659,15 +674,20 @@ function cariJadwalAktif(siswa) {
   const kelasSiswa = (siswa.kelas || '').trim().toUpperCase();
   const tingkatSiswa = kelasSiswa.replace(/[^0-9]/g, '').charAt(0);
 
+  debugTulis('🔍 [Jadwal] Total baris jadwal termuat:', (D.jadwal||[]).length);
+  debugTulis('🔍 [Jadwal] Tanggal hari ini (device):', today, '| Kelas siswa:', kelasSiswa, '| Tingkat:', tingkatSiswa, '| Jam sekarang (menit):', menitSekarang);
+  if ((D.jadwal||[]).length > 0) {
+    debugTulis('🔍 [Jadwal] Contoh baris pertama (mentah):', D.jadwal[0]);
+  }
+
   const kandidatHariIni = (D.jadwal || []).filter(j => {
-    if (!tanggalSama(parseTanggalFleksibel(j.tanggal), today)) return false;
-    if (String(j.tingkat).trim() !== tingkatSiswa) return false;
-    if (j.prioritas) {
-      const daftar = j.prioritas.split(',').map(s => s.trim().toUpperCase());
-      if (!daftar.includes(kelasSiswa)) return false;
-    }
-    return true;
+    const tglParsed = parseTanggalFleksibel(j.tanggal);
+    const cocokTgl = tanggalSama(tglParsed, today);
+    if (!cocokTgl) return false;
+    return prioritasMengizinkan(j.prioritas, kelasSiswa, tingkatSiswa);
   });
+
+  debugTulis('🔍 [Jadwal] Kandidat cocok tanggal+kelas hari ini:', kandidatHariIni.length, kandidatHariIni);
 
   if (kandidatHariIni.length === 0) return { status: 'kosong' };
 
@@ -793,10 +813,12 @@ async function init() {
   if (konfig.token) D.sekolah.token = konfig.token;
   if (konfig.toleransiMs) TOLERANSI_MS = konfig.toleransiMs;
   if (rowsJadwal) {
+    debugTulis('🔍 [Jadwal] Header mentah dari jadwal.csv:', rowsJadwal[0]);
+    debugTulis('🔍 [Jadwal] Contoh baris data mentah:', rowsJadwal[1]);
     D.jadwal = csvToJadwal(rowsJadwal);
     console.log('✅ Jadwal dari CSV:', D.jadwal.length, 'baris');
   } else {
-    console.warn('⚠️ Gagal memuat jadwal.csv — tombol asesmen tidak akan aktif.');
+    console.warn('⚠️ Gagal memuat jadwal.csv (file tidak ditemukan/404?) — tombol asesmen tidak akan aktif.');
   }
   if (rowsSiswa) {
     D.siswa = csvToSiswa(rowsSiswa);
@@ -1757,6 +1779,20 @@ function hentikanAlarm() {
 // ============================================================
 // UBAH PASSWORD
 // ============================================================
+
+// Tulis ke console DAN ke panel debug di layar (supaya kelihatan
+// langsung tanpa perlu buka DevTools — berguna kalau diakses dari HP).
+function debugTulis(...args) {
+  console.log(...args);
+  const el = document.getElementById('debugJadwal');
+  if (!el) return;
+  const teks = args.map(a => {
+    if (a === null || a === undefined) return String(a);
+    if (typeof a === 'object') { try { return JSON.stringify(a); } catch(e) { return String(a); } }
+    return String(a);
+  }).join(' ');
+  el.textContent += teks + '\n\n';
+}
 
 function val(id)      { return document.getElementById(id).value.trim(); }
 function setText(id,t){ const e=document.getElementById(id); if(e) e.textContent=t; }

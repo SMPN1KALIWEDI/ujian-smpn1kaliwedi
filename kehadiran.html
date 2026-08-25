@@ -320,6 +320,11 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
 }
 .btn-keluar:hover{background:var(--merah2);color:var(--merah);border-color:#ef9a9a}
 
+.top-row-absen{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.btn-kel-inline{background:none;border:none;padding:0;margin:0;color:var(--abu2);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px}
+.btn-kel-inline:hover{color:var(--merah)}
+.top-row-tgl{font-size:.9rem;color:var(--abu2);font-weight:600;text-align:right}
+
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
 .modal-bg.show{display:flex}
@@ -491,9 +496,15 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
   <div class="card">
     <div class="profil-bar">
       <div class="profil-nama" id="abNama"></div>
-      <div style="font-size:.82rem;opacity:.85" id="abNISNteks"></div>
-      <div class="profil-chip-wrap">
-        <div class="profil-chip" id="abKls"></div>
+      <div style="font-size:.82rem;opacity:.85">
+        <span id="abNISNteks"></span> &middot; <span id="abKls"></span>
+      </div>
+    </div>
+
+    <div style="padding:14px 18px 0">
+      <div class="top-row-absen">
+        <button class="btn-kel-inline" onclick="kembaliKeGerbang()">⬅ Kembali ke Gerbang</button>
+        <span class="top-row-tgl" id="tglHariIniAbsen"></span>
       </div>
     </div>
 
@@ -592,7 +603,6 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
 
     <div style="padding:0 18px 18px">
       <button class="btn-kartu" onclick="bukaHalamanKartu()">🪪 Lihat Kartu Absen Saya</button>
-      <button class="btn-keluar" style="margin-top:10px" onclick="kembaliKeGerbang()">⬅ Kembali ke Gerbang Sekolah</button>
     </div>
   </div>
 </div>
@@ -665,22 +675,6 @@ tr.row-future td{background:#fafafa!important;opacity:.5}
     <div id="qr-box"></div>
     <div class="qr-status" id="qrStatus">Memulai kamera...</div>
     <button class="btn-tutup-qr" id="btnTutupQR" onclick="stopQR()">✕ Tutup Kamera</button>
-  </div>
-</div>
-
-<!-- MODAL PERINGATAN PASSWORD DEFAULT -->
-<div class="modal-bg" id="mPeringatanPw">
-  <div class="modal" style="max-width:340px;text-align:center">
-    <div style="font-size:2.6rem;margin-bottom:6px">🔐</div>
-    <h3 style="margin-bottom:8px">Amankan Akun Anda</h3>
-    <p style="font-size:.86rem;color:var(--abu2);line-height:1.55;margin-bottom:18px">
-      Anda masih menggunakan <b>password default</b> (<code>user123</code>).
-      Demi keamanan data Anda, sebaiknya segera ganti lewat <b>Gerbang Sekolah</b>.
-    </p>
-    <div class="btn-row">
-      <button class="btn-batal" onclick="tutup('mPeringatanPw')">Nanti Saja</button>
-      <button class="btn-simpan" onclick="lanjutGantiPwDariPeringatan()">Ganti di Gerbang Sekolah</button>
-    </div>
   </div>
 </div>
 
@@ -908,16 +902,6 @@ async function login() {
 
   D.aktif = user;
   await tampilAbsen(user);
-
-  // Kalau masih pakai password default → ingatkan untuk menggantinya
-  if (String(user.password).trim() === 'user123') {
-    setTimeout(() => buka('mPeringatanPw'), 600);
-  }
-}
-
-function lanjutGantiPwDariPeringatan() {
-  tutup('mPeringatanPw');
-  window.location.href = 'gerbang-sekolah.html';
 }
 
 // ============================================================
@@ -928,7 +912,10 @@ async function tampilAbsen(user) {
 
   setText('abNama',    user.nama);
   setText('abNISNteks','NISN: ' + user.nisn);
-  setText('abKls',    '🏫 Kelas ' + user.kelas);
+  setText('abKls',    'Kelas ' + user.kelas);
+
+  const skrg = new Date();
+  setText('tglHariIniAbsen', `${HARI_PANJANG[skrg.getDay()]}, ${skrg.getDate()} ${BLN_PANJANG[skrg.getMonth()]} ${skrg.getFullYear()}`);
 
   // Set bulan default = bulan ini
   document.getElementById('selBulan').value = new Date().getMonth() + 1;

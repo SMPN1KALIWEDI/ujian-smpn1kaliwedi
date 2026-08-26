@@ -98,7 +98,7 @@ input:focus{border-color:var(--hijau2);box-shadow:0 0 0 3px rgba(39,174,118,.12)
 .ibox .vl{font-size:1.05rem;font-weight:800;color:var(--teks)}
 .sec-title{font-size:.8rem;font-weight:700;color:var(--abu2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 table.tn{width:100%;border-collapse:collapse;font-size:.87rem;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:18px}
-table.tn thead tr{background:linear-gradient(135deg,var(--hijau),var(--biru));color:#fff}
+table.tn thead tr{background:var(--hijau-bg);color:var(--hijau)}
 table.tn th{padding:9px 11px;text-align:left;font-size:.76rem;font-weight:700;letter-spacing:.3px}
 table.tn td{padding:8px 11px;border-bottom:1px solid #eef2f6}
 table.tn tbody tr:last-child td{border-bottom:none}
@@ -327,11 +327,26 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
   </div>
   <!-- Google Form tampil di sini, fullscreen -->
   <iframe id="soalIframe" src="" allow="camera; microphone" allowfullscreen></iframe>
+  <button id="btnSelesaiUjian" class="btn-selesai-ujian" onclick="selesaiUjianManual()">✅ Selesai</button>
 </div>
 
 <style>
 @keyframes denyut{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 @keyframes kedip{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes munculSelesai{0%{transform:translateY(-10px);opacity:0}100%{transform:translateY(0);opacity:1}}
+
+.btn-selesai-ujian{
+  display:none;
+  position:fixed;top:12px;right:12px;z-index:99999;
+  padding:9px 16px;border-radius:22px;border:none;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;
+  cursor:pointer;align-items:center;gap:5px;
+  background:linear-gradient(135deg,var(--hijau),var(--hijau2));color:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);
+  animation:munculSelesai .3s ease-out;
+}
+.btn-selesai-ujian:hover{opacity:.92}
+.btn-selesai-ujian.tampil{display:flex}
 
 /* MODAL QR SCANNER */
 #modalQR { z-index: 2000; }
@@ -1385,6 +1400,45 @@ async function cekOtorisasiManual() {
 // Soal hanya bisa diakses lewat portal — tidak ada tab terpisah.
 // ============================================================
 let timerKelonggaran = null;
+let timerTombolSelesai = null;
+
+// ============================================================
+// TOMBOL "✅ Selesai" (pojok kanan atas halaman soal)
+// Aktif 10 menit sebelum jam SELESAI jadwal; kalau jadwal tidak
+// punya jam selesai, aktif langsung sejak siswa mulai mengerjakan.
+// ============================================================
+function aturTombolSelesaiUjian() {
+  const btn = document.getElementById('btnSelesaiUjian');
+  if (!btn) return;
+  if (timerTombolSelesai) { clearTimeout(timerTombolSelesai); timerTombolSelesai = null; }
+
+  const jadwal = jadwalAktifSekarang && jadwalAktifSekarang.jadwal;
+  const menitSelesai = jadwal ? parseJamMenit(jadwal.selesai) : null;
+
+  if (menitSelesai === null) {
+    // Tidak ada jam selesai di jadwal → aktif langsung
+    btn.classList.add('tampil');
+    return;
+  }
+
+  const targetAktif = new Date();
+  targetAktif.setHours(Math.floor(menitSelesai / 60), (menitSelesai % 60) - 10, 0, 0);
+  const selisihMs = targetAktif.getTime() - Date.now();
+
+  if (selisihMs <= 0) {
+    btn.classList.add('tampil');
+  } else {
+    btn.classList.remove('tampil');
+    timerTombolSelesai = setTimeout(() => { btn.classList.add('tampil'); }, selisihMs);
+  }
+}
+
+function selesaiUjianManual() {
+  if (!confirm('Yakin sudah selesai mengerjakan? Anda akan kembali ke halaman utama Asesmen.')) return;
+  bersihkanPengawas();
+  hide('h1'); show('h2');
+  if (D.aktif) { muatNilai(D.aktif, true); renderAsesmenAktif(); }
+}
 
 function mulaiUjian(link) {
   const siswa = D.aktif;
@@ -1402,6 +1456,8 @@ function mulaiUjian(link) {
   sedangUjian      = false;
   sudahPelanggaran = false;
   if (timerKelonggaran) clearTimeout(timerKelonggaran);
+
+  aturTombolSelesaiUjian();
 
   // Hitung sisa kelonggaran dari waktu scan token
   // (jika sudah ada waktu scan, kurangi waktu yang telah berlalu)
@@ -1799,9 +1855,12 @@ function bersihkanPengawas() {
   nonaktifkanPengawas();
   hentikanAlarm();
   if (timerKelonggaran) { clearTimeout(timerKelonggaran); timerKelonggaran = null; }
+  if (timerTombolSelesai) { clearTimeout(timerTombolSelesai); timerTombolSelesai = null; }
   const iframe = document.getElementById('soalIframe');
   if (iframe) iframe.src = '';
   document.getElementById('hSoal').style.display = 'none';
+  const btnSelesai = document.getElementById('btnSelesaiUjian');
+  if (btnSelesai) btnSelesai.classList.remove('tampil');
 }
 
 // ============================================================

@@ -587,6 +587,7 @@
     <button id="btnMuatRekap" class="btn btn-primary">
       <span id="btnMuatRekapLabel">🔄 Muat / Refresh Rekap</span>
     </button>
+    <button id="btnSortNilai" type="button" class="btn btn-ghost" style="width:100%;margin-top:8px">↕️ Urutkan: Nama (A–Z)</button>
     <div id="rekapStatus" class="status-msg"></div>
     <div id="rekapContainer" style="margin-top:14px;max-height:420px;overflow-y:auto"></div>
     <button id="btnDownloadXLS" class="btn btn-ghost" style="margin-top:14px;width:100%" disabled>
@@ -763,6 +764,7 @@ const els = {
   rekapStatus: document.getElementById('rekapStatus'),
   rekapContainer: document.getElementById('rekapContainer'),
   btnDownloadXLS: document.getElementById('btnDownloadXLS'),
+  btnSortNilai: document.getElementById('btnSortNilai'),
   btnTutupRekap: document.getElementById('btnTutupRekap'),
   screenResetPw: document.getElementById('screenResetPw'),
   inputNisnResetPw: document.getElementById('inputNisnResetPw'),
@@ -1254,12 +1256,37 @@ function isiFilterMapel(daftarMapel){
   els.filterMapel.value = nilaiSekarang;
 }
 
+let modeUrutanNilai = 'nama'; // 'nama' | 'desc' (tertinggi dulu) | 'asc' (terendah dulu)
+const LABEL_URUTAN_NILAI = {
+  nama: '↕️ Urutkan: Nama (A–Z)',
+  desc: '↕️ Urutkan: Nilai Tertinggi',
+  asc:  '↕️ Urutkan: Nilai Terendah',
+};
+
+function urutkanBarisRekap(rows, mode){
+  const salinan = [...rows];
+  if (mode === 'nama') return salinan.sort((a, b) => a.nama.localeCompare(b.nama));
+
+  const angka = r => {
+    if (r.belumAda) return null;
+    const n = parseFloat(r.nilai);
+    return isNaN(n) ? null : n;
+  };
+  return salinan.sort((a, b) => {
+    const na = angka(a), nb = angka(b);
+    if (na === null && nb === null) return a.nama.localeCompare(b.nama);
+    if (na === null) return 1;  // yang belum ada nilai/nilai non-angka ditaruh di bawah
+    if (nb === null) return -1;
+    return mode === 'asc' ? na - nb : nb - na;
+  });
+}
+
 function renderRekap(rekap){
   const kelasList = Object.keys(rekap).sort();
   if (kelasList.length === 0){ els.rekapContainer.innerHTML = ''; return; }
 
   els.rekapContainer.innerHTML = kelasList.map(kelas => {
-    const rows = rekap[kelas];
+    const rows = urutkanBarisRekap(rekap[kelas], modeUrutanNilai);
     const jumlahBelum = rows.filter(r => r.belumAda).length;
     const jumlahAda = rows.length - jumlahBelum;
     return `
@@ -1293,7 +1320,7 @@ function downloadRekapXLS(){
   if (!rekapTerakhir || typeof XLSX === 'undefined') return;
   const wb = XLSX.utils.book_new();
   Object.keys(rekapTerakhir).sort().forEach(kelas => {
-    const rows = rekapTerakhir[kelas].map(r => ({
+    const rows = urutkanBarisRekap(rekapTerakhir[kelas], modeUrutanNilai).map(r => ({
       'Nama': r.nama, 'Kode Siswa': r.kode, 'Mapel': r.mapel,
       'Nilai': r.belumAda ? 'Belum ada nilai' : r.nilai, 'Waktu': r.waktu
     }));
@@ -1331,6 +1358,11 @@ els.btnMuatRekap.addEventListener('click', muatDataRekap);
 els.filterKelas.addEventListener('change', muatDataRekap);
 els.filterMapel.addEventListener('change', muatDataRekap);
 els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
+els.btnSortNilai.addEventListener('click', () => {
+  modeUrutanNilai = modeUrutanNilai === 'nama' ? 'desc' : (modeUrutanNilai === 'desc' ? 'asc' : 'nama');
+  els.btnSortNilai.textContent = LABEL_URUTAN_NILAI[modeUrutanNilai];
+  if (rekapTerakhir) renderRekap(rekapTerakhir);
+});
 els.btnTutupRekap.addEventListener('click', () => {
   aturHeader('home');
   els.screenRekap.classList.add('hidden');

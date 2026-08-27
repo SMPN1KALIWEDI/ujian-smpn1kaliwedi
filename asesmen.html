@@ -256,6 +256,16 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
       <button class="btn-batal" onclick="tutupSusulanQR()">Batal</button>
       <button class="btn-simpan" id="btnUlangSusulan" style="display:none" onclick="mulaiScanSusulan()">🔄 Coba Lagi</button>
     </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px">
+      <a onclick="bukaOtorisasiManual()" style="font-size:.8rem;color:var(--abu2);cursor:pointer;text-decoration:underline">Kamera tidak bisa dibuka? Minta bantuan pengawas</a>
+      <button type="button" onclick="toggleInputTokenManual('susulan')" title="Input token manual"
+        style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 5px;line-height:1;flex:none">✏️</button>
+    </div>
+    <div id="inputTokenManualWrapSusulan" style="display:none;margin-top:10px">
+      <input type="text" id="inputTokenManualSusulan" placeholder="Ketik token dari pengawas" autocapitalize="characters" autocomplete="off"
+        style="width:100%;padding:11px;border:2px solid #d8e6f0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;text-align:center;text-transform:uppercase;letter-spacing:.06em;box-sizing:border-box">
+      <button class="btn-simpan" style="width:100%;margin-top:8px" onclick="submitTokenManual('susulan')">Masuk dengan Token Ini</button>
+    </div>
   </div>
 </div>
 
@@ -272,7 +282,16 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
       <button class="btn-batal" onclick="tutupTokenQR()">Batal</button>
       <button class="btn-simpan" id="btnUlangToken" style="display:none" onclick="mulaiScanToken()">🔄 Coba Lagi</button>
     </div>
-    <a onclick="bukaOtorisasiManual()" style="display:block;text-align:center;margin-top:14px;font-size:.8rem;color:var(--abu2);cursor:pointer;text-decoration:underline">Kamera tidak bisa dibuka? Minta bantuan pengawas</a>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px">
+      <a onclick="bukaOtorisasiManual()" style="font-size:.8rem;color:var(--abu2);cursor:pointer;text-decoration:underline">Kamera tidak bisa dibuka? Minta bantuan pengawas</a>
+      <button type="button" onclick="toggleInputTokenManual('utama')" title="Input token manual"
+        style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 5px;line-height:1;flex:none">✏️</button>
+    </div>
+    <div id="inputTokenManualWrapUtama" style="display:none;margin-top:10px">
+      <input type="text" id="inputTokenManualUtama" placeholder="Ketik token dari pengawas" autocapitalize="characters" autocomplete="off"
+        style="width:100%;padding:11px;border:2px solid #d8e6f0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;text-align:center;text-transform:uppercase;letter-spacing:.06em;box-sizing:border-box">
+      <button class="btn-simpan" style="width:100%;margin-top:8px" onclick="submitTokenManual('utama')">Masuk dengan Token Ini</button>
+    </div>
   </div>
 </div>
 
@@ -1268,27 +1287,7 @@ function mulaiScanToken() {
           }
           // Token benar — tutup scanner, langsung masuk ke soal
           tutupTokenQR();
-          const siswa  = D.aktif;
-          const hasilJadwal = cariJadwalAktif(siswa);
-          if (hasilJadwal.status !== 'aktif') {
-            renderAsesmenAktif();
-            alert('⚠️ Jadwal asesmen untuk Anda sudah tidak aktif. Silakan cek kembali jadwal di dashboard.');
-            return;
-          }
-          const link = susunLinkAktif(siswa, hasilJadwal.jadwal);
-          if (!link) { alert('⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
-
-          // Catat waktu scan token ke Sheet2!G (hanya scan PERTAMA)
-          // Scan token ke-2 dst (setelah pelanggaran) tidak dicatat
-          if (jmlPelanggaran === 0) {
-            waktuScanToken = Date.now();
-            apiFetch({ action:'catatWaktuToken', id: siswa.id, waktu: new Date().toISOString() });
-          }
-
-          // Setelah pelanggaran, soal SELALU dimuat ulang dari awal
-          // (jawaban sebelumnya sengaja dihapus — siswa mulai dari 0).
-          mintaFullscreen();
-          mulaiUjian(link);
+          await lanjutkanSetelahTokenUtamaValid();
         },
         () => {}
       ).then(() => {
@@ -1308,6 +1307,74 @@ function mulaiScanToken() {
     qrTokenScanner.stop().catch(() => {}).finally(() => { qrTokenScanner.clear(); qrTokenScanner = null; jalankan(); });
   } else {
     jalankan();
+  }
+}
+
+// Dipisah dari alur scan QR supaya bisa dipakai ulang oleh input token
+// manual (tombol pensil ✏️) — dua-duanya berakhir di sini kalau token cocok.
+async function lanjutkanSetelahTokenUtamaValid() {
+  const siswa  = D.aktif;
+  const hasilJadwal = cariJadwalAktif(siswa);
+  if (hasilJadwal.status !== 'aktif') {
+    renderAsesmenAktif();
+    alert('⚠️ Jadwal asesmen untuk Anda sudah tidak aktif. Silakan cek kembali jadwal di dashboard.');
+    return;
+  }
+  const link = susunLinkAktif(siswa, hasilJadwal.jadwal);
+  if (!link) { alert('⚠️ Link soal belum tersedia. Hubungi pengawas.'); return; }
+
+  // Catat waktu scan token ke Sheet2!G (hanya scan PERTAMA)
+  // Scan token ke-2 dst (setelah pelanggaran) tidak dicatat
+  if (jmlPelanggaran === 0) {
+    waktuScanToken = Date.now();
+    apiFetch({ action:'catatWaktuToken', id: siswa.id, waktu: new Date().toISOString() });
+  }
+
+  // Setelah pelanggaran, soal SELALU dimuat ulang dari awal
+  // (jawaban sebelumnya sengaja dihapus — siswa mulai dari 0).
+  mintaFullscreen();
+  mulaiUjian(link);
+}
+
+/* =========================================================
+   INPUT TOKEN MANUAL (✏️) — jalur cadangan kalau kamera HP
+   siswa tidak bisa dibuka sama sekali. Token yang sama dengan
+   yang di-scan lewat QR (dan sekarang juga ditampilkan sebagai
+   teks di layar pengawas), tinggal diketik manual.
+========================================================= */
+function toggleInputTokenManual(jenis) {
+  const wrap  = document.getElementById(jenis === 'susulan' ? 'inputTokenManualWrapSusulan' : 'inputTokenManualWrapUtama');
+  const input = document.getElementById(jenis === 'susulan' ? 'inputTokenManualSusulan' : 'inputTokenManualUtama');
+  const tampil = wrap.style.display === 'none';
+  wrap.style.display = tampil ? 'block' : 'none';
+  if (tampil) { input.value = ''; input.focus(); }
+}
+
+async function submitTokenManual(jenis) {
+  const inputId  = jenis === 'susulan' ? 'inputTokenManualSusulan' : 'inputTokenManualUtama';
+  const statusId = jenis === 'susulan' ? 'qrSusulanStatus' : 'qrTokenStatus';
+  const masuk = (document.getElementById(inputId).value || '').trim().toUpperCase();
+  const benar = (D.sekolah.token || '').toUpperCase();
+
+  if (!masuk) return;
+  if (!benar) {
+    setText(statusId, '⚠️ Token belum termuat dari server. Refresh halaman lalu coba lagi.');
+    return;
+  }
+  if (masuk !== benar) {
+    setText(statusId, '❌ Token tidak valid. Coba lagi.');
+    return;
+  }
+
+  if (jenis === 'susulan') {
+    tutupSusulanQR();
+    const link = susulanAktif ? susulanAktif.linkSoal : '';
+    if (!link) { alert('⚠️ Link soal susulan tidak tersedia. Hubungi pengawas.'); return; }
+    mintaFullscreen();
+    mulaiUjian(link);
+  } else {
+    tutupTokenQR();
+    await lanjutkanSetelahTokenUtamaValid();
   }
 }
 

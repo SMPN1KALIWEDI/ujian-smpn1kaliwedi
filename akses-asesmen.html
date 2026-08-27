@@ -525,6 +525,11 @@
       <div id="qrCanvasWrap" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></div>
     </div>
 
+    <div id="tokenTeksWrap" style="text-align:center;margin-top:12px">
+      <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Kode token (kalau kamera siswa gagal scan)</div>
+      <div id="tokenTeks" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:22px;letter-spacing:.12em;color:var(--navy-800)">-</div>
+    </div>
+
     <div class="refresh-row">
       <div class="refresh-info">
         <div class="countdown" id="countdownText">05:00</div>
@@ -970,6 +975,8 @@ function renderQR(value){
     colorLight: '#FFFFFF',
     correctLevel: QRCode.CorrectLevel.M
   });
+  const elTokenTeks = document.getElementById('tokenTeks');
+  if (elTokenTeks) elTokenTeks.textContent = value;
 }
 
 function formatJam(d){

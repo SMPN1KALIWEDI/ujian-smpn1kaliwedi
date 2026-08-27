@@ -1,225 +1,1761 @@
-/**
- * APPS SCRIPT — PENGAWAS RUANG
- * ------------------------------------------------------------
- * Script ini di-deploy sebagai WEB APP dan berperan sebagai
- * "jembatan" tunggal antara aplikasi (pengawas-ruang.html) dan
- * DUA spreadsheet:
- *
- *  1) Sheet PENGAWAS (tempat script ini di-bind / container-bound)
- *     https://docs.google.com/spreadsheets/d/13IlK4ep8Db8YssWRg7U5OxIy-VZWEk3KVqmPK72KauA
- *     Kolom Sheet1: A=Timestamp, B=RUANG, C=PENGAWAS
- *     Kolom Sheet2!A:A: daftar nama guru untuk dropdown "Nama Pengawas"
- *
- *  2) Sheet SUMBER TOKEN (dibaca DAN DITULIS lewat openById, TIDAK
- *     pernah dikirim/terlihat di kode HTML sisi klien)
- *     https://docs.google.com/spreadsheets/d/1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg
- *     - Nilai token diambil dari Sheet1!B6
- *     - Sheet "Otorisasi" (BARU): dipakai untuk mencatat konfirmasi
- *       manual pengawas terhadap siswa yang kamera HP-nya gagal scan
- *       QR Token di aplikasi Asesmen. asesmen.html membaca sheet ini
- *       langsung lewat gviz (sama seperti cara baca token B6) untuk
- *       mengecek apakah siswa sudah dikonfirmasi.
- *
- * CARA PASANG:
- *  1. Buka spreadsheet PENGAWAS (#1) di atas.
- *  2. Extensions > Apps Script.
- *  3. Hapus isi default, tempel seluruh isi file ini.
- *  4. Klik Deploy > New deployment.
- *     - Type: Web app
- *     - Execute as: Me
- *     - Who has access: Anyone
- *  5. Salin URL Web App yang muncul, tempelkan ke variabel
- *     CONFIG.APPS_SCRIPT_URL pada file pengawas-ruang.html.
- *  6. Pastikan akun yang men-deploy memiliki akses ke spreadsheet
- *     SUMBER TOKEN (#2):
- *       - Minimal "Viewer" untuk baca token (fitur lama)
- *       - WAJIB "Editor" untuk fitur konfirmasi manual (fitur baru)
- *  7. Di spreadsheet SUMBER TOKEN (#2), buat 1 sheet baru bernama
- *     persis "Otorisasi" (tanpa perlu isi header — script akan
- *     membuatnya otomatis kalau belum ada saat konfirmasi pertama).
- * ------------------------------------------------------------
- */
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Akses Asesmen - SMP Negeri 1 Kaliwedi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy-950:#0F1B33;
+    --navy-800:#1B2A4A;
+    --navy-700:#243a63;
+    --teal-500:#17A6A0;
+    --teal-400:#3FC7C1;
+    --amber-500:#E2A63B;
+    --red-500:#E15C5C;
+    --violet-500:#8B6BD8;
+    --bg:#EAF6EE;
+    --card:#FFFFFF;
+    --ink:#151A26;
+    --ink-soft:#5B6478;
+    --ring-track:#E4E8F0;
+    --radius-lg:22px;
+    --radius-md:14px;
+    --shadow:0 10px 30px -12px rgba(15,27,51,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    background:var(--bg);
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #app{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 20px 40px;
+  }
+  .hidden{display:none !important;}
 
-var SHEET_TOKEN_ID       = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
-var SHEET_TOKEN_NAME     = 'Sheet1';
-var SHEET_TOKEN_CELL     = 'B6';
-var SHEET_OTORISASI_NAME = 'Otorisasi'; // sheet baru di spreadsheet SUMBER TOKEN (#2)
-var SHEET_PENGAWAS_NAME  = 'Sheet1';
-var SHEET_GURU_NAME      = 'Sheet2';
-var SHEET_GURU_COLUMN    = 'A';
+  /* ---------- Header ---------- */
+  .brand{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    margin-bottom:26px;
+    text-align:center;
+  }
+  .brand-badge{
+    width:56px;height:56px;border-radius:16px;
+    background:linear-gradient(155deg,var(--navy-800),var(--navy-950));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:var(--shadow);
+    margin-bottom:6px;
+  }
+  .brand-badge svg{width:30px;height:30px;}
+  .brand h1{
+    font-family:'Poppins',sans-serif;
+    font-weight:800;
+    font-size:22px;
+    margin:0;
+    color:var(--navy-950);
+    letter-spacing:-0.3px;
+  }
+  .brand p{
+    margin:0;
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
 
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
+  /* ---------- Card ---------- */
+  .card{
+    width:100%;
+    max-width:420px;
+    background:var(--card);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);
+    padding:26px 22px;
+  }
 
-    if (data.action === 'simpan') {
-      var ss = SpreadsheetApp.getActiveSpreadsheet();
-      var sheet = ss.getSheetByName(SHEET_PENGAWAS_NAME);
-      var tz = ss.getSpreadsheetTimeZone();
-      var timestamp = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss');
+  /* ---------- Form ---------- */
+  .field{margin-bottom:18px;}
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy-800);
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+  }
+  .select-wrap{position:relative;}
+  .select-wrap::after{
+    content:'';
+    position:absolute;
+    right:16px;top:50%;
+    width:10px;height:10px;
+    border-right:2.5px solid var(--ink-soft);
+    border-bottom:2.5px solid var(--ink-soft);
+    transform:translateY(-70%) rotate(45deg);
+    pointer-events:none;
+  }
+  .field select{
+    width:100%;
+    padding:16px 40px 16px 16px;
+    font-size:16px;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    border:2px solid var(--ring-track);
+    border-radius:var(--radius-md);
+    background:#FAFBFD;
+    color:var(--ink);
+    outline:none;
+    appearance:none;
+    -webkit-appearance:none;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .field select:focus{
+    border-color:var(--teal-500);
+    background:#fff;
+  }
+  .field select:disabled{
+    color:#A7AEC0;
+    cursor:not-allowed;
+  }
 
-      sheet.appendRow([timestamp, data.ruang, data.pengawas]);
+  .btn{
+    width:100%;
+    border:none;
+    border-radius:var(--radius-md);
+    padding:17px 18px;
+    font-size:16px;
+    font-family:'Poppins',sans-serif;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{
+    background:linear-gradient(135deg,var(--teal-500),var(--navy-800));
+    color:#fff;
+    box-shadow:0 8px 20px -8px rgba(23,166,160,0.55);
+  }
+  .btn-primary:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
+  .btn-ghost{
+    background:#EEF1F6;
+    color:var(--navy-800);
+    margin-top:10px;
+  }
+  .btn svg{width:18px;height:18px;flex-shrink:0;}
 
-      return jsonOutput({ status: 'ok' });
-    }
+  .status-msg{
+    margin-top:14px;
+    font-size:13.5px;
+    font-weight:600;
+    text-align:center;
+    min-height:18px;
+  }
+  .status-msg.ok{color:var(--teal-500);}
+  .status-msg.err{color:var(--red-500);}
 
-    if (data.action === 'otorisasiManual') {
-      // Konfirmasi manual untuk siswa yang kamera HP-nya gagal scan
-      // QR Token. Ditulis ke sheet "Otorisasi" di spreadsheet SUMBER
-      // TOKEN (#2) — BUKAN di spreadsheet PENGAWAS (#1) — supaya
-      // asesmen.html bisa membacanya langsung lewat gviz tanpa perlu
-      // panggil Apps Script apa pun.
-      var nisn = String(data.nisn || '').trim();
-      if (!nisn) return jsonOutput({ status: 'error', message: 'NISN kosong' });
+  .spinner{
+    width:18px;height:18px;
+    border:2.5px solid rgba(255,255,255,0.4);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
 
-      var ssToken = SpreadsheetApp.openById(SHEET_TOKEN_ID);
-      var sheetOt = ssToken.getSheetByName(SHEET_OTORISASI_NAME);
-      if (!sheetOt) {
-        sheetOt = ssToken.insertSheet(SHEET_OTORISASI_NAME);
-        sheetOt.appendRow(['NISN', 'Timestamp', 'Ruang', 'Pengawas']);
+  /* ---------- Token screen ---------- */
+  .token-meta{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .token-meta .chip{
+    flex:1;
+    background:#F0F3F9;
+    border-radius:12px;
+    padding:10px 12px;
+    text-align:center;
+  }
+  .token-meta .chip .label{
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin-bottom:3px;
+  }
+  .token-meta .chip .value{
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--navy-950);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .qr-stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    max-width:280px;
+    margin:0 auto 20px;
+    background:#fff;
+    border-radius:var(--radius-md);
+    border:2px solid var(--ring-track);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .qr-stage img,.qr-stage canvas{
+    width:82% !important;
+    height:82% !important;
+  }
+  .live-dot{
+    position:absolute;
+    top:10px;right:10px;
+    display:flex;align-items:center;gap:6px;
+    background:rgba(15,27,51,0.9);
+    padding:4px 9px 4px 7px;
+    border-radius:999px;
+  }
+  .live-dot .pulse{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--teal-400);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  .live-dot span{color:#fff;font-size:10px;font-weight:700;letter-spacing:0.5px;}
+  @keyframes pulse{
+    0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(63,199,193,0.5);}
+    50%{opacity:0.6;box-shadow:0 0 0 5px rgba(63,199,193,0);}
+  }
+  .qr-loading{
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    color:var(--ink-soft);font-size:12.5px;font-weight:600;
+  }
+  .qr-loading .spinner{border-color:rgba(23,42,74,0.15);border-top-color:var(--navy-800);}
+  .qr-error{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    color:var(--red-500);font-size:12.5px;font-weight:600;text-align:center;padding:0 16px;
+  }
+
+  .refresh-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin-bottom:6px;
+  }
+  .ring-btn{
+    position:relative;
+    width:64px;height:64px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    background:conic-gradient(var(--teal-500) calc(var(--pct,0)*1%), var(--ring-track) 0);
+    transition:transform .12s ease;
+  }
+  .ring-btn:active{transform:scale(0.94);}
+  .ring-btn::after{
+    content:'';
+    position:absolute;
+    inset:5px;
+    border-radius:50%;
+    background:var(--card);
+  }
+  .ring-btn svg{
+    position:relative;z-index:1;
+    width:22px;height:22px;
+    color:var(--navy-800);
+    transition:transform .5s ease;
+  }
+  .ring-btn.spinning svg{animation:spin .8s linear infinite;}
+
+  .refresh-info{
+    text-align:center;
+  }
+  .refresh-info .countdown{
+    font-family:'JetBrains Mono',monospace;
+    font-size:20px;
+    font-weight:700;
+    color:var(--navy-950);
+    letter-spacing:0.5px;
+  }
+  .refresh-info .caption{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-top:2px;
+  }
+
+  .updated-at{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    font-weight:500;
+    margin-top:16px;
+  }
+@keyframes jatuhBintang {
+  0%   { transform: translateY(-30px) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(340px) rotate(360deg); opacity: 0; }
+}
+@keyframes munculPop {
+  0%   { transform: scale(.6); opacity: 0; }
+  60%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.bintang-jatuh {
+  position: absolute;
+  top: -20px;
+  font-size: 18px;
+  animation-name: jatuhBintang;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+#popupSuksesBox { animation: munculPop .35s ease-out; }
+  /* ---------- Menu Utama (Home) ---------- */
+  .menu-list{display:flex;flex-direction:column;gap:12px;}
+  .menu-card{
+    display:flex;align-items:center;gap:14px;
+    width:100%;padding:16px;
+    background:#FAFBFD;
+    border:1.5px solid var(--ring-track);
+    border-radius:var(--radius-md);
+    cursor:pointer;
+    font-family:inherit;
+    text-align:left;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .menu-card:hover{border-color:var(--accent, var(--teal-500));background:#fff;}
+  .menu-card:active{transform:scale(0.98);}
+  .menu-icon{
+    flex:none;
+    width:48px;height:48px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--accent, var(--teal-500));
+    box-shadow:0 6px 16px -6px var(--accent, var(--teal-500));
+  }
+  .menu-icon svg{width:24px;height:24px;}
+  .menu-text{flex:1;min-width:0;}
+  .menu-title{
+    font-family:'Poppins',sans-serif;
+    font-weight:700;font-size:15px;
+    color:var(--navy-950);
+    margin-bottom:2px;
+  }
+  .menu-desc{
+    font-size:12.5px;color:var(--ink-soft);
+    line-height:1.4;
+  }
+  .menu-chevron{flex:none;width:18px;height:18px;color:#B7BECF;}
+  .menu-back{
+    display:flex;align-items:center;gap:6px;
+    background:none;border:none;cursor:pointer;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+    color:var(--ink-soft);
+    padding:8px 2px;margin-bottom:14px;
+  }
+  .menu-back svg{width:16px;height:16px;}
+  .menu-back:hover{color:var(--navy-800);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="brand">
+    <div class="brand-badge" id="brandBadge">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 12C2 12 5.5 5.5 12 5.5C18.5 5.5 22 12 22 12C22 12 18.5 18.5 12 18.5C5.5 18.5 2 12 2 12Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+        <circle cx="12" cy="12" r="3.4" stroke="white" stroke-width="1.8"/>
+        <circle cx="12" cy="12" r="1.1" fill="white"/>
+      </svg>
+    </div>
+    <h1 id="brandTitle">Akses Asesmen</h1>
+    <p>SMP Negeri 1 Kaliwedi</p>
+  </div>
+
+  <!-- ===================== SCREEN 0 : MENU UTAMA ===================== -->
+  <div id="screenHome" class="card">
+    <div class="menu-list">
+      <button type="button" id="cardTokenAsesmen" class="menu-card" style="--accent:var(--teal-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <path d="M14 14h3.2M14 18h7M20.5 14v7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Token Asesmen</div>
+          <div class="menu-desc">Tampilkan QR token untuk ruang ujian</div>
+        </div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <button type="button" id="cardRekapNilai" class="menu-card" style="--accent:var(--amber-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 20V10M12 20V4M20 20v-7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Rekap Nilai</div>
+          <div class="menu-desc">Lihat & unduh nilai siswa per kelas</div>
+        </div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <button type="button" id="cardResetPw" class="menu-card" style="--accent:var(--red-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+            <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Reset Password</div>
+          <div class="menu-desc">Bantu siswa yang gagal login</div>
+        </div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <button type="button" id="cardKartuSiswa" class="menu-card" style="--accent:var(--violet-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.8"/>
+            <circle cx="8.5" cy="11" r="2" stroke="white" stroke-width="1.8"/>
+            <path d="M5.5 16c0-1.7 1.4-2.8 3-2.8s3 1.1 3 2.8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M14 10h4.2M14 13h4.2" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Kartu Siswa</div>
+          <div class="menu-desc">Lihat nilai satu siswa lengkap</div>
+        </div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== SCREEN 1 : JENDELA MASUK (TOKEN ASESMEN) ===================== -->
+  <div id="screenEntry" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariEntry">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div class="field">
+      <label for="inputRuang">Ruang Asesmen</label>
+      <div class="select-wrap">
+        <select id="inputRuang">
+          <option value="">Pilih ruang…</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="inputPengawas">Nama Pengawas</label>
+      <div class="select-wrap">
+        <select id="inputPengawas" disabled>
+          <option value="">Memuat daftar guru…</option>
+        </select>
+      </div>
+    </div>
+    <button id="btnBukaToken" class="btn btn-primary" disabled>
+      <span id="btnBukaTokenLabel">Buka Token</span>
+    </button>
+    <div id="entryStatus" class="status-msg"></div>
+  </div>
+
+  <!-- ===================== SCREEN 2 : TOKEN QR ===================== -->
+  <div id="screenToken" class="card hidden">
+    <div class="token-meta">
+      <div class="chip">
+        <div class="label">Ruang</div>
+        <div class="value" id="metaRuang">-</div>
+      </div>
+      <div class="chip">
+        <div class="label">Pengawas</div>
+        <div class="value" id="metaPengawas">-</div>
+      </div>
+    </div>
+
+    <div class="qr-stage" id="qrStage">
+      <div class="live-dot"><span class="pulse"></span><span>LIVE</span></div>
+      <div class="qr-loading" id="qrLoading">
+        <div class="spinner"></div>
+        <span>Memuat token…</span>
+      </div>
+      <div id="qrCanvasWrap" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></div>
+    </div>
+
+    <div class="refresh-row">
+      <div class="refresh-info">
+        <div class="countdown" id="countdownText">05:00</div>
+        <div class="caption">refresh otomatis</div>
+      </div>
+      <div class="ring-btn" id="btnRefresh" style="--pct:0;">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="updated-at" id="updatedAt">-</div>
+
+    <button id="btnBukaManual" class="btn btn-ghost" style="margin-top:16px">
+      🧑‍🎓 Kamera Siswa Gagal? Konfirmasi Manual
+    </button>
+  </div>
+
+  <!-- ===================== SCREEN 3 : KONFIRMASI MANUAL ===================== -->
+  <div id="screenManual" class="card hidden" style="margin-top:16px">
+    <div class="field">
+      <label for="inputNisnManual">NISN Siswa</label>
+      <input type="text" id="inputNisnManual" placeholder="Ketik NISN siswa yang kameranya gagal"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnKonfirmasiManual" class="btn btn-primary">
+      <span id="btnKonfirmasiManualLabel">✅ Konfirmasi Masuk</span>
+    </button>
+    <div id="manualStatus" class="status-msg"></div>
+
+    <div id="manualLog" style="margin-top:18px;max-height:200px;overflow-y:auto"></div>
+  </div>
+
+  <!-- ===================== SCREEN 4 : REKAP NILAI ===================== -->
+  <div id="screenRekap" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnTutupRekap">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div class="field">
+      <label for="filterKelas">Filter Kelas</label>
+      <div class="select-wrap">
+        <select id="filterKelas">
+          <option value="">Semua Kelas</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="filterMapel">Filter Mapel</label>
+      <div class="select-wrap">
+        <select id="filterMapel">
+          <option value="">Semua Mapel</option>
+        </select>
+      </div>
+    </div>
+    <button id="btnMuatRekap" class="btn btn-primary">
+      <span id="btnMuatRekapLabel">🔄 Muat / Refresh Rekap</span>
+    </button>
+    <button id="btnSortNilai" type="button" class="btn btn-ghost" style="width:100%;margin-top:8px">↕️ Urutkan: Nama (A–Z)</button>
+    <div id="rekapStatus" class="status-msg"></div>
+    <div id="rekapContainer" style="margin-top:14px;max-height:420px;overflow-y:auto"></div>
+    <button id="btnDownloadXLS" class="btn btn-ghost" style="margin-top:14px;width:100%" disabled>
+      ⬇️ Download Excel (.xlsx)
+    </button>
+  </div>
+
+  <!-- ===================== SCREEN 5 : RESET PASSWORD SISWA ===================== -->
+  <div id="screenResetPw" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnTutupResetPw">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div class="field">
+      <label for="inputNisnResetPw">NISN Siswa</label>
+      <input type="text" id="inputNisnResetPw" placeholder="Ketik atau scan QR NISN siswa"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnScanQrResetPw" class="btn btn-ghost" style="width:100%">📷 Scan QR Kartu Siswa</button>
+    <div id="qrReaderResetPwWrap" style="margin-top:10px;display:none">
+      <div id="qr-reader-resetpw" style="border-radius:12px;overflow:hidden"></div>
+      <div id="qrStatusResetPw" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
+      <button id="btnTutupQrResetPw" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
+    </div>
+
+    <div id="previewSiswaResetPw" style="display:none;margin-top:12px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px">Siswa ditemukan</div>
+      <div id="previewNamaResetPw" style="font-size:15px;font-weight:700;color:var(--navy-800)">-</div>
+      <div id="previewKelasResetPw" style="font-size:12.5px;color:var(--ink-soft)">-</div>
+    </div>
+    <div id="previewNotFoundResetPw" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF6E5;border:1.5px solid #F3DFA8;border-radius:var(--radius-md);font-size:12.5px;color:#8A6A17">
+      ⚠️ NISN belum ditemukan di data siswa — cek lagi penulisannya. Reset tetap bisa dicoba.
+    </div>
+
+    <button id="btnResetPwSubmit" class="btn btn-primary" style="margin-top:12px">
+      <span id="btnResetPwSubmitLabel">🔑 Reset ke Password Default</span>
+    </button>
+    <div id="resetPwStatus" class="status-msg"></div>
+    <div style="margin-top:10px;font-size:12px;color:var(--ink-soft);line-height:1.5">
+      Setelah direset, siswa login pakai NISN + password default <b>user123</b>, lalu akan diminta ganti password baru sendiri.
+    </div>
+  </div>
+
+  <!-- ===================== SCREEN 6 : KARTU SISWA ===================== -->
+  <div id="screenKartuSiswa" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnTutupKartuSiswa">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div class="field">
+      <label for="kartuFilterKelas">Pilih Kelas</label>
+      <div class="select-wrap">
+        <select id="kartuFilterKelas">
+          <option value="">Pilih kelas…</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="kartuFilterNama">Pilih Nama Siswa</label>
+      <div class="select-wrap">
+        <select id="kartuFilterNama" disabled>
+          <option value="">Pilih kelas dulu…</option>
+        </select>
+      </div>
+    </div>
+    <div id="kartuSiswaStatus" class="status-msg"></div>
+    <div id="kartuSiswaHasil" style="margin-top:8px"></div>
+  </div>
+  <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+      <div id="popupBintangLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
+      <div style="position:relative;font-size:46px;line-height:1">🎉</div>
+      <div style="position:relative;margin-top:10px;font-size:19px;font-weight:800;color:var(--navy-800);letter-spacing:.02em">RESET BERHASIL</div>
+      <div id="popupSuksesNama" style="position:relative;margin-top:4px;font-size:13.5px;color:var(--ink-soft)"></div>
+      <button id="btnTutupPopupSukses" class="btn btn-primary" style="position:relative;margin-top:18px">Oke</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   KONFIGURASI
+   Ganti APPS_SCRIPT_URL dengan URL Web App hasil deploy
+   Google Apps Script (lihat catatan penyerahan).
+========================================================= */
+const CONFIG = {
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyI3ZLv-jOhSxINB10yz8wMuUPwPUo3VeSw6hrkLCFdsuM8Hka49cvfBNzePgfgJAYbow/exec',
+  REFRESH_INTERVAL_MS: 5 * 60 * 1000 // 5 menit
+};
+
+/* =========================================================
+   PWA MANIFEST (embedded, tanpa file terpisah)
+========================================================= */
+(async function setupManifest(){
+  const iconSvgFallback = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512">
+    <rect width="24" height="24" rx="5" fill="#0F1B33"/>
+    <path d="M2 12C2 12 5.5 5.5 12 5.5C18.5 5.5 22 12 22 12C22 12 18.5 18.5 12 18.5C5.5 18.5 2 12 2 12Z" stroke="#3FC7C1" stroke-width="1.6" fill="none"/>
+    <circle cx="12" cy="12" r="3.2" stroke="#3FC7C1" stroke-width="1.6" fill="none"/>
+    <circle cx="12" cy="12" r="1" fill="#3FC7C1"/>
+  </svg>`;
+  const iconUrlFallback = 'data:image/svg+xml;base64,' + btoa(iconSvgFallback);
+
+  function jadikanRawGithubUrlManifest(url){
+    const cocok = String(url || '').match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/(.+)$/);
+    return cocok ? `https://raw.githubusercontent.com/${cocok[1]}/${cocok[2]}/${cocok[3]}` : url;
+  }
+
+  async function ambilLogoSekolahManifest(){
+    try {
+      const t = Math.floor(Date.now() / 60000);
+      const res = await fetch('https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/sekolah.csv?t=' + t, { cache: 'no-store' });
+      if (!res.ok) return null;
+      const baris = (await res.text()).trim().split('\n').map(l => l.split(','));
+      for (let i = 1; i < baris.length; i++){
+        if ((baris[i][0] || '').trim() === 'logo' && baris[i][1]) {
+          return jadikanRawGithubUrlManifest(baris[i][1].trim());
+        }
       }
+    } catch (e) { /* pakai fallback */ }
+    return null;
+  }
 
-      var tzTok = ssToken.getSpreadsheetTimeZone();
-      var waktu = Utilities.formatDate(new Date(), tzTok, "yyyy-MM-dd'T'HH:mm:ss");
+  const logoUrl = await ambilLogoSekolahManifest();
+  const iconUrl = logoUrl || iconUrlFallback;
+  const tipeIcon = logoUrl ? 'image/png' : 'image/svg+xml';
 
-      // PENTING: kolom NISN (A) DIPAKSA format Teks ('@') SEBELUM diisi.
-      // Kalau tidak, NISN yang angka murni akan otomatis dikonversi
-      // Google Sheets jadi Number — bikin query gviz di asesmen.html
-      // (yang membandingkan sebagai teks berkutip) tidak pernah cocok,
-      // sehingga status konfirmasi selalu dianggap "belum" walau sudah
-      // dikonfirmasi pengawas.
-      var barisBaru = sheetOt.getLastRow() + 1;
-      sheetOt.getRange(barisBaru, 1).setNumberFormat('@').setValue(nisn);
-      sheetOt.getRange(barisBaru, 2, 1, 3).setValues([[waktu, data.ruang || '', data.pengawas || '']]);
+  const manifest = {
+    id: 'pengawas-ruang-smpn1kaliwedi',
+    name: 'Akses Asesmen - SMPN 1 Kaliwedi',
+    short_name: 'Akses Asesmen',
+    start_url: '.',
+    display: 'standalone',
+    background_color: '#F3F5F9',
+    theme_color: '#0F1B33',
+    icons: [
+      { src: iconUrl, sizes: '192x192', type: tipeIcon, purpose: 'any maskable' },
+      { src: iconUrl, sizes: '512x512', type: tipeIcon, purpose: 'any maskable' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = URL.createObjectURL(blob);
+  document.head.appendChild(link);
 
-      return jsonOutput({ status: 'ok', nisn: nisn, waktu: waktu });
+  const linkIcon = document.createElement('link');
+  linkIcon.rel = 'icon';
+  linkIcon.href = iconUrl;
+  document.head.appendChild(linkIcon);
+
+  const linkApple = document.createElement('link');
+  linkApple.rel = 'apple-touch-icon';
+  linkApple.href = iconUrl;
+  document.head.appendChild(linkApple);
+})();
+
+/* =========================================================
+   STATE
+========================================================= */
+let refreshTimer = null;
+let countdownTimer = null;
+let secondsLeft = CONFIG.REFRESH_INTERVAL_MS / 1000;
+let qrObj = null;
+
+const els = {
+  inputRuang: document.getElementById('inputRuang'),
+  inputPengawas: document.getElementById('inputPengawas'),
+  btnBukaToken: document.getElementById('btnBukaToken'),
+  btnBukaTokenLabel: document.getElementById('btnBukaTokenLabel'),
+  entryStatus: document.getElementById('entryStatus'),
+  screenEntry: document.getElementById('screenEntry'),
+  screenToken: document.getElementById('screenToken'),
+  metaRuang: document.getElementById('metaRuang'),
+  metaPengawas: document.getElementById('metaPengawas'),
+  qrStage: document.getElementById('qrStage'),
+  qrLoading: document.getElementById('qrLoading'),
+  qrCanvasWrap: document.getElementById('qrCanvasWrap'),
+  countdownText: document.getElementById('countdownText'),
+  btnRefresh: document.getElementById('btnRefresh'),
+  updatedAt: document.getElementById('updatedAt'),
+  btnBukaManual: document.getElementById('btnBukaManual'),
+  screenManual: document.getElementById('screenManual'),
+  inputNisnManual: document.getElementById('inputNisnManual'),
+  btnKonfirmasiManual: document.getElementById('btnKonfirmasiManual'),
+  btnKonfirmasiManualLabel: document.getElementById('btnKonfirmasiManualLabel'),
+  manualStatus: document.getElementById('manualStatus'),
+  manualLog: document.getElementById('manualLog'),
+  brandBadge: document.getElementById('brandBadge'),
+  brandTitle: document.getElementById('brandTitle'),
+  screenHome: document.getElementById('screenHome'),
+  cardTokenAsesmen: document.getElementById('cardTokenAsesmen'),
+  cardRekapNilai: document.getElementById('cardRekapNilai'),
+  cardResetPw: document.getElementById('cardResetPw'),
+  btnKembaliDariEntry: document.getElementById('btnKembaliDariEntry'),
+  screenRekap: document.getElementById('screenRekap'),
+  filterKelas: document.getElementById('filterKelas'),
+  filterMapel: document.getElementById('filterMapel'),
+  btnMuatRekap: document.getElementById('btnMuatRekap'),
+  btnMuatRekapLabel: document.getElementById('btnMuatRekapLabel'),
+  rekapStatus: document.getElementById('rekapStatus'),
+  rekapContainer: document.getElementById('rekapContainer'),
+  btnDownloadXLS: document.getElementById('btnDownloadXLS'),
+  btnSortNilai: document.getElementById('btnSortNilai'),
+  btnTutupRekap: document.getElementById('btnTutupRekap'),
+  screenResetPw: document.getElementById('screenResetPw'),
+  inputNisnResetPw: document.getElementById('inputNisnResetPw'),
+  btnScanQrResetPw: document.getElementById('btnScanQrResetPw'),
+  qrReaderResetPwWrap: document.getElementById('qrReaderResetPwWrap'),
+  qrStatusResetPw: document.getElementById('qrStatusResetPw'),
+  btnTutupQrResetPw: document.getElementById('btnTutupQrResetPw'),
+  btnResetPwSubmit: document.getElementById('btnResetPwSubmit'),
+  btnResetPwSubmitLabel: document.getElementById('btnResetPwSubmitLabel'),
+  resetPwStatus: document.getElementById('resetPwStatus'),
+  btnTutupResetPw: document.getElementById('btnTutupResetPw'),
+  previewSiswaResetPw: document.getElementById('previewSiswaResetPw'),
+  previewNamaResetPw: document.getElementById('previewNamaResetPw'),
+  previewKelasResetPw: document.getElementById('previewKelasResetPw'),
+  previewNotFoundResetPw: document.getElementById('previewNotFoundResetPw'),
+  popupSuksesReset: document.getElementById('popupSuksesReset'),
+  popupBintangLayer: document.getElementById('popupBintangLayer'),
+  popupSuksesNama: document.getElementById('popupSuksesNama'),
+  btnTutupPopupSukses: document.getElementById('btnTutupPopupSukses'),
+  cardKartuSiswa: document.getElementById('cardKartuSiswa'),
+  screenKartuSiswa: document.getElementById('screenKartuSiswa'),
+  btnTutupKartuSiswa: document.getElementById('btnTutupKartuSiswa'),
+  kartuFilterKelas: document.getElementById('kartuFilterKelas'),
+  kartuFilterNama: document.getElementById('kartuFilterNama'),
+  kartuSiswaStatus: document.getElementById('kartuSiswaStatus'),
+  kartuSiswaHasil: document.getElementById('kartuSiswaHasil'),
+};
+
+/* =========================================================
+   ISI PILIHAN RUANG (Ruang 01 - Ruang 30)
+========================================================= */
+function isiPilihanRuang(){
+  const frag = document.createDocumentFragment();
+  for (let i = 1; i <= 30; i++){
+    const kode = 'Ruang ' + String(i).padStart(2, '0');
+    const opt = document.createElement('option');
+    opt.value = kode;
+    opt.textContent = kode;
+    frag.appendChild(opt);
+  }
+  els.inputRuang.appendChild(frag);
+}
+isiPilihanRuang();
+
+/* =========================================================
+   MUAT DAFTAR NAMA GURU — dari GitHub CSV (cepat, lewat CDN)
+   karena datanya jarang berubah. Kalau file belum ada/gagal,
+   otomatis jatuh ke Apps Script (Sheet2!A:A) sebagai cadangan.
+========================================================= */
+const GURU_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/guru.csv';
+
+function isiDropdownGuru(daftar){
+  els.inputPengawas.innerHTML = '';
+  const optKosong = document.createElement('option');
+  optKosong.value = '';
+  optKosong.textContent = 'Pilih nama guru…';
+  els.inputPengawas.appendChild(optKosong);
+
+  daftar.forEach(nama => {
+    const opt = document.createElement('option');
+    opt.value = nama;
+    opt.textContent = nama;
+    els.inputPengawas.appendChild(opt);
+  });
+  els.inputPengawas.disabled = false;
+}
+
+function parseCSVGuru(text){
+  return text.trim().split('\n')
+    .map(baris => baris.trim())
+    .filter(baris => baris && baris.toLowerCase() !== 'nama' && baris.toLowerCase() !== 'nama guru');
+}
+
+async function muatDaftarGuruDariCSV(){
+  const res = await fetch(GURU_CSV_URL + '?t=' + Math.floor(Date.now()/60000), { cache: 'no-store' });
+  if (!res.ok) throw new Error('guru.csv belum tersedia (HTTP ' + res.status + ')');
+  const daftar = parseCSVGuru(await res.text());
+  if (!daftar.length) throw new Error('guru.csv kosong');
+  return daftar;
+}
+
+async function muatDaftarGuruDariAppsScript(){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=guru', { method: 'GET' });
+  const json = await res.json();
+  if (json.status !== 'ok' || !Array.isArray(json.daftar)) throw new Error('Daftar guru tidak tersedia');
+  return json.daftar;
+}
+
+async function muatDaftarGuru(){
+  try {
+    const daftar = await muatDaftarGuruDariCSV();
+    isiDropdownGuru(daftar);
+  } catch (errCSV) {
+    console.warn('⚠️ Gagal ambil guru.csv, coba Apps Script sebagai cadangan:', errCSV.message);
+    try {
+      const daftar = await muatDaftarGuruDariAppsScript();
+      isiDropdownGuru(daftar);
+    } catch (errAS) {
+      els.inputPengawas.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
+      els.entryStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
+      els.entryStatus.className = 'status-msg err';
     }
+  }
+}
+muatDaftarGuru();
+function validateForm(){
+  const ok = els.inputRuang.value.trim().length > 0 && els.inputPengawas.value.trim().length > 0;
+  els.btnBukaToken.disabled = !ok;
+}
+els.inputRuang.addEventListener('change', validateForm);
+els.inputPengawas.addEventListener('change', validateForm);
 
-    return jsonOutput({ status: 'error', message: 'Aksi tidak dikenali' });
+/* =========================================================
+   SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
+========================================================= */
+async function simpanPengawas(ruang, pengawas){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'simpan', ruang, pengawas })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan data');
+  return json;
+}
+
+els.btnBukaToken.addEventListener('click', async () => {
+  const ruang = els.inputRuang.value.trim();
+  const pengawas = els.inputPengawas.value.trim();
+  if (!ruang || !pengawas) return;
+
+  els.btnBukaToken.disabled = true;
+  els.btnBukaTokenLabel.innerHTML = '<span class="spinner"></span> Sedang membuat token...';
+  els.entryStatus.textContent = '';
+  els.entryStatus.className = 'status-msg';
+
+  try {
+    await simpanPengawas(ruang, pengawas);
+    els.metaRuang.textContent = ruang;
+    els.metaRuang.title = ruang;
+    els.metaPengawas.textContent = pengawas;
+    els.metaPengawas.title = pengawas;
+    openTokenScreen();
   } catch (err) {
-    return jsonOutput({ status: 'error', message: err.message });
+    els.entryStatus.textContent = 'Gagal menyimpan data. Periksa koneksi lalu coba lagi.';
+    els.entryStatus.className = 'status-msg err';
+  } finally {
+    els.btnBukaToken.disabled = false;
+    els.btnBukaTokenLabel.textContent = 'Buka Token';
+    validateForm();
+  }
+});
+
+/* =========================================================
+   AMBIL NILAI TOKEN (sumber data tidak ditampilkan ke UI;
+   permintaan hanya menuju Apps Script milik aplikasi ini)
+========================================================= */
+async function ambilTokenValue(){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=token', { method: 'GET' });
+  const json = await res.json();
+  if (json.status !== 'ok' || !json.value) throw new Error('Token tidak tersedia');
+  return json.value;
+}
+
+function renderQR(value){
+  els.qrCanvasWrap.innerHTML = '';
+  qrObj = new QRCode(els.qrCanvasWrap, {
+    text: value,
+    width: 260,
+    height: 260,
+    colorDark: '#0F1B33',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+
+function formatJam(d){
+  return d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+async function loadToken(showSpinnerOverlay){
+  if (showSpinnerOverlay){
+    els.qrLoading.classList.remove('hidden');
+    els.qrCanvasWrap.style.opacity = '0.25';
+  }
+  els.btnRefresh.classList.add('spinning');
+
+  try {
+    const value = await ambilTokenValue();
+    renderQR(value);
+    els.qrLoading.classList.add('hidden');
+    els.qrCanvasWrap.style.opacity = '1';
+    els.updatedAt.textContent = 'Diperbarui pukul ' + formatJam(new Date());
+    resetCountdown();
+  } catch (err) {
+    els.qrCanvasWrap.innerHTML = '<div class="qr-error">Token belum bisa dimuat.<br>Coba refresh kembali.</div>';
+    els.qrLoading.classList.add('hidden');
+    els.qrCanvasWrap.style.opacity = '1';
+    els.updatedAt.textContent = 'Gagal memuat pada ' + formatJam(new Date());
+  } finally {
+    els.btnRefresh.classList.remove('spinning');
   }
 }
 
-function doGet(e) {
+/* =========================================================
+   COUNTDOWN + AUTO REFRESH 5 MENIT
+========================================================= */
+function resetCountdown(){
+  secondsLeft = CONFIG.REFRESH_INTERVAL_MS / 1000;
+  updateCountdownUI();
+}
+function updateCountdownUI(){
+  const m = Math.floor(secondsLeft / 60).toString().padStart(2,'0');
+  const s = Math.floor(secondsLeft % 60).toString().padStart(2,'0');
+  els.countdownText.textContent = `${m}:${s}`;
+  const pct = 100 - (secondsLeft / (CONFIG.REFRESH_INTERVAL_MS/1000) * 100);
+  els.btnRefresh.style.setProperty('--pct', pct.toFixed(1));
+}
+function startTimers(){
+  stopTimers();
+  countdownTimer = setInterval(() => {
+    secondsLeft -= 1;
+    if (secondsLeft <= 0){
+      loadToken(false);
+      return;
+    }
+    updateCountdownUI();
+  }, 1000);
+}
+function stopTimers(){
+  if (countdownTimer) clearInterval(countdownTimer);
+  if (refreshTimer) clearInterval(refreshTimer);
+  countdownTimer = null;
+  refreshTimer = null;
+}
+
+els.btnRefresh.addEventListener('click', () => loadToken(true));
+
+/* =========================================================
+   NAVIGASI ANTAR LAYAR
+========================================================= */
+function openTokenScreen(){
+  els.screenEntry.classList.add('hidden');
+  els.screenToken.classList.remove('hidden');
+  els.qrCanvasWrap.innerHTML = '';
+  els.qrLoading.classList.remove('hidden');
+  loadToken(true);
+  startTimers();
+}
+
+/* =========================================================
+   KONFIRMASI MANUAL — untuk siswa yang kamera HP-nya gagal
+   scan QR Token di aplikasi Asesmen. Menulis NISN + waktu ke
+   sheet "Otorisasi" (lewat Apps Script), yang nanti dibaca
+   langsung oleh asesmen.html.
+========================================================= */
+els.btnBukaManual.addEventListener('click', () => {
+  const buka = els.screenManual.classList.contains('hidden');
+  els.screenManual.classList.toggle('hidden');
+  els.btnBukaManual.textContent = buka
+    ? '⬆️ Tutup Panel Konfirmasi Manual'
+    : '🧑‍🎓 Kamera Siswa Gagal? Konfirmasi Manual';
+  if (buka) els.inputNisnManual.focus();
+});
+
+async function kirimOtorisasiManual(nisn){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      action: 'otorisasiManual',
+      nisn,
+      ruang: els.metaRuang.textContent,
+      pengawas: els.metaPengawas.textContent,
+    })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal mengonfirmasi');
+  return json;
+}
+
+function tambahLogManual(nisn){
+  const item = document.createElement('div');
+  item.style.cssText = 'display:flex;justify-content:space-between;padding:9px 4px;border-bottom:1px solid var(--ring-track);font-size:13px;';
+  item.innerHTML = `<span style="font-weight:700;color:var(--navy-950)">${nisn}</span><span style="color:var(--ink-soft)">${formatJam(new Date())}</span>`;
+  els.manualLog.prepend(item);
+}
+
+els.btnKonfirmasiManual.addEventListener('click', async () => {
+  const nisn = els.inputNisnManual.value.trim();
+  els.manualStatus.textContent = '';
+  els.manualStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.manualStatus.textContent = 'Ketik NISN siswa terlebih dahulu.';
+    els.manualStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnKonfirmasiManual.disabled = true;
+  els.btnKonfirmasiManualLabel.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.4);border-top-color:#fff;"></span>';
+
   try {
-    var action = e.parameter.action;
-
-    if (action === 'token') {
-      var ssToken = SpreadsheetApp.openById(SHEET_TOKEN_ID);
-      var sheet = ssToken.getSheetByName(SHEET_TOKEN_NAME);
-      var value = sheet.getRange(SHEET_TOKEN_CELL).getDisplayValue();
-
-      return jsonOutput({
-        status: 'ok',
-        value: String(value),
-        updated: new Date().toISOString()
-      });
-    }
-
-    if (action === 'guru') {
-      var ssGuru = SpreadsheetApp.getActiveSpreadsheet();
-      var sheetGuru = ssGuru.getSheetByName(SHEET_GURU_NAME);
-      var lastRow = sheetGuru.getLastRow();
-      var daftar = [];
-
-      if (lastRow >= 1) {
-        var range = sheetGuru.getRange(SHEET_GURU_COLUMN + '1:' + SHEET_GURU_COLUMN + lastRow);
-        var values = range.getValues();
-        var headerKeywords = ['nama', 'nama guru', 'nama pengawas', 'guru', 'pengawas'];
-
-        values.forEach(function(row, idx){
-          var val = String(row[0]).trim();
-          if (!val) return;
-          var isHeader = (idx === 0) && headerKeywords.indexOf(val.toLowerCase()) !== -1;
-          if (!isHeader) daftar.push(val);
-        });
-      }
-
-      return jsonOutput({ status: 'ok', daftar: daftar });
-    }
-
-    return jsonOutput({ status: 'error', message: 'Aksi tidak dikenali' });
+    await kirimOtorisasiManual(nisn);
+    els.manualStatus.textContent = `✅ ${nisn} dikonfirmasi. Minta siswa tekan "Cek Status" di HP-nya.`;
+    els.manualStatus.className = 'status-msg ok';
+    tambahLogManual(nisn);
+    els.inputNisnManual.value = '';
   } catch (err) {
-    return jsonOutput({ status: 'error', message: err.message });
+    els.manualStatus.textContent = 'Gagal mengonfirmasi. Periksa koneksi lalu coba lagi.';
+    els.manualStatus.className = 'status-msg err';
+  } finally {
+    els.btnKonfirmasiManual.disabled = false;
+    els.btnKonfirmasiManualLabel.textContent = '✅ Konfirmasi Masuk';
+  }
+});
+
+els.inputNisnManual.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnKonfirmasiManual.click();
+});
+
+/* =========================================================
+   REKAP NILAI — baca data/nilai.csv & data/siswa.csv dari
+   GitHub (di-generate otomatis oleh Apps Script dari Sheet3
+   & Sheet2), gabungkan lewat KODE SISWA, kelompokkan per
+   kelas, render tabel + tombol download Excel per kelas.
+========================================================= */
+const SEKOLAH_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/sekolah.csv';
+const NILAI_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/nilai.csv';
+const SISWA_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/siswa.csv';
+
+// Parser CSV umum (mendukung koma di dalam tanda kutip)
+function parseCSVGenerik(text){
+  const baris = [];
+  const lines = text.trim().split('\n');
+  for (const line of lines){
+    if (!line.trim()) continue;
+    const cols = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < line.length; i++){
+      const ch = line[i];
+      if (ch === '"'){
+        if (inQ && line[i+1] === '"'){ cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (ch === ',' && !inQ){ cols.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim());
+    baris.push(cols);
+  }
+  return baris;
+}
+// Array 2D → array objek berdasarkan NAMA KOLOM (baris header pertama)
+function csvKeObjek(rows){
+  if (!rows || rows.length < 2) return [];
+  const header = rows[0].map(h => (h||'').trim().toUpperCase());
+  const data = [];
+  for (let i = 1; i < rows.length; i++){
+    const row = rows[i];
+    if (!row || !row.some(c => c && c.trim())) continue;
+    const obj = {};
+    header.forEach((h, idx) => { if (h) obj[h] = (row[idx] || '').trim(); });
+    data.push(obj);
+  }
+  return data;
+}
+function ambilKolomRekap(obj, ...namaAlternatif){
+  for (const n of namaAlternatif){ const v = obj[n.toUpperCase()]; if (v !== undefined) return v; }
+  return '';
+}
+function escapeHtmlRekap(s){
+  const d = document.createElement('div');
+  d.textContent = (s === undefined || s === null) ? '' : String(s);
+  return d.innerHTML;
+}
+
+let rekapTerakhir = null; // { "Kelas": [ {nama, kode, mapel, nilai, waktu}, ... ] }
+
+async function muatDataRekap(){
+  els.btnMuatRekap.disabled = true;
+  els.btnMuatRekapLabel.innerHTML = '<span class="spinner"></span>';
+  els.rekapStatus.textContent = '';
+  els.rekapStatus.className = 'status-msg';
+  els.btnDownloadXLS.disabled = true;
+
+  try {
+    const t = Math.floor(Date.now() / 60000); // cache-bust per menit
+    const [resNilai, resSiswa] = await Promise.all([
+      fetch(NILAI_CSV_URL + '?t=' + t, { cache: 'no-store' }),
+      fetch(SISWA_CSV_URL + '?t=' + t, { cache: 'no-store' }),
+    ]);
+    if (!resNilai.ok) throw new Error('data/nilai.csv belum tersedia (HTTP ' + resNilai.status + ')');
+    if (!resSiswa.ok) throw new Error('data/siswa.csv belum tersedia (HTTP ' + resSiswa.status + ')');
+
+    const objNilai = csvKeObjek(parseCSVGenerik(await resNilai.text()));
+    const objSiswa = csvKeObjek(parseCSVGenerik(await resSiswa.text()));
+
+    // Peta KODE SISWA -> { nama, kelas } dari siswa.csv
+    // (header CSV-nya tetap "KODE SOAL" — nama lama, nilainya sama dengan KODE SISWA)
+    const lookup = {};
+    const semuaKelas = new Set();
+    objSiswa.forEach(o => {
+      const kode = ambilKolomRekap(o, 'KODE SOAL', 'KODE SISWA', 'KODE').toUpperCase();
+      if (!kode) return;
+      const kelas = ambilKolomRekap(o, 'KLS', 'KELAS') || '-';
+      lookup[kode] = { nama: ambilKolomRekap(o, 'NAMA') || '-', kelas };
+      semuaKelas.add(kelas);
+    });
+    isiFilterKelas([...semuaKelas]);
+
+    const kelasFilter = els.filterKelas.value.trim().toUpperCase();
+    const mapelFilter = els.filterMapel.value.trim().toUpperCase();
+    const semuaMapel = new Set();
+    const rekap = {};
+    objNilai.forEach(o => {
+      const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
+      if (!kode) return;
+      const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
+      semuaMapel.add(mapel);
+      const nilai = ambilKolomRekap(o, 'NILAI');
+      const waktu = ambilKolomRekap(o, 'TIMESTAMP');
+      const info = lookup[kode] || { nama: '(tidak dikenal — cek Sheet2)', kelas: '(tanpa kelas)' };
+      if (kelasFilter && info.kelas.toUpperCase() !== kelasFilter) return;
+      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
+      if (!rekap[info.kelas]) rekap[info.kelas] = [];
+      rekap[info.kelas].push({ nama: info.nama, kode, mapel, nilai, waktu });
+    });
+    isiFilterMapel([...semuaMapel]);
+
+    // ---- Lengkapi dengan siswa yang BELUM punya nilai (sesuai filter aktif) ----
+    // Kalau filter Mapel aktif: cek siapa yang belum punya nilai utk mapel itu.
+    // Kalau filter Mapel kosong: cek siapa yang belum punya nilai SAMA SEKALI.
+    const sudahAdaNilai = new Set();
+    objNilai.forEach(o => {
+      const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
+      if (!kode) return;
+      const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
+      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
+      sudahAdaNilai.add(kode);
+    });
+    const labelMapelBelum = els.filterMapel.selectedOptions[0] && els.filterMapel.value
+      ? els.filterMapel.selectedOptions[0].textContent
+      : '-';
+    Object.entries(lookup).forEach(([kode, info]) => {
+      if (kelasFilter && info.kelas.toUpperCase() !== kelasFilter) return;
+      if (sudahAdaNilai.has(kode)) return;
+      if (!rekap[info.kelas]) rekap[info.kelas] = [];
+      rekap[info.kelas].push({ nama: info.nama, kode, mapel: labelMapelBelum, nilai: null, waktu: '', belumAda: true });
+    });
+
+    // Urutkan tiap kelas berdasarkan nama
+    Object.values(rekap).forEach(list => list.sort((a, b) => a.nama.localeCompare(b.nama)));
+
+    renderRekap(rekap);
+    rekapTerakhir = rekap;
+    const totalBaris = Object.values(rekap).reduce((n, l) => n + l.length, 0);
+    els.btnDownloadXLS.disabled = totalBaris === 0;
+    if (totalBaris === 0){
+      els.rekapStatus.textContent = 'Belum ada data nilai untuk ditampilkan.';
+      els.rekapStatus.className = 'status-msg';
+    }
+  } catch (err){
+    els.rekapContainer.innerHTML = '';
+    els.rekapStatus.textContent = 'Gagal memuat rekap: ' + err.message;
+    els.rekapStatus.className = 'status-msg err';
+  } finally {
+    els.btnMuatRekap.disabled = false;
+    els.btnMuatRekapLabel.textContent = '🔄 Muat / Refresh Rekap';
   }
 }
 
-function jsonOutput(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+function isiFilterKelas(daftarKelas){
+  const nilaiSekarang = els.filterKelas.value;
+  els.filterKelas.innerHTML = '<option value="">Semua Kelas</option>';
+  daftarKelas.filter(Boolean).sort().forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = k;
+    els.filterKelas.appendChild(opt);
+  });
+  els.filterKelas.value = nilaiSekarang;
+}
+function isiFilterMapel(daftarMapel){
+  const nilaiSekarang = els.filterMapel.value;
+  els.filterMapel.innerHTML = '<option value="">Semua Mapel</option>';
+  daftarMapel.filter(Boolean).sort().forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    els.filterMapel.appendChild(opt);
+  });
+  els.filterMapel.value = nilaiSekarang;
 }
 
-// ================================================================
-// EXPORT DAFTAR GURU KE GITHUB — jalankan MANUAL (pilih fungsi ini
-// di dropdown, klik Run) setiap kali ada guru baru ditambahkan atau
-// nama diubah di Sheet2!A:A. Datanya jarang berubah jadi TIDAK perlu
-// trigger otomatis — cukup dijalankan sesekali saat memang ada
-// perubahan, supaya pengawas-ruang.html tetap cepat (baca dari
-// GitHub, bukan Apps Script tiap kali dibuka).
-//
-// CATATAN: perlu GITHUB_TOKEN di Script Properties (Project Settings
-// → Script Properties → Add → GITHUB_TOKEN → token GitHub scope 'repo').
-// ================================================================
-var GITHUB_USER_GURU   = 'SMPN1KALIWEDI';
-var GITHUB_REPO_GURU   = 'ujian-smpn1kaliwedi';
-var GITHUB_BRANCH_GURU = 'main';
-var GITHUB_PATH_GURU   = 'data/guru.csv';
+let modeUrutanNilai = 'nama'; // 'nama' | 'desc' (tertinggi dulu) | 'asc' (terendah dulu)
+const LABEL_URUTAN_NILAI = {
+  nama: '↕️ Urutkan: Nama (A–Z)',
+  desc: '↕️ Urutkan: Nilai Tertinggi',
+  asc:  '↕️ Urutkan: Nilai Terendah',
+};
 
-function exportGuruKeGithub() {
-  var ssGuru = SpreadsheetApp.getActiveSpreadsheet();
-  var sheetGuru = ssGuru.getSheetByName(SHEET_GURU_NAME);
-  var lastRow = sheetGuru.getLastRow();
-  var daftar = [];
+function urutkanBarisRekap(rows, mode){
+  const salinan = [...rows];
+  if (mode === 'nama') return salinan.sort((a, b) => a.nama.localeCompare(b.nama));
 
-  if (lastRow >= 1) {
-    var range = sheetGuru.getRange(SHEET_GURU_COLUMN + '1:' + SHEET_GURU_COLUMN + lastRow);
-    var values = range.getValues();
-    var headerKeywords = ['nama', 'nama guru', 'nama pengawas', 'guru', 'pengawas'];
+  const angka = r => {
+    if (r.belumAda) return null;
+    const n = parseFloat(r.nilai);
+    return isNaN(n) ? null : n;
+  };
+  return salinan.sort((a, b) => {
+    const na = angka(a), nb = angka(b);
+    if (na === null && nb === null) return a.nama.localeCompare(b.nama);
+    if (na === null) return 1;  // yang belum ada nilai/nilai non-angka ditaruh di bawah
+    if (nb === null) return -1;
+    return mode === 'asc' ? na - nb : nb - na;
+  });
+}
 
-    values.forEach(function(row, idx){
-      var val = String(row[0]).trim();
-      if (!val) return;
-      var isHeader = (idx === 0) && headerKeywords.indexOf(val.toLowerCase()) !== -1;
-      if (!isHeader) daftar.push(val);
+function renderRekap(rekap){
+  const kelasList = Object.keys(rekap).sort();
+  if (kelasList.length === 0){ els.rekapContainer.innerHTML = ''; return; }
+
+  els.rekapContainer.innerHTML = kelasList.map(kelas => {
+    const rows = urutkanBarisRekap(rekap[kelas], modeUrutanNilai);
+    const jumlahBelum = rows.filter(r => r.belumAda).length;
+    const jumlahAda = rows.length - jumlahBelum;
+    return `
+      <div style="margin-bottom:18px">
+        <div style="font-weight:700;font-size:13.5px;color:var(--navy-800);margin-bottom:6px">
+          Kelas ${escapeHtmlRekap(kelas)}
+          <span style="color:var(--ink-soft);font-weight:500">(${jumlahAda} ada${jumlahBelum ? `, <span style="color:#C98A1F">${jumlahBelum} belum</span>` : ''})</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead>
+            <tr style="background:var(--navy-800);color:#fff">
+              <th style="padding:7px 8px;text-align:left">Nama</th>
+              <th style="padding:7px 8px;text-align:left">Mapel</th>
+              <th style="padding:7px 8px;text-align:center">Nilai</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr style="border-bottom:1px solid var(--ring-track);${r.belumAda ? 'background:#FFF8EA' : ''}">
+                <td style="padding:6px 8px">${escapeHtmlRekap(r.nama)}</td>
+                <td style="padding:6px 8px">${escapeHtmlRekap(r.mapel)}</td>
+                <td style="padding:6px 8px;text-align:center;font-weight:700;${r.belumAda ? 'color:#C98A1F' : ''}">${r.belumAda ? '⚠️ Belum ada' : escapeHtmlRekap(r.nilai)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }).join('');
+}
+
+function downloadRekapXLS(){
+  if (!rekapTerakhir || typeof XLSX === 'undefined') return;
+  const wb = XLSX.utils.book_new();
+  Object.keys(rekapTerakhir).sort().forEach(kelas => {
+    const rows = urutkanBarisRekap(rekapTerakhir[kelas], modeUrutanNilai).map(r => ({
+      'Nama': r.nama, 'Kode Siswa': r.kode, 'Mapel': r.mapel,
+      'Nilai': r.belumAda ? 'Belum ada nilai' : r.nilai, 'Waktu': r.waktu
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const namaSheet = String(kelas).substring(0, 31).replace(/[\\/?*[\]:]/g, '-') || 'Kelas';
+    XLSX.utils.book_append_sheet(wb, ws, namaSheet);
+  });
+  XLSX.writeFile(wb, `Rekap-Nilai-${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
+/* =========================================================
+   HEADER DINAMIS PER LAYAR — badge/logo hanya di Menu Utama,
+   layar lain tampilkan judul sesuai fiturnya, tanpa ikon.
+========================================================= */
+const HEADER_LAYAR = {
+  home:       { judul: 'Akses Asesmen', tampilkanIkon: true  },
+  token:      { judul: 'Token Asesmen', tampilkanIkon: false },
+  rekap:      { judul: 'REKAP NILAI',   tampilkanIkon: false },
+  resetpw:    { judul: 'Reset Password',tampilkanIkon: false },
+  kartusiswa: { judul: 'Kartu Siswa',   tampilkanIkon: false },
+};
+function aturHeader(kunci){
+  const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
+  els.brandTitle.textContent = cfg.judul;
+  els.brandBadge.style.display = cfg.tampilkanIkon ? 'flex' : 'none';
+}
+
+els.cardRekapNilai.addEventListener('click', () => {
+  aturHeader('rekap');
+  els.screenHome.classList.add('hidden');
+  els.screenRekap.classList.remove('hidden');
+  if (!rekapTerakhir) muatDataRekap();
+});
+els.btnMuatRekap.addEventListener('click', muatDataRekap);
+els.filterKelas.addEventListener('change', muatDataRekap);
+els.filterMapel.addEventListener('change', muatDataRekap);
+els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
+els.btnSortNilai.addEventListener('click', () => {
+  modeUrutanNilai = modeUrutanNilai === 'nama' ? 'desc' : (modeUrutanNilai === 'desc' ? 'asc' : 'nama');
+  els.btnSortNilai.textContent = LABEL_URUTAN_NILAI[modeUrutanNilai];
+  if (rekapTerakhir) renderRekap(rekapTerakhir);
+});
+els.btnTutupRekap.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenRekap.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+let daftarSiswaCache = null; // cache hasil siswa.csv, dipakai bareng utk preview & rekap
+
+async function muatDaftarSiswaCache(){
+  if (daftarSiswaCache) return daftarSiswaCache;
+  try {
+    const t = Math.floor(Date.now() / 60000);
+    const res = await fetch(SISWA_CSV_URL + '?t=' + t, { cache: 'no-store' });
+    if (!res.ok) return [];
+    daftarSiswaCache = csvKeObjek(parseCSVGenerik(await res.text()));
+    return daftarSiswaCache;
+  } catch (e) {
+    return [];
+  }
+}
+
+function cariSiswaByNisn(daftar, nisn){
+  const nisnCari = String(nisn || '').trim();
+  if (!nisnCari) return null;
+  return daftar.find(o => ambilKolomRekap(o, 'NISN') === nisnCari) || null;
+}
+
+function cariSiswaByKode(daftar, kode){
+  const kodeCari = String(kode || '').trim().toUpperCase();
+  if (!kodeCari) return null;
+  return daftar.find(o => ambilKolomRekap(o, 'KODE SOAL', 'KODE SISWA', 'KODE').toUpperCase() === kodeCari) || null;
+}
+
+/* =========================================================
+   KARTU SISWA — pilih kelas → pilih nama → tampilkan semua
+   nilai yang sudah diperoleh siswa tsb (dari data/nilai.csv).
+========================================================= */
+async function isiKartuFilterKelas(){
+  const daftar = await muatDaftarSiswaCache();
+  const kelasSet = new Set(daftar.map(o => ambilKolomRekap(o, 'KLS', 'KELAS')).filter(Boolean));
+  els.kartuFilterKelas.innerHTML = '<option value="">Pilih kelas…</option>' +
+    [...kelasSet].sort().map(k => `<option value="${escapeHtmlRekap(k)}">${escapeHtmlRekap(k)}</option>`).join('');
+}
+
+els.kartuFilterKelas.addEventListener('change', async () => {
+  const kelas = els.kartuFilterKelas.value;
+  els.kartuSiswaHasil.innerHTML = '';
+  els.kartuSiswaStatus.textContent = '';
+  if (!kelas){
+    els.kartuFilterNama.innerHTML = '<option value="">Pilih kelas dulu…</option>';
+    els.kartuFilterNama.disabled = true;
+    return;
+  }
+  const daftar = await muatDaftarSiswaCache();
+  const siswaKelas = daftar
+    .filter(o => (ambilKolomRekap(o, 'KLS', 'KELAS') || '').toUpperCase() === kelas.toUpperCase())
+    .map(o => ({ kode: ambilKolomRekap(o, 'KODE SOAL', 'KODE SISWA', 'KODE').toUpperCase(), nama: ambilKolomRekap(o, 'NAMA') || '(tanpa nama)' }))
+    .filter(s => s.kode)
+    .sort((a, b) => a.nama.localeCompare(b.nama));
+
+  els.kartuFilterNama.innerHTML = '<option value="">Pilih nama…</option>' +
+    siswaKelas.map(s => `<option value="${escapeHtmlRekap(s.kode)}">${escapeHtmlRekap(s.nama)}</option>`).join('');
+  els.kartuFilterNama.disabled = siswaKelas.length === 0;
+  if (siswaKelas.length === 0){
+    els.kartuSiswaStatus.textContent = 'Tidak ada siswa terdaftar di kelas ini.';
+    els.kartuSiswaStatus.className = 'status-msg';
+  }
+});
+
+els.kartuFilterNama.addEventListener('change', () => {
+  const kode = els.kartuFilterNama.value;
+  if (!kode){ els.kartuSiswaHasil.innerHTML = ''; return; }
+  tampilkanKartuSiswa(kode);
+});
+
+async function tampilkanKartuSiswa(kode){
+  els.kartuSiswaStatus.textContent = '';
+  els.kartuSiswaStatus.className = 'status-msg';
+  els.kartuSiswaHasil.innerHTML = '<div style="text-align:center;padding:24px"><span class="spinner"></span></div>';
+
+  try {
+    const daftarSiswa = await muatDaftarSiswaCache();
+    const siswa = cariSiswaByKode(daftarSiswa, kode);
+    const nama = siswa ? (ambilKolomRekap(siswa, 'NAMA') || '-') : '-';
+    const kelas = siswa ? (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-') : '-';
+
+    const t = Math.floor(Date.now() / 60000);
+    const resNilai = await fetch(NILAI_CSV_URL + '?t=' + t, { cache: 'no-store' });
+    if (!resNilai.ok) throw new Error('data/nilai.csv belum tersedia (HTTP ' + resNilai.status + ')');
+    const objNilai = csvKeObjek(parseCSVGenerik(await resNilai.text()));
+
+    const daftarNilai = objNilai
+      .filter(o => ambilKolomRekap(o, 'KODE').toUpperCase() === kode.toUpperCase())
+      .map(o => ({
+        mapel: ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-',
+        nilai: ambilKolomRekap(o, 'NILAI'),
+        waktu: ambilKolomRekap(o, 'TIMESTAMP'),
+      }))
+      .sort((a, b) => a.mapel.localeCompare(b.mapel));
+
+    const nilaiNumerik = daftarNilai.map(n => parseFloat(n.nilai)).filter(n => !isNaN(n));
+    const rataRata = nilaiNumerik.length
+      ? (nilaiNumerik.reduce((a, b) => a + b, 0) / nilaiNumerik.length).toFixed(1)
+      : null;
+
+    els.kartuSiswaHasil.innerHTML = `
+      <div style="padding:16px;background:linear-gradient(135deg,var(--violet-500),#6E4FC2);border-radius:var(--radius-md);color:#fff;margin-bottom:14px">
+        <div style="font-size:17px;font-weight:800">${escapeHtmlRekap(nama)}</div>
+        <div style="font-size:12.5px;opacity:.9;margin-top:2px">Kelas ${escapeHtmlRekap(kelas)} • Kode ${escapeHtmlRekap(kode)}</div>
+      </div>
+      ${daftarNilai.length === 0 ? `
+        <div style="text-align:center;padding:20px;color:var(--ink-soft);font-size:13px">
+          ⚠️ Belum ada nilai untuk siswa ini.
+        </div>` : `
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead>
+            <tr style="background:var(--navy-800);color:#fff">
+              <th style="padding:7px 8px;text-align:left">Mapel</th>
+              <th style="padding:7px 8px;text-align:center">Nilai</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${daftarNilai.map(n => `
+              <tr style="border-bottom:1px solid var(--ring-track)">
+                <td style="padding:6px 8px">${escapeHtmlRekap(n.mapel)}</td>
+                <td style="padding:6px 8px;text-align:center;font-weight:700">${escapeHtmlRekap(n.nilai)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+        ${rataRata !== null ? `
+        <div style="margin-top:10px;text-align:right;font-size:13px;font-weight:800;color:var(--navy-800)">
+          Rata-rata: ${rataRata}
+        </div>` : ''}
+      `}
+    `;
+  } catch (err){
+    els.kartuSiswaHasil.innerHTML = '';
+    els.kartuSiswaStatus.textContent = 'Gagal memuat nilai: ' + err.message;
+    els.kartuSiswaStatus.className = 'status-msg err';
+  }
+}
+
+els.cardKartuSiswa.addEventListener('click', () => {
+  aturHeader('kartusiswa');
+  els.screenHome.classList.add('hidden');
+  els.screenKartuSiswa.classList.remove('hidden');
+  isiKartuFilterKelas();
+});
+els.btnTutupKartuSiswa.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenKartuSiswa.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+async function tampilkanPreviewSiswaResetPw(){
+  const nisn = els.inputNisnResetPw.value.trim();
+  els.previewSiswaResetPw.style.display = 'none';
+  els.previewNotFoundResetPw.style.display = 'none';
+  if (!nisn) return;
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+
+  if (siswa){
+    els.previewNamaResetPw.textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
+    els.previewKelasResetPw.textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
+    els.previewSiswaResetPw.style.display = 'block';
+  } else {
+    els.previewNotFoundResetPw.style.display = 'block';
+  }
+}
+
+/* =========================================================
+   RESET PASSWORD SISWA — panggil Apps Script AbsensiKu
+   (spreadsheet ROSTER, terpisah dari spreadsheet asesmen)
+   untuk menghapus password custom siswa yang gagal login,
+   sehingga otomatis balik ke password default "user123".
+========================================================= */
+const APPS_SCRIPT_URL_PW = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
+
+async function resetPasswordSiswa(){
+  const nisn = els.inputNisnResetPw.value.trim();
+  els.resetPwStatus.textContent = '';
+  els.resetPwStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.resetPwStatus.textContent = 'Ketik NISN siswa terlebih dahulu.';
+    els.resetPwStatus.className = 'status-msg err';
+    return;
+  }
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+  const namaSiswa = siswa ? (ambilKolomRekap(siswa, 'NAMA') || '') : '';
+
+  els.btnResetPwSubmit.disabled = true;
+  els.btnResetPwSubmitLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 12000);
+    const res = await fetch(APPS_SCRIPT_URL_PW + '?' + new URLSearchParams({ action: 'resetPassword', nisn }), { signal: ctrl.signal });
+    clearTimeout(tid);
+    const data = await res.json();
+
+    if (data.status === 'ok'){
+      els.resetPwStatus.textContent = '✅ ' + (data.pesan || 'Password berhasil direset.');
+      els.resetPwStatus.className = 'status-msg ok';
+      els.inputNisnResetPw.value = '';
+      els.previewSiswaResetPw.style.display = 'none';
+      els.previewNotFoundResetPw.style.display = 'none';
+      tampilkanPopupSukses(namaSiswa);
+    } else {
+      els.resetPwStatus.textContent = '❌ ' + (data.pesan || 'Gagal mereset password.');
+      els.resetPwStatus.className = 'status-msg err';
+    }
+  } catch (err){
+    els.resetPwStatus.textContent = '❌ Gagal menghubungi server: ' + err.message;
+    els.resetPwStatus.className = 'status-msg err';
+  } finally {
+    els.btnResetPwSubmit.disabled = false;
+    els.btnResetPwSubmitLabel.textContent = '🔑 Reset ke Password Default';
+  }
+}
+
+/* ---- Popup "RESET BERHASIL" dengan bintang warna-warni ---- */
+const WARNA_BINTANG = ['#FFC93C', '#FF6B6B', '#4D96FF', '#6BCB77', '#C780FA', '#FF9F45'];
+const SIMBOL_BINTANG = ['⭐', '✨', '🌟', '💫'];
+
+function tampilkanPopupSukses(nama){
+  els.popupSuksesNama.textContent = nama ? `Password ${nama} sudah direset` : '';
+  els.popupBintangLayer.innerHTML = '';
+
+  const jumlah = 22;
+  for (let i = 0; i < jumlah; i++){
+    const b = document.createElement('span');
+    b.className = 'bintang-jatuh';
+    b.textContent = SIMBOL_BINTANG[Math.floor(Math.random() * SIMBOL_BINTANG.length)];
+    b.style.left = Math.random() * 100 + '%';
+    b.style.color = WARNA_BINTANG[Math.floor(Math.random() * WARNA_BINTANG.length)];
+    b.style.fontSize = (14 + Math.random() * 14) + 'px';
+    b.style.animationDuration = (1.4 + Math.random() * 1.6) + 's';
+    b.style.animationDelay = (Math.random() * 0.8) + 's';
+    els.popupBintangLayer.appendChild(b);
+  }
+
+  els.popupSuksesReset.classList.remove('hidden');
+}
+
+function tutupPopupSukses(){
+  els.popupSuksesReset.classList.add('hidden');
+  els.popupBintangLayer.innerHTML = '';
+}
+
+els.btnTutupPopupSukses.addEventListener('click', tutupPopupSukses);
+
+els.cardResetPw.addEventListener('click', () => {
+  aturHeader('resetpw');
+  els.screenHome.classList.add('hidden');
+  els.screenResetPw.classList.remove('hidden');
+});
+els.btnResetPwSubmit.addEventListener('click', resetPasswordSiswa);
+els.inputNisnResetPw.addEventListener('input', () => {
+  clearTimeout(window._debounceLookupResetPw);
+  window._debounceLookupResetPw = setTimeout(tampilkanPreviewSiswaResetPw, 350);
+});
+els.inputNisnResetPw.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnResetPwSubmit.click();
+});
+els.btnTutupResetPw.addEventListener('click', () => {
+  aturHeader('home');
+  tutupQrResetPw();
+  els.screenResetPw.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+/* ---- Scan QR NISN (kartu siswa) untuk Reset Password ---- */
+let qrScannerResetPw = null;
+
+function bukaQrResetPw(){
+  els.qrReaderResetPwWrap.style.display = 'block';
+  els.qrStatusResetPw.textContent = 'Memulai kamera...';
+  setTimeout(() => {
+    try {
+      qrScannerResetPw = new Html5Qrcode('qr-reader-resetpw');
+      qrScannerResetPw.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const teks = decodedText.trim();
+          els.inputNisnResetPw.value = teks;
+          els.qrStatusResetPw.textContent = '✅ Terbaca: ' + teks;
+          tampilkanPreviewSiswaResetPw();
+          if (qrScannerResetPw) { try { qrScannerResetPw.pause(true); } catch(e){} }
+          setTimeout(tutupQrResetPw, 700);
+        },
+        () => {}
+      ).then(() => { els.qrStatusResetPw.textContent = '🔍 Arahkan ke QR Code kartu siswa...'; })
+       .catch(err => { els.qrStatusResetPw.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
+    } catch (e) {
+      els.qrStatusResetPw.textContent = '❌ ' + e.message;
+    }
+  }, 300);
+}
+
+function tutupQrResetPw(){
+  if (qrScannerResetPw){
+    qrScannerResetPw.stop().catch(() => {}).finally(() => {
+      try { qrScannerResetPw.clear(); } catch(e){}
+      qrScannerResetPw = null;
     });
   }
-
-  var csvText = daftar.join('\n');
-  var token = PropertiesService.getScriptProperties().getProperty('GITHUB_TOKEN');
-  if (!token) throw new Error('GITHUB_TOKEN belum diatur di Script Properties.');
-
-  var url = 'https://api.github.com/repos/' + GITHUB_USER_GURU + '/' + GITHUB_REPO_GURU + '/contents/' + GITHUB_PATH_GURU;
-  var encoded = Utilities.base64Encode(csvText, Utilities.Charset.UTF_8);
-
-  var sha = null;
-  var cek = UrlFetchApp.fetch(url, {
-    method: 'GET',
-    headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' },
-    muteHttpExceptions: true,
-  });
-  if (cek.getResponseCode() === 200) sha = JSON.parse(cek.getContentText()).sha;
-
-  var payload = {
-    message: 'Update guru.csv - ' + new Date().toISOString(),
-    content: encoded,
-    branch: GITHUB_BRANCH_GURU,
-  };
-  if (sha) payload.sha = sha;
-
-  var res = UrlFetchApp.fetch(url, {
-    method: 'PUT',
-    contentType: 'application/json',
-    headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' },
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true,
-  });
-
-  var kode = res.getResponseCode();
-  if (kode !== 200 && kode !== 201) {
-    throw new Error('Gagal upload guru.csv. Kode: ' + kode + ' — ' + res.getContentText());
-  }
-  console.log('✅ guru.csv berhasil di-export (' + daftar.length + ' nama)');
-  return { status: 'ok', jumlah: daftar.length };
+  els.qrReaderResetPwWrap.style.display = 'none';
 }
+
+els.btnScanQrResetPw.addEventListener('click', bukaQrResetPw);
+els.btnTutupQrResetPw.addEventListener('click', tutupQrResetPw);
+els.cardTokenAsesmen.addEventListener('click', () => {
+  aturHeader('token');
+  els.screenHome.classList.add('hidden');
+  els.screenEntry.classList.remove('hidden');
+});
+els.btnKembaliDariEntry.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenEntry.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+/* ---- Logo sekolah dari data/sekolah.csv (GitHub), tampil di Menu Utama ---- */
+// Konversi otomatis link GitHub "blob" (halaman viewer) jadi link
+// gambar mentah (raw.githubusercontent.com) — biar tetap jalan
+// walau yang ditempel di Sheet1!B3 itu link blob dari browser.
+function jadikanRawGithubUrl(url){
+  const cocok = String(url || '').match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/(.+)$/);
+  return cocok ? `https://raw.githubusercontent.com/${cocok[1]}/${cocok[2]}/${cocok[3]}` : url;
+}
+
+async function muatLogoSekolah(){
+  try {
+    const t = Math.floor(Date.now() / 60000);
+    const res = await fetch(SEKOLAH_CSV_URL + '?t=' + t, { cache: 'no-store' });
+    if (!res.ok) return;
+    const baris = parseCSVGenerik(await res.text());
+    let logoUrl = '';
+    for (let i = 1; i < baris.length; i++) {
+      const [k, v] = baris[i];
+      if ((k || '').trim() === 'logo' && v) { logoUrl = jadikanRawGithubUrl(v.trim()); break; }
+    }
+    if (logoUrl) {
+      els.brandBadge.style.background = '#fff';
+      els.brandBadge.style.borderRadius = '50%';
+      els.brandBadge.style.padding = '6px';
+      els.brandBadge.innerHTML = `<img src="${logoUrl}" alt="Logo SMP Negeri 1 Kaliwedi" style="width:100%;height:100%;object-fit:contain;border-radius:50%">`;
+    }
+  } catch (e) {
+    // biarkan pakai ikon bawaan kalau logo belum bisa dimuat
+  }
+}
+muatLogoSekolah();
+
+
+validateForm();
+</script>
+</body>
+</html>

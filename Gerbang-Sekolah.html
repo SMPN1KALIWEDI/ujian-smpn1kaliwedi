@@ -9,12 +9,41 @@
 <!-- ICON APLIKASI (Home Screen / PWA) -->
 <link id="manifestLink" rel="manifest" href="">
 <script>
-(function(){
-  const ICON = "data:image/svg+xml;base64," + btoa(`
+(async function(){
+  const ICON_FALLBACK = "data:image/svg+xml;base64," + btoa(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
       <rect width="200" height="200" rx="40" fill="#1a7f5a"/>
       <text x="100" y="130" font-size="110" text-anchor="middle" fill="#fff" font-family="Arial">🏫</text>
     </svg>`);
+
+  // Link "blob" GitHub (halaman viewer) otomatis dikonversi jadi link
+  // gambar mentah, kalau-kalau yang ditempel di Sheet1!B3 itu link blob.
+  function jadikanRawGithubUrl(url){
+    const cocok = String(url || '').match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/(.+)$/);
+    return cocok ? `https://raw.githubusercontent.com/${cocok[1]}/${cocok[2]}/${cocok[3]}` : url;
+  }
+
+  // Ambil logo sekolah asli dari data/sekolah.csv (GitHub) — sama
+  // sumbernya dengan logo di header Akses Asesmen.
+  async function ambilLogoSekolah(){
+    try {
+      const t = Math.floor(Date.now() / 60000);
+      const res = await fetch('https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/sekolah.csv?t=' + t, { cache: 'no-store' });
+      if (!res.ok) return null;
+      const baris = (await res.text()).trim().split('\n').map(l => l.split(','));
+      for (let i = 1; i < baris.length; i++){
+        if ((baris[i][0] || '').trim() === 'logo' && baris[i][1]) {
+          return jadikanRawGithubUrl(baris[i][1].trim());
+        }
+      }
+    } catch (e) { /* pakai fallback */ }
+    return null;
+  }
+
+  const logoUrl = await ambilLogoSekolah();
+  const ICON = logoUrl || ICON_FALLBACK;
+  const tipeIcon = logoUrl ? 'image/png' : 'image/svg+xml';
+
   const manifest = {
     id: "portal-siswa-smpn1kaliwedi",
     name: "Portal Siswa — SMP Negeri 1 Kaliwedi",
@@ -24,10 +53,19 @@
     display: "standalone",
     background_color: "#1a7f5a",
     theme_color: "#1a7f5a",
-    icons: [{ src: ICON, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" }]
+    icons: [
+      { src: ICON, sizes: "192x192", type: tipeIcon, purpose: "any maskable" },
+      { src: ICON, sizes: "512x512", type: tipeIcon, purpose: "any maskable" }
+    ]
   };
   const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
   document.getElementById('manifestLink').setAttribute('href', URL.createObjectURL(blob));
+
+  // Icon shortcut Safari/iOS (apple-touch-icon) juga ikut dipasang
+  const linkApple = document.createElement('link');
+  linkApple.rel = 'apple-touch-icon';
+  linkApple.href = ICON;
+  document.head.appendChild(linkApple);
 })();
 </script>
 

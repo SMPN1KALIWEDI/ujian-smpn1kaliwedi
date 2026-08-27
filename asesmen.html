@@ -1345,8 +1345,11 @@ async function cekOtorisasiManual() {
 
   let terkonfirmasi = false;
   try {
-    const nisnAman = siswa.id.replace(/'/g, "\\'");
-    const tq  = encodeURIComponent(`select A,B where A = '${nisnAman}' order by B desc limit 1`);
+    // Ambil SEMUA baris (tanpa WHERE) lalu cocokkan NISN sebagai TEKS
+    // di sisi JS — supaya tidak terpengaruh apakah kolom A ("Otorisasi")
+    // ke-detect gviz sebagai Number atau Text (WHERE A='...' berkutip
+    // akan gagal cocok kalau kolomnya ternyata bertipe Number).
+    const tq  = encodeURIComponent('select A,B order by B desc');
     const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID_KONFIG}/gviz/tq?tqx=out:json&sheet=Otorisasi&tq=${tq}&t=${Date.now()}`;
     const ctrl = new AbortController();
     const tid  = setTimeout(() => ctrl.abort(), 10000);
@@ -1356,8 +1359,19 @@ async function cekOtorisasiManual() {
     const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
     if (s >= 0) {
       const json = JSON.parse(txt.substring(s, e + 1));
-      const row  = json.table && json.table.rows && json.table.rows[0];
-      const waktuStr = row && row.c && row.c[1] && row.c[1].v;
+      const rows = (json.table && json.table.rows) || [];
+      const nisnCari = String(siswa.id || '').trim();
+
+      let waktuStr = null;
+      for (const row of rows) {
+        const nisnBarisRaw = row && row.c && row.c[0] ? row.c[0].v : null;
+        if (nisnBarisRaw === null || nisnBarisRaw === undefined) continue;
+        if (String(nisnBarisRaw).trim() === nisnCari) {
+          waktuStr = row.c[1] && row.c[1].v;
+          break; // sudah diurutkan terbaru dulu (order by B desc)
+        }
+      }
+
       if (waktuStr) {
         const waktuKonfirmasi = new Date(waktuStr);
         const menitBerlalu = (Date.now() - waktuKonfirmasi.getTime()) / 60000;

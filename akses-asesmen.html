@@ -20,6 +20,7 @@
     --amber-500:#E2A63B;
     --red-500:#E15C5C;
     --violet-500:#8B6BD8;
+    --indigo-500:#4C6FE0;
     --bg:#EAF6EE;
     --card:#FFFFFF;
     --ink:#151A26;
@@ -470,6 +471,22 @@
           <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
+
+      <button type="button" id="cardTokenManual" class="menu-card" style="--accent:var(--indigo-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.8"/>
+            <path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13.5h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Token Manual</div>
+          <div class="menu-desc">Lihat kode token tanpa QR</div>
+        </div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -505,6 +522,12 @@
 
   <!-- ===================== SCREEN 2 : TOKEN QR ===================== -->
   <div id="screenToken" class="card hidden">
+    <button type="button" class="menu-back" id="btnKembaliDariToken">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
     <div class="token-meta">
       <div class="chip">
         <div class="label">Ruang</div>
@@ -523,14 +546,6 @@
         <span>Memuat token…</span>
       </div>
       <div id="qrCanvasWrap" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></div>
-    </div>
-
-    <div id="tokenTeksWrap" style="text-align:center;margin-top:12px">
-      <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Kalau kamera siswa gagal scan</div>
-      <button type="button" id="btnBukaTokenTeks" class="btn btn-ghost" style="width:100%" onclick="toggleTokenTeks()">👁️ Tampilkan Kode Token</button>
-      <div id="tokenTeksBox" style="display:none;margin-top:8px">
-        <div id="tokenTeks" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:22px;letter-spacing:.12em;color:var(--navy-800)">-</div>
-      </div>
     </div>
 
     <div class="refresh-row">
@@ -667,6 +682,26 @@
     </div>
     <div id="kartuSiswaStatus" class="status-msg"></div>
     <div id="kartuSiswaHasil" style="margin-top:8px"></div>
+  </div>
+
+  <!-- ===================== SCREEN 7 : TOKEN MANUAL ===================== -->
+  <div id="screenTokenManual" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariTokenManual">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Dipakai kalau siswa perlu tahu kode token tapi kameranya gagal scan QR. Dibatasi 10 kali dibuka per token supaya tidak disalahgunakan.
+    </div>
+    <button type="button" id="btnBukaTokenTeks" class="btn btn-primary" style="width:100%" onclick="toggleTokenTeks()">👁️ Tampilkan Kode Token</button>
+    <div id="tokenTeksBox" style="display:none;margin-top:14px;text-align:center;padding:20px;background:var(--bg);border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Kode Token Saat Ini</div>
+      <div id="tokenTeks" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:28px;letter-spacing:.14em;color:var(--navy-800)">-</div>
+    </div>
+    <div id="tokenManualStatus" class="status-msg" style="margin-top:10px"></div>
+    <button type="button" id="btnRefreshTokenManual" class="btn btn-ghost" style="width:100%;margin-top:10px">🔄 Muat Ulang Token</button>
   </div>
   <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
     <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
@@ -830,6 +865,14 @@ const els = {
   kartuFilterNama: document.getElementById('kartuFilterNama'),
   kartuSiswaStatus: document.getElementById('kartuSiswaStatus'),
   kartuSiswaHasil: document.getElementById('kartuSiswaHasil'),
+  btnKembaliDariToken: document.getElementById('btnKembaliDariToken'),
+  cardTokenManual: document.getElementById('cardTokenManual'),
+  screenTokenManual: document.getElementById('screenTokenManual'),
+  btnKembaliDariTokenManual: document.getElementById('btnKembaliDariTokenManual'),
+  btnBukaTokenTeks: document.getElementById('btnBukaTokenTeks'),
+  tokenTeksBox: document.getElementById('tokenTeksBox'),
+  tokenManualStatus: document.getElementById('tokenManualStatus'),
+  btnRefreshTokenManual: document.getElementById('btnRefreshTokenManual'),
 };
 
 /* =========================================================
@@ -969,49 +1012,66 @@ async function ambilTokenValue(){
 }
 
 /* =========================================================
-   TOMBOL "Tampilkan Kode Token" — dibatasi 10 kali DIBUKA per
-   token (bukan per refresh). Counter cuma reset kalau nilai
-   tokennya benar-benar berubah, supaya tidak bisa di-reset
-   dengan spam tombol refresh.
+   TOKEN MANUAL — layar terpisah dari QR. Tombol "Tampilkan
+   Kode Token" dibatasi 10 kali DIBUKA per token (bukan per
+   refresh). Counter cuma reset kalau nilai tokennya benar-benar
+   berubah, supaya tidak bisa di-reset dengan spam refresh.
 ========================================================= */
-let tokenSebelumnya = null;
+let tokenManualSebelumnya = null;
 let tokenTeksSisaBuka = 10;
 let tokenTeksSedangTampil = false;
 
 function resetTombolTokenTeks(){
-  const btn = document.getElementById('btnBukaTokenTeks');
-  const box = document.getElementById('tokenTeksBox');
-  if (!btn || !box) return;
+  if (!els.btnBukaTokenTeks || !els.tokenTeksBox) return;
   tokenTeksSedangTampil = false;
-  box.style.display = 'none';
-  btn.disabled = false;
-  btn.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
+  els.tokenTeksBox.style.display = 'none';
+  els.btnBukaTokenTeks.disabled = false;
+  els.btnBukaTokenTeks.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
 }
 
 function toggleTokenTeks(){
-  const btn = document.getElementById('btnBukaTokenTeks');
-  const box = document.getElementById('tokenTeksBox');
-
   if (tokenTeksSedangTampil){
     // Sembunyikan lagi — tidak mengurangi jatah, cuma menutup pandangan
     tokenTeksSedangTampil = false;
-    box.style.display = 'none';
-    btn.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
+    els.tokenTeksBox.style.display = 'none';
+    els.btnBukaTokenTeks.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
     return;
   }
 
   if (tokenTeksSisaBuka <= 0){
-    btn.disabled = true;
-    btn.textContent = '🚫 Batas tampil token habis — pakai QR atau Otorisasi Manual';
+    els.btnBukaTokenTeks.disabled = true;
+    els.btnBukaTokenTeks.textContent = '🚫 Batas tampil token habis — pakai QR atau Otorisasi Manual';
     return;
   }
 
   tokenTeksSisaBuka--;
   tokenTeksSedangTampil = true;
-  box.style.display = 'block';
-  btn.textContent = tokenTeksSisaBuka > 0
+  els.tokenTeksBox.style.display = 'block';
+  els.btnBukaTokenTeks.textContent = tokenTeksSisaBuka > 0
     ? `🙈 Sembunyikan (sisa ${tokenTeksSisaBuka}x)`
     : `🙈 Sembunyikan (jatah habis, jangan dibuka lagi)`;
+}
+
+async function muatTokenManual(){
+  els.tokenManualStatus.textContent = '';
+  els.tokenManualStatus.className = 'status-msg';
+  els.btnRefreshTokenManual.disabled = true;
+  try {
+    const value = await ambilTokenValue();
+    const elTokenTeks = document.getElementById('tokenTeks');
+    if (elTokenTeks) elTokenTeks.textContent = value;
+
+    if (value !== tokenManualSebelumnya){
+      tokenManualSebelumnya = value;
+      tokenTeksSisaBuka = 10;
+    }
+    resetTombolTokenTeks();
+  } catch (err) {
+    els.tokenManualStatus.textContent = 'Gagal memuat token: ' + err.message;
+    els.tokenManualStatus.className = 'status-msg err';
+  } finally {
+    els.btnRefreshTokenManual.disabled = false;
+  }
 }
 
 function renderQR(value){
@@ -1024,14 +1084,6 @@ function renderQR(value){
     colorLight: '#FFFFFF',
     correctLevel: QRCode.CorrectLevel.M
   });
-  const elTokenTeks = document.getElementById('tokenTeks');
-  if (elTokenTeks) elTokenTeks.textContent = value;
-
-  if (value !== tokenSebelumnya){
-    tokenSebelumnya = value;
-    tokenTeksSisaBuka = 10;
-    resetTombolTokenTeks();
-  }
 }
 
 function formatJam(d){
@@ -1429,11 +1481,12 @@ function downloadRekapXLS(){
    layar lain tampilkan judul sesuai fiturnya, tanpa ikon.
 ========================================================= */
 const HEADER_LAYAR = {
-  home:       { judul: 'Akses Asesmen', tampilkanIkon: true  },
-  token:      { judul: 'Token Asesmen', tampilkanIkon: false },
-  rekap:      { judul: 'REKAP NILAI',   tampilkanIkon: false },
-  resetpw:    { judul: 'Reset Password',tampilkanIkon: false },
-  kartusiswa: { judul: 'Kartu Siswa',   tampilkanIkon: false },
+  home:        { judul: 'Akses Asesmen', tampilkanIkon: true  },
+  token:       { judul: 'Token Asesmen', tampilkanIkon: false },
+  rekap:       { judul: 'REKAP NILAI',   tampilkanIkon: false },
+  resetpw:     { judul: 'Reset Password',tampilkanIkon: false },
+  kartusiswa:  { judul: 'Kartu Siswa',   tampilkanIkon: false },
+  tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
 };
 function aturHeader(kunci){
   const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
@@ -1607,6 +1660,26 @@ els.cardKartuSiswa.addEventListener('click', () => {
 els.btnTutupKartuSiswa.addEventListener('click', () => {
   aturHeader('home');
   els.screenKartuSiswa.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+els.cardTokenManual.addEventListener('click', () => {
+  aturHeader('tokenmanual');
+  els.screenHome.classList.add('hidden');
+  els.screenTokenManual.classList.remove('hidden');
+  muatTokenManual();
+});
+els.btnKembaliDariTokenManual.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenTokenManual.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+els.btnRefreshTokenManual.addEventListener('click', muatTokenManual);
+
+els.btnKembaliDariToken.addEventListener('click', () => {
+  stopTimers();
+  aturHeader('home');
+  els.screenToken.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
 });
 

@@ -526,8 +526,11 @@
     </div>
 
     <div id="tokenTeksWrap" style="text-align:center;margin-top:12px">
-      <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Kode token (kalau kamera siswa gagal scan)</div>
-      <div id="tokenTeks" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:22px;letter-spacing:.12em;color:var(--navy-800)">-</div>
+      <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Kalau kamera siswa gagal scan</div>
+      <button type="button" id="btnBukaTokenTeks" class="btn btn-ghost" style="width:100%" onclick="toggleTokenTeks()">👁️ Tampilkan Kode Token</button>
+      <div id="tokenTeksBox" style="display:none;margin-top:8px">
+        <div id="tokenTeks" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:22px;letter-spacing:.12em;color:var(--navy-800)">-</div>
+      </div>
     </div>
 
     <div class="refresh-row">
@@ -965,6 +968,52 @@ async function ambilTokenValue(){
   return json.value;
 }
 
+/* =========================================================
+   TOMBOL "Tampilkan Kode Token" — dibatasi 10 kali DIBUKA per
+   token (bukan per refresh). Counter cuma reset kalau nilai
+   tokennya benar-benar berubah, supaya tidak bisa di-reset
+   dengan spam tombol refresh.
+========================================================= */
+let tokenSebelumnya = null;
+let tokenTeksSisaBuka = 10;
+let tokenTeksSedangTampil = false;
+
+function resetTombolTokenTeks(){
+  const btn = document.getElementById('btnBukaTokenTeks');
+  const box = document.getElementById('tokenTeksBox');
+  if (!btn || !box) return;
+  tokenTeksSedangTampil = false;
+  box.style.display = 'none';
+  btn.disabled = false;
+  btn.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
+}
+
+function toggleTokenTeks(){
+  const btn = document.getElementById('btnBukaTokenTeks');
+  const box = document.getElementById('tokenTeksBox');
+
+  if (tokenTeksSedangTampil){
+    // Sembunyikan lagi — tidak mengurangi jatah, cuma menutup pandangan
+    tokenTeksSedangTampil = false;
+    box.style.display = 'none';
+    btn.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
+    return;
+  }
+
+  if (tokenTeksSisaBuka <= 0){
+    btn.disabled = true;
+    btn.textContent = '🚫 Batas tampil token habis — pakai QR atau Otorisasi Manual';
+    return;
+  }
+
+  tokenTeksSisaBuka--;
+  tokenTeksSedangTampil = true;
+  box.style.display = 'block';
+  btn.textContent = tokenTeksSisaBuka > 0
+    ? `🙈 Sembunyikan (sisa ${tokenTeksSisaBuka}x)`
+    : `🙈 Sembunyikan (jatah habis, jangan dibuka lagi)`;
+}
+
 function renderQR(value){
   els.qrCanvasWrap.innerHTML = '';
   qrObj = new QRCode(els.qrCanvasWrap, {
@@ -977,6 +1026,12 @@ function renderQR(value){
   });
   const elTokenTeks = document.getElementById('tokenTeks');
   if (elTokenTeks) elTokenTeks.textContent = value;
+
+  if (value !== tokenSebelumnya){
+    tokenSebelumnya = value;
+    tokenTeksSisaBuka = 10;
+    resetTombolTokenTeks();
+  }
 }
 
 function formatJam(d){

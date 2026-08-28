@@ -295,9 +295,23 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
   </div>
 </div>
 
-<!-- MODAL: OTORISASI MANUAL — untuk HP yang kameranya tidak bisa dipakai.
-     Siswa MINTA pengawas mendekat dan konfirmasi lewat pengawas-ruang.html
-     (pengawas ketik NISN siswa di sana), lalu tekan tombol Cek Status di sini. -->
+<!-- MODAL: SCAN QR KELUAR DARURAT — dipakai kalau siswa tap "Selesai"
+     SEBELUM jendela waktu wajar (10 menit sebelum jam SELESAI). Wajib
+     scan QR "QR Keluar" dari pengawas dulu supaya tidak dihitung
+     pelanggaran. -->
+<div class="modal-bg" id="mQrKeluar">
+  <div class="modal" style="max-width:340px">
+    <div class="token-ic">🚪</div>
+    <h3 style="text-align:center">Konfirmasi Keluar Darurat</h3>
+    <div class="token-sub">Ini masih jauh dari jadwal selesai ujian. Minta pengawas menunjukkan <b>QR Keluar</b>, lalu scan di sini.</div>
+    <div id="qr-keluar-reader" style="border-radius:12px;overflow:hidden;background:#000;width:100%"></div>
+    <div class="qr-status" id="qrKeluarDaruratStatus">Memulai kamera...</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn-batal" onclick="tutupScanQrKeluar()">Batal, Lanjut Mengerjakan</button>
+      <button class="btn-simpan" id="btnUlangQrKeluar" style="display:none" onclick="bukaScanQrKeluar()">🔄 Coba Lagi</button>
+    </div>
+  </div>
+</div>
 <div class="modal-bg" id="mOtorisasi">
   <div class="modal" style="max-width:340px">
     <div class="token-ic">🧑‍🏫</div>
@@ -1485,20 +1499,29 @@ let timerTombolSelesai = null;
 
 // ============================================================
 // TOMBOL "✅ Selesai" (pojok kanan atas halaman soal)
-// Aktif 10 menit sebelum jam SELESAI jadwal; kalau jadwal tidak
-// punya jam selesai, aktif langsung sejak siswa mulai mengerjakan.
+// SELALU tampil sejak ujian dimulai — supaya siswa yang perlu
+// keluar darurat tetap punya jalan RESMI (bukan pindah tab dsb).
+// Tapi perilakunya beda tergantung waktu:
+//  - Sudah masuk jendela wajar (10 menit sebelum jam SELESAI,
+//    atau jadwal tanpa jam selesai) → langsung keluar, tinggal
+//    konfirmasi biasa.
+//  - Masih jauh dari jam selesai → dianggap KELUAR DARURAT, wajib
+//    scan QR "QR Keluar" dari pengawas dulu.
 // ============================================================
+let selesaiNormalAktif = false;
+
 function aturTombolSelesaiUjian() {
   const btn = document.getElementById('btnSelesaiUjian');
   if (!btn) return;
   if (timerTombolSelesai) { clearTimeout(timerTombolSelesai); timerTombolSelesai = null; }
 
+  btn.classList.add('tampil'); // selalu tampil, lihat catatan di atas
+
   const jadwal = jadwalAktifSekarang && jadwalAktifSekarang.jadwal;
   const menitSelesai = jadwal ? parseJamMenit(jadwal.selesai) : null;
 
   if (menitSelesai === null) {
-    // Tidak ada jam selesai di jadwal → aktif langsung
-    btn.classList.add('tampil');
+    selesaiNormalAktif = true;
     return;
   }
 
@@ -1507,18 +1530,94 @@ function aturTombolSelesaiUjian() {
   const selisihMs = targetAktif.getTime() - Date.now();
 
   if (selisihMs <= 0) {
-    btn.classList.add('tampil');
+    selesaiNormalAktif = true;
   } else {
-    btn.classList.remove('tampil');
-    timerTombolSelesai = setTimeout(() => { btn.classList.add('tampil'); }, selisihMs);
+    selesaiNormalAktif = false;
+    timerTombolSelesai = setTimeout(() => { selesaiNormalAktif = true; }, selisihMs);
   }
 }
 
 function selesaiUjianManual() {
-  if (!confirm('Yakin sudah selesai mengerjakan? Anda akan kembali ke halaman utama Asesmen.')) return;
+  if (selesaiNormalAktif) {
+    if (!confirm('Yakin sudah selesai mengerjakan? Anda akan kembali ke halaman utama Asesmen.')) return;
+    tutupUjianTanpaPelanggaran();
+    return;
+  }
+  // Masih jauh dari jam selesai → keluar DARURAT, wajib scan QR izin dari pengawas
+  bukaScanQrKeluar();
+}
+
+function tutupUjianTanpaPelanggaran() {
   bersihkanPengawas();
   hide('h1'); show('h2');
   if (D.aktif) { muatNilai(D.aktif, true); renderAsesmenAktif(); }
+}
+
+/* =========================================================
+   SCAN QR KELUAR DARURAT — dipanggil dari selesaiUjianManual()
+   kalau masih jauh dari jam selesai. QR-nya dari layar "QR Keluar"
+   di pengawas-ruang.html, isinya "KELUAR:<token asesmen berlaku>".
+========================================================= */
+let qrKeluarDaruratScanner = null;
+
+function bukaScanQrKeluar() {
+  buka('mQrKeluar');
+  setText('qrKeluarDaruratStatus', 'Menyalakan kamera...');
+  document.getElementById('btnUlangQrKeluar').style.display = 'none';
+
+  const jalankan = () => {
+    try {
+      qrKeluarDaruratScanner = new Html5Qrcode('qr-keluar-reader');
+      qrKeluarDaruratScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 230, height: 230 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const masuk = decodedText.trim().toUpperCase();
+          const benar = (D.sekolah.token || '').toUpperCase();
+
+          if (!masuk.startsWith('KELUAR:')) {
+            setText('qrKeluarDaruratStatus', '❌ Ini bukan QR Keluar. Minta pengawas tunjukkan QR yang benar.');
+            return;
+          }
+          const kodeDalamQr = masuk.slice('KELUAR:'.length);
+          if (!benar || kodeDalamQr !== benar) {
+            setText('qrKeluarDaruratStatus', '❌ QR tidak valid/kedaluwarsa. Coba lagi.');
+            return;
+          }
+
+          // Valid — tutup scanner, keluar TANPA dihitung pelanggaran
+          tutupScanQrKeluar();
+          tutupUjianTanpaPelanggaran();
+        },
+        () => {}
+      ).then(() => {
+        setText('qrKeluarDaruratStatus', '🔍 Arahkan ke QR Keluar dari pengawas...');
+      }).catch(err => {
+        setText('qrKeluarDaruratStatus', '❌ Kamera tidak bisa diakses. Izinkan akses kamera lalu tekan Coba Lagi.');
+        document.getElementById('btnUlangQrKeluar').style.display = 'inline-block';
+        console.warn('Kamera QR Keluar gagal:', err);
+      });
+    } catch (e) {
+      setText('qrKeluarDaruratStatus', '❌ ' + e.message);
+      document.getElementById('btnUlangQrKeluar').style.display = 'inline-block';
+    }
+  };
+
+  if (qrKeluarDaruratScanner) {
+    qrKeluarDaruratScanner.stop().catch(() => {}).finally(() => { qrKeluarDaruratScanner.clear(); qrKeluarDaruratScanner = null; jalankan(); });
+  } else {
+    jalankan();
+  }
+}
+
+function tutupScanQrKeluar() {
+  tutup('mQrKeluar');
+  if (qrKeluarDaruratScanner) {
+    qrKeluarDaruratScanner.stop().catch(() => {}).finally(() => {
+      try { qrKeluarDaruratScanner.clear(); } catch(e){}
+      qrKeluarDaruratScanner = null;
+    });
+  }
 }
 
 function mulaiUjian(link) {

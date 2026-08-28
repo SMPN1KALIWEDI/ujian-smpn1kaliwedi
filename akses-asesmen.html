@@ -21,6 +21,7 @@
     --red-500:#E15C5C;
     --violet-500:#8B6BD8;
     --indigo-500:#4C6FE0;
+    --emerald-500:#22A06B;
     --bg:#EAF6EE;
     --card:#FFFFFF;
     --ink:#151A26;
@@ -391,12 +392,11 @@
 <div id="app">
 
   <div class="brand">
-    <div class="brand-badge" id="brandBadge">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 12C2 12 5.5 5.5 12 5.5C18.5 5.5 22 12 22 12C22 12 18.5 18.5 12 18.5C5.5 18.5 2 12 2 12Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
-        <circle cx="12" cy="12" r="3.4" stroke="white" stroke-width="1.8"/>
-        <circle cx="12" cy="12" r="1.1" fill="white"/>
-      </svg>
+    <div class="brand-badge" id="brandBadge" style="background:#fff;padding:6px">
+      <img src="https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/assets/logo_smp.png"
+           alt="Logo SMP Negeri 1 Kaliwedi"
+           style="width:100%;height:100%;object-fit:contain;border-radius:inherit"
+           onerror="this.parentElement.style.background='linear-gradient(155deg,var(--navy-800),var(--navy-950))';this.parentElement.style.padding='0';this.style.display='none'">
     </div>
     <h1 id="brandTitle">Akses Asesmen</h1>
     <p>SMP Negeri 1 Kaliwedi</p>
@@ -482,6 +482,22 @@
         <div class="menu-text">
           <div class="menu-title">Token Manual</div>
           <div class="menu-desc">Lihat kode token tanpa QR</div>
+        </div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <button type="button" id="cardQrKeluar" class="menu-card" style="--accent:var(--emerald-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11 12h9m0 0-3-3m3 3-3 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">QR Keluar</div>
+          <div class="menu-desc">Izin siswa keluar darurat sebelum waktunya</div>
         </div>
         <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -703,6 +719,24 @@
     <div id="tokenManualStatus" class="status-msg" style="margin-top:10px"></div>
     <button type="button" id="btnRefreshTokenManual" class="btn btn-ghost" style="width:100%;margin-top:10px">🔄 Muat Ulang Token</button>
   </div>
+
+  <!-- ===================== SCREEN 8 : QR KELUAR (izin darurat) ===================== -->
+  <div id="screenQrKeluar" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariQrKeluar">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Untuk siswa yang <b>benar-benar darurat</b> perlu keluar ujian sebelum waktunya. Siswa tap tombol "Selesai" di halaman ujiannya, lalu scan QR ini — otomatis kembali ke dashboard tanpa dihitung pelanggaran.
+    </div>
+    <div id="qrKeluarStage" style="display:flex;align-items:center;justify-content:center;width:220px;height:220px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:var(--shadow)">
+      <div class="spinner"></div>
+    </div>
+    <div id="qrKeluarStatus" class="status-msg" style="margin-top:10px;text-align:center"></div>
+    <button type="button" id="btnRefreshQrKeluar" class="btn btn-ghost" style="width:100%;margin-top:12px">🔄 Muat Ulang QR</button>
+  </div>
   <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
     <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
       <div id="popupBintangLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
@@ -851,6 +885,12 @@ const els = {
   tokenTeksBox: document.getElementById('tokenTeksBox'),
   tokenManualStatus: document.getElementById('tokenManualStatus'),
   btnRefreshTokenManual: document.getElementById('btnRefreshTokenManual'),
+  cardQrKeluar: document.getElementById('cardQrKeluar'),
+  screenQrKeluar: document.getElementById('screenQrKeluar'),
+  btnKembaliDariQrKeluar: document.getElementById('btnKembaliDariQrKeluar'),
+  qrKeluarStage: document.getElementById('qrKeluarStage'),
+  qrKeluarStatus: document.getElementById('qrKeluarStatus'),
+  btnRefreshQrKeluar: document.getElementById('btnRefreshQrKeluar'),
 };
 
 /* =========================================================
@@ -987,6 +1027,40 @@ async function ambilTokenValue(){
   const json = await res.json();
   if (json.status !== 'ok' || !json.value) throw new Error('Token tidak tersedia');
   return json.value;
+}
+
+/* =========================================================
+   QR KELUAR — QR izin darurat keluar ujian lebih awal. Nilainya
+   "KELUAR:<token asesmen yang sedang berlaku>", pakai token yang
+   sama dengan Token Asesmen (tidak perlu sheet/endpoint baru) —
+   cuma dikasih prefiks "KELUAR:" biar asesmen.html bisa bedakan
+   ini scan untuk KELUAR, bukan scan untuk MASUK ujian.
+========================================================= */
+let qrKeluarObj = null;
+
+async function muatQrKeluar(){
+  els.qrKeluarStatus.textContent = '';
+  els.qrKeluarStatus.className = 'status-msg';
+  els.btnRefreshQrKeluar.disabled = true;
+  els.qrKeluarStage.innerHTML = '<div class="spinner"></div>';
+  try {
+    const value = await ambilTokenValue();
+    els.qrKeluarStage.innerHTML = '';
+    qrKeluarObj = new QRCode(els.qrKeluarStage, {
+      text: 'KELUAR:' + value,
+      width: 200,
+      height: 200,
+      colorDark: '#0F1B33',
+      colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch (err) {
+    els.qrKeluarStage.innerHTML = '<div class="qr-error">Gagal memuat.<br>Coba refresh.</div>';
+    els.qrKeluarStatus.textContent = 'Gagal memuat QR: ' + err.message;
+    els.qrKeluarStatus.className = 'status-msg err';
+  } finally {
+    els.btnRefreshQrKeluar.disabled = false;
+  }
 }
 
 /* =========================================================
@@ -1465,6 +1539,7 @@ const HEADER_LAYAR = {
   resetpw:     { judul: 'Reset Password',tampilkanIkon: false },
   kartusiswa:  { judul: 'Kartu Siswa',   tampilkanIkon: false },
   tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
+  qrkeluar:    { judul: 'QR Keluar',     tampilkanIkon: false },
 };
 function aturHeader(kunci){
   const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
@@ -1654,6 +1729,19 @@ els.btnKembaliDariTokenManual.addEventListener('click', () => {
 });
 els.btnRefreshTokenManual.addEventListener('click', muatTokenManual);
 
+els.cardQrKeluar.addEventListener('click', () => {
+  aturHeader('qrkeluar');
+  els.screenHome.classList.add('hidden');
+  els.screenQrKeluar.classList.remove('hidden');
+  muatQrKeluar();
+});
+els.btnKembaliDariQrKeluar.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenQrKeluar.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+els.btnRefreshQrKeluar.addEventListener('click', muatQrKeluar);
+
 els.btnKembaliDariToken.addEventListener('click', () => {
   stopTimers();
   aturHeader('home');
@@ -1836,36 +1924,6 @@ els.btnKembaliDariEntry.addEventListener('click', () => {
 });
 
 /* ---- Logo sekolah dari data/sekolah.csv (GitHub), tampil di Menu Utama ---- */
-// Konversi otomatis link GitHub "blob" (halaman viewer) jadi link
-// gambar mentah (raw.githubusercontent.com) — biar tetap jalan
-// walau yang ditempel di Sheet1!B3 itu link blob dari browser.
-function jadikanRawGithubUrl(url){
-  const cocok = String(url || '').match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/(.+)$/);
-  return cocok ? `https://raw.githubusercontent.com/${cocok[1]}/${cocok[2]}/${cocok[3]}` : url;
-}
-
-async function muatLogoSekolah(){
-  try {
-    const t = Math.floor(Date.now() / 60000);
-    const res = await fetch(SEKOLAH_CSV_URL + '?t=' + t, { cache: 'no-store' });
-    if (!res.ok) return;
-    const baris = parseCSVGenerik(await res.text());
-    let logoUrl = '';
-    for (let i = 1; i < baris.length; i++) {
-      const [k, v] = baris[i];
-      if ((k || '').trim() === 'logo' && v) { logoUrl = jadikanRawGithubUrl(v.trim()); break; }
-    }
-    if (logoUrl) {
-      els.brandBadge.style.background = '#fff';
-      els.brandBadge.style.borderRadius = '50%';
-      els.brandBadge.style.padding = '6px';
-      els.brandBadge.innerHTML = `<img src="${logoUrl}" alt="Logo SMP Negeri 1 Kaliwedi" style="width:100%;height:100%;object-fit:contain;border-radius:50%">`;
-    }
-  } catch (e) {
-    // biarkan pakai ikon bawaan kalau logo belum bisa dimuat
-  }
-}
-muatLogoSekolah();
 
 
 validateForm();

@@ -14,11 +14,11 @@
   // pasti kebaca browser saat "Add to Home Screen" — versi sebelumnya
   // ambil logo lewat fetch async yang kadang belum selesai saat browser
   // sudah keburu mengecek manifest, jadi ikon sering gagal muncul.
-  const ICON = "data:image/svg+xml;base64," + btoa(`
+  const ICON = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
       <rect width="200" height="200" rx="40" fill="#1a7f5a"/>
       <text x="100" y="135" font-size="115" text-anchor="middle" font-family="'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif">🏛️</text>
-    </svg>`);
+    </svg>`)));
 
   const manifest = {
     id: "portal-siswa-smpn1kaliwedi",

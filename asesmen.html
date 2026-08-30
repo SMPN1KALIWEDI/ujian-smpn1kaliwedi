@@ -295,20 +295,21 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
   </div>
 </div>
 
-<!-- MODAL: SCAN QR KELUAR DARURAT — dipakai kalau siswa tap "Selesai"
-     SEBELUM jendela waktu wajar (10 menit sebelum jam SELESAI). Wajib
-     scan QR "QR Keluar" dari pengawas dulu supaya tidak dihitung
-     pelanggaran. -->
+<!-- MODAL: MENUNGGU IZIN KELUAR DARURAT — dipakai kalau siswa tap
+     "Selesai" SEBELUM jendela waktu wajar (10 menit sebelum jam
+     SELESAI). Pengawasan TIDAK dimatikan di sini — baru dimatikan
+     setelah server mengonfirmasi pengawas sudah scan kartu NISN
+     siswa ini di menu "Izin Keluar" (pengawas-ruang.html). Dicek
+     berkala (polling), tidak perlu kamera sama sekali di sisi siswa. -->
 <div class="modal-bg" id="mQrKeluar">
-  <div class="modal" style="max-width:340px">
+  <div class="modal" style="max-width:340px;text-align:center">
     <div class="token-ic">🚪</div>
-    <h3 style="text-align:center">Konfirmasi Keluar Darurat</h3>
-    <div class="token-sub">Ini masih jauh dari jadwal selesai ujian. Minta pengawas menunjukkan <b>QR Keluar</b>, lalu scan di sini.</div>
-    <div id="qr-keluar-reader" style="border-radius:12px;overflow:hidden;background:#000;width:100%"></div>
-    <div class="qr-status" id="qrKeluarDaruratStatus">Memulai kamera...</div>
+    <h3>Menunggu Izin Pengawas</h3>
+    <div class="token-sub">Ini masih jauh dari jadwal selesai ujian. Minta pengawas untuk <b>scan kartu NISN Anda</b> di menu "Izin Keluar" pada aplikasi Akses Asesmen. Halaman ini akan otomatis lanjut begitu pengawas mengonfirmasi.</div>
+    <div style="padding:16px 0"><span class="spinner-besar"></span></div>
+    <div class="qr-status" id="qrKeluarDaruratStatus">⏳ Menunggu konfirmasi pengawas...</div>
     <div class="btn-row" style="margin-top:14px">
-      <button class="btn-batal" onclick="tutupScanQrKeluar()">Batal, Lanjut Mengerjakan</button>
-      <button class="btn-simpan" id="btnUlangQrKeluar" style="display:none" onclick="bukaScanQrKeluar()">🔄 Coba Lagi</button>
+      <button class="btn-batal" onclick="tutupTungguIzinKeluar()" style="width:100%">Batal, Lanjut Mengerjakan</button>
     </div>
   </div>
 </div>
@@ -365,6 +366,13 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
 
 <style>
 @keyframes denyut{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes putarSpinner{to{transform:rotate(360deg)}}
+.spinner-besar{
+  display:inline-block;width:40px;height:40px;
+  border:4px solid #e0e0e0;border-top-color:var(--hijau,#1a7f5a);
+  border-radius:50%;
+  animation:putarSpinner .8s linear infinite;
+}
 @keyframes kedip{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes munculSelesai{0%{transform:translateY(-10px);opacity:0}100%{transform:translateY(0);opacity:1}}
 
@@ -1538,30 +1546,28 @@ function aturTombolSelesaiUjian() {
 }
 
 function selesaiUjianManual() {
-  // PENTING: matikan pengawasan SEBELUM dialog apa pun muncul (confirm()
-  // atau izin kamera buat scan QR Keluar) — soalnya dialog itu sendiri
-  // bikin jendela "blur" sesaat, dan kalau pengawasan masih aktif itu
-  // salah dianggap "pindah aplikasi" → dihitung pelanggaran + alarm bunyi,
-  // padahal siswanya tidak kemana-mana.
-  sedangUjian = false;
-  nonaktifkanPengawas();
-
   if (selesaiNormalAktif) {
+    // Sudah masuk jendela waktu wajar (dekat/lewat jam SELESAI) — cukup
+    // konfirmasi biasa. Pengawasan dimatikan sesaat SEBELUM confirm()
+    // muncul (soalnya dialog itu sendiri memicu blur), lalu dinyalakan
+    // lagi kalau siswa batal.
+    sedangUjian = false;
+    nonaktifkanPengawas();
     const yakin = confirm('Yakin sudah selesai mengerjakan? Anda akan kembali ke halaman utama Asesmen.');
-    if (!yakin) {
-      lanjutkanPengawasanSetelahBatal();
-      return;
-    }
+    if (!yakin) { lanjutkanPengawasanSetelahBatal(); return; }
     tutupUjianTanpaPelanggaran();
     return;
   }
-  // Masih jauh dari jam selesai → keluar DARURAT, wajib scan QR izin dari pengawas
-  bukaScanQrKeluar();
+  // Masih jauh dari jam selesai → KELUAR DARURAT. Pengawasan TIDAK
+  // disentuh sama sekali di sini — baru dimatikan setelah server
+  // benar-benar mengonfirmasi pengawas sudah scan kartu NISN siswa ini
+  // (lewat menu "Izin Keluar" di Akses Asesmen). Jadi tidak ada celah
+  // waktu tanpa pengawasan sebelum izin resmi benar-benar didapat.
+  bukaTungguIzinKeluar();
 }
 
-// Dipanggil kalau siswa BATAL keluar (baik dari dialog konfirmasi biasa
-// maupun dari modal scan QR Keluar) — nyalakan lagi pengawasannya supaya
-// ujian tetap terpantau seperti biasa.
+// Dipanggil kalau siswa BATAL keluar (dari dialog konfirmasi biasa) —
+// nyalakan lagi pengawasannya supaya ujian tetap terpantau seperti biasa.
 function lanjutkanPengawasanSetelahBatal() {
   if (sudahPelanggaran) return; // sudah kena pelanggaran lain, tidak perlu diaktifkan lagi
   sedangUjian = true;
@@ -1575,80 +1581,86 @@ function tutupUjianTanpaPelanggaran() {
 }
 
 /* =========================================================
-   SCAN QR KELUAR DARURAT — dipanggil dari selesaiUjianManual()
-   kalau masih jauh dari jam selesai. QR-nya dari layar "QR Keluar"
-   di pengawas-ruang.html, isinya "KELUAR:<token asesmen berlaku>".
+   MENUNGGU IZIN KELUAR DARURAT — dipanggil dari selesaiUjianManual()
+   kalau masih jauh dari jam selesai. TIDAK ada kamera/scan di sisi
+   siswa sama sekali — sistem cuma polling sheet "IzinKeluar" (ditulis
+   pengawas-ruang.html waktu pengawas scan kartu NISN siswa ini di
+   menu "Izin Keluar"). Pengawasan anti-contek TETAP AKTIF selama
+   menunggu — baru dimatikan begitu konfirmasi ketemu.
 ========================================================= */
-let qrKeluarDaruratScanner = null;
+const IZIN_KELUAR_BERLAKU_MENIT = 3; // konfirmasi dianggap kedaluwarsa setelah ini
+let timerPollingIzinKeluar = null;
 
-function bukaScanQrKeluar() {
+function bukaTungguIzinKeluar() {
   buka('mQrKeluar');
-  setText('qrKeluarDaruratStatus', 'Menyalakan kamera...');
-  document.getElementById('btnUlangQrKeluar').style.display = 'none';
-
-  const jalankan = () => {
-    try {
-      qrKeluarDaruratScanner = new Html5Qrcode('qr-keluar-reader');
-      qrKeluarDaruratScanner.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 230, height: 230 }, aspectRatio: 1.0 },
-        (decodedText) => {
-          const masuk = decodedText.trim().toUpperCase();
-          const benar = (D.sekolah.token || '').toUpperCase();
-
-          if (!masuk.startsWith('KELUAR:')) {
-            setText('qrKeluarDaruratStatus', '❌ Ini bukan QR Keluar. Minta pengawas tunjukkan QR yang benar.');
-            return;
-          }
-          const kodeDalamQr = masuk.slice('KELUAR:'.length);
-          if (!benar || kodeDalamQr !== benar) {
-            setText('qrKeluarDaruratStatus', '❌ QR tidak valid/kedaluwarsa. Coba lagi.');
-            return;
-          }
-
-          // Valid — tutup scanner TANPA nyalakan pengawasan lagi (ujian
-          // memang mau diakhiri), lalu keluar tanpa dihitung pelanggaran
-          tutupScanQrKeluarSaja();
-          tutupUjianTanpaPelanggaran();
-        },
-        () => {}
-      ).then(() => {
-        setText('qrKeluarDaruratStatus', '🔍 Arahkan ke QR Keluar dari pengawas...');
-      }).catch(err => {
-        setText('qrKeluarDaruratStatus', '❌ Kamera tidak bisa diakses. Izinkan akses kamera lalu tekan Coba Lagi.');
-        document.getElementById('btnUlangQrKeluar').style.display = 'inline-block';
-        console.warn('Kamera QR Keluar gagal:', err);
-      });
-    } catch (e) {
-      setText('qrKeluarDaruratStatus', '❌ ' + e.message);
-      document.getElementById('btnUlangQrKeluar').style.display = 'inline-block';
-    }
-  };
-
-  if (qrKeluarDaruratScanner) {
-    qrKeluarDaruratScanner.stop().catch(() => {}).finally(() => { qrKeluarDaruratScanner.clear(); qrKeluarDaruratScanner = null; jalankan(); });
-  } else {
-    jalankan();
-  }
+  setText('qrKeluarDaruratStatus', '⏳ Menunggu konfirmasi pengawas...');
+  mulaiPollingIzinKeluar();
 }
 
-// Tutup modal + hentikan kamera saja, TANPA menyalakan pengawasan lagi
-// (dipakai waktu QR-nya sudah valid dan ujian memang mau diakhiri).
-function tutupScanQrKeluarSaja() {
+function tutupTungguIzinKeluar() {
   tutup('mQrKeluar');
-  if (qrKeluarDaruratScanner) {
-    qrKeluarDaruratScanner.stop().catch(() => {}).finally(() => {
-      try { qrKeluarDaruratScanner.clear(); } catch(e){}
-      qrKeluarDaruratScanner = null;
-    });
+  hentikanPollingIzinKeluar();
+  // Pengawasan tidak pernah dimatikan selama menunggu, jadi tidak perlu
+  // dinyalakan lagi di sini — ujian tetap terpantau seperti biasa.
+}
+
+function hentikanPollingIzinKeluar() {
+  if (timerPollingIzinKeluar) { clearInterval(timerPollingIzinKeluar); timerPollingIzinKeluar = null; }
+}
+
+function mulaiPollingIzinKeluar() {
+  hentikanPollingIzinKeluar();
+  cekIzinKeluarSekali(); // cek langsung sekali, jangan nunggu interval pertama
+  timerPollingIzinKeluar = setInterval(cekIzinKeluarSekali, 4000);
+}
+
+async function cekIzinKeluarSekali() {
+  const siswa = D.aktif;
+  if (!siswa) return;
+  try {
+    const ok = await cekIzinKeluarKeSheet(siswa.id);
+    if (ok) {
+      hentikanPollingIzinKeluar();
+      tutup('mQrKeluar');
+      // Konfirmasi server sudah didapat — sekarang baru aman mematikan
+      // pengawasan dan keluar tanpa dihitung pelanggaran.
+      tutupUjianTanpaPelanggaran();
+    }
+  } catch (err) {
+    console.warn('Gagal cek izin keluar:', err.message);
+    setText('qrKeluarDaruratStatus', '⚠️ Gagal menghubungi server, mencoba lagi...');
   }
 }
 
-// Dipanggil dari tombol "Batal, Lanjut Mengerjakan" — tutup modal DAN
-// nyalakan lagi pengawasan karena siswa memilih lanjut mengerjakan.
-function tutupScanQrKeluar() {
-  tutupScanQrKeluarSaja();
-  lanjutkanPengawasanSetelahBatal();
+async function cekIzinKeluarKeSheet(nisn) {
+  // Sama seperti cekOtorisasiManual — ambil SEMUA baris tanpa WHERE lalu
+  // cocokkan NISN sebagai teks di JS, supaya tidak terpengaruh gviz
+  // salah nebak tipe kolom (Number vs Text).
+  const tq  = encodeURIComponent('select A,B order by B desc');
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID_KONFIG}/gviz/tq?tqx=out:json&sheet=IzinKeluar&tq=${tq}&t=${Date.now()}`;
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 8000);
+  const res  = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+  clearTimeout(tid);
+  const txt  = await res.text();
+  const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+  if (s < 0) return false;
+
+  const json = JSON.parse(txt.substring(s, e + 1));
+  const rows = (json.table && json.table.rows) || [];
+  const nisnCari = String(nisn || '').trim();
+
+  for (const row of rows) {
+    const nisnBarisRaw = row && row.c && row.c[0] ? row.c[0].v : null;
+    if (nisnBarisRaw === null || nisnBarisRaw === undefined) continue;
+    if (String(nisnBarisRaw).trim() === nisnCari) {
+      const waktuStr = row.c[1] && row.c[1].v;
+      if (!waktuStr) return false;
+      const menitBerlalu = (Date.now() - new Date(waktuStr).getTime()) / 60000;
+      return !isNaN(menitBerlalu) && menitBerlalu >= 0 && menitBerlalu <= IZIN_KELUAR_BERLAKU_MENIT;
+    }
+  }
+  return false;
 }
 
 function mulaiUjian(link) {

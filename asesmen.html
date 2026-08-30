@@ -1538,13 +1538,34 @@ function aturTombolSelesaiUjian() {
 }
 
 function selesaiUjianManual() {
+  // PENTING: matikan pengawasan SEBELUM dialog apa pun muncul (confirm()
+  // atau izin kamera buat scan QR Keluar) — soalnya dialog itu sendiri
+  // bikin jendela "blur" sesaat, dan kalau pengawasan masih aktif itu
+  // salah dianggap "pindah aplikasi" → dihitung pelanggaran + alarm bunyi,
+  // padahal siswanya tidak kemana-mana.
+  sedangUjian = false;
+  nonaktifkanPengawas();
+
   if (selesaiNormalAktif) {
-    if (!confirm('Yakin sudah selesai mengerjakan? Anda akan kembali ke halaman utama Asesmen.')) return;
+    const yakin = confirm('Yakin sudah selesai mengerjakan? Anda akan kembali ke halaman utama Asesmen.');
+    if (!yakin) {
+      lanjutkanPengawasanSetelahBatal();
+      return;
+    }
     tutupUjianTanpaPelanggaran();
     return;
   }
   // Masih jauh dari jam selesai → keluar DARURAT, wajib scan QR izin dari pengawas
   bukaScanQrKeluar();
+}
+
+// Dipanggil kalau siswa BATAL keluar (baik dari dialog konfirmasi biasa
+// maupun dari modal scan QR Keluar) — nyalakan lagi pengawasannya supaya
+// ujian tetap terpantau seperti biasa.
+function lanjutkanPengawasanSetelahBatal() {
+  if (sudahPelanggaran) return; // sudah kena pelanggaran lain, tidak perlu diaktifkan lagi
+  sedangUjian = true;
+  aktifkanPengawas();
 }
 
 function tutupUjianTanpaPelanggaran() {
@@ -1585,8 +1606,9 @@ function bukaScanQrKeluar() {
             return;
           }
 
-          // Valid — tutup scanner, keluar TANPA dihitung pelanggaran
-          tutupScanQrKeluar();
+          // Valid — tutup scanner TANPA nyalakan pengawasan lagi (ujian
+          // memang mau diakhiri), lalu keluar tanpa dihitung pelanggaran
+          tutupScanQrKeluarSaja();
           tutupUjianTanpaPelanggaran();
         },
         () => {}
@@ -1610,7 +1632,9 @@ function bukaScanQrKeluar() {
   }
 }
 
-function tutupScanQrKeluar() {
+// Tutup modal + hentikan kamera saja, TANPA menyalakan pengawasan lagi
+// (dipakai waktu QR-nya sudah valid dan ujian memang mau diakhiri).
+function tutupScanQrKeluarSaja() {
   tutup('mQrKeluar');
   if (qrKeluarDaruratScanner) {
     qrKeluarDaruratScanner.stop().catch(() => {}).finally(() => {
@@ -1618,6 +1642,13 @@ function tutupScanQrKeluar() {
       qrKeluarDaruratScanner = null;
     });
   }
+}
+
+// Dipanggil dari tombol "Batal, Lanjut Mengerjakan" — tutup modal DAN
+// nyalakan lagi pengawasan karena siswa memilih lanjut mengerjakan.
+function tutupScanQrKeluar() {
+  tutupScanQrKeluarSaja();
+  lanjutkanPengawasanSetelahBatal();
 }
 
 function mulaiUjian(link) {

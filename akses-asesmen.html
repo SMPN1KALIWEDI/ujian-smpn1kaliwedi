@@ -441,8 +441,8 @@
           </svg>
         </div>
         <div class="menu-text">
-          <div class="menu-title">QR Keluar</div>
-          <div class="menu-desc">Izin keluar darurat</div>
+          <div class="menu-title">Izin Keluar</div>
+          <div class="menu-desc">Scan NISN, izin darurat</div>
         </div>
       </button>
 
@@ -711,13 +711,33 @@
       Menu Utama
     </button>
     <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
-      Untuk siswa yang <b>benar-benar darurat</b> perlu keluar ujian sebelum waktunya. Siswa tap tombol "Selesai" di halaman ujiannya, lalu scan QR ini — otomatis kembali ke dashboard tanpa dihitung pelanggaran.
+      Untuk siswa yang <b>benar-benar darurat</b> perlu keluar ujian sebelum waktunya. Scan atau ketik NISN siswa, lalu konfirmasi — halaman ujian siswa itu akan otomatis lanjut keluar tanpa dihitung pelanggaran.
     </div>
-    <div id="qrKeluarStage" style="display:flex;align-items:center;justify-content:center;width:220px;height:220px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:var(--shadow)">
-      <div class="spinner"></div>
+    <div class="field">
+      <label for="inputNisnQrKeluar">NISN Siswa</label>
+      <input type="text" id="inputNisnQrKeluar" placeholder="Ketik atau scan QR NISN siswa"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
     </div>
-    <div id="qrKeluarStatus" class="status-msg" style="margin-top:10px;text-align:center"></div>
-    <button type="button" id="btnRefreshQrKeluar" class="btn btn-ghost" style="width:100%;margin-top:12px">🔄 Muat Ulang QR</button>
+    <button id="btnScanQrKeluar" class="btn btn-ghost" style="width:100%">📷 Scan QR Kartu Siswa</button>
+    <div id="qrReaderKeluarWrap" style="margin-top:10px;display:none">
+      <div id="qr-reader-keluar" style="border-radius:12px;overflow:hidden"></div>
+      <div id="qrStatusKeluarScan" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
+      <button id="btnTutupQrScanKeluar" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
+    </div>
+
+    <div id="previewSiswaQrKeluar" style="display:none;margin-top:12px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px">Siswa ditemukan</div>
+      <div id="previewNamaQrKeluar" style="font-size:15px;font-weight:700;color:var(--navy-800)">-</div>
+      <div id="previewKelasQrKeluar" style="font-size:12.5px;color:var(--ink-soft)">-</div>
+    </div>
+    <div id="previewNotFoundQrKeluar" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF6E5;border:1.5px solid #F3DFA8;border-radius:var(--radius-md);font-size:12.5px;color:#8A6A17">
+      ⚠️ NISN belum ditemukan di data siswa — cek lagi penulisannya. Izin tetap bisa dikirim.
+    </div>
+
+    <button id="btnKirimIzinKeluar" class="btn btn-primary" style="margin-top:12px">
+      <span id="btnKirimIzinKeluarLabel">🚪 Izinkan Keluar Sekarang</span>
+    </button>
+    <div id="izinKeluarStatus" class="status-msg"></div>
   </div>
   <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
     <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
@@ -870,9 +890,18 @@ const els = {
   cardQrKeluar: document.getElementById('cardQrKeluar'),
   screenQrKeluar: document.getElementById('screenQrKeluar'),
   btnKembaliDariQrKeluar: document.getElementById('btnKembaliDariQrKeluar'),
-  qrKeluarStage: document.getElementById('qrKeluarStage'),
-  qrKeluarStatus: document.getElementById('qrKeluarStatus'),
-  btnRefreshQrKeluar: document.getElementById('btnRefreshQrKeluar'),
+  inputNisnQrKeluar: document.getElementById('inputNisnQrKeluar'),
+  btnScanQrKeluar: document.getElementById('btnScanQrKeluar'),
+  qrReaderKeluarWrap: document.getElementById('qrReaderKeluarWrap'),
+  qrStatusKeluarScan: document.getElementById('qrStatusKeluarScan'),
+  btnTutupQrScanKeluar: document.getElementById('btnTutupQrScanKeluar'),
+  previewSiswaQrKeluar: document.getElementById('previewSiswaQrKeluar'),
+  previewNamaQrKeluar: document.getElementById('previewNamaQrKeluar'),
+  previewKelasQrKeluar: document.getElementById('previewKelasQrKeluar'),
+  previewNotFoundQrKeluar: document.getElementById('previewNotFoundQrKeluar'),
+  btnKirimIzinKeluar: document.getElementById('btnKirimIzinKeluar'),
+  btnKirimIzinKeluarLabel: document.getElementById('btnKirimIzinKeluarLabel'),
+  izinKeluarStatus: document.getElementById('izinKeluarStatus'),
 };
 
 /* =========================================================
@@ -1012,38 +1041,126 @@ async function ambilTokenValue(){
 }
 
 /* =========================================================
-   QR KELUAR — QR izin darurat keluar ujian lebih awal. Nilainya
-   "KELUAR:<token asesmen yang sedang berlaku>", pakai token yang
-   sama dengan Token Asesmen (tidak perlu sheet/endpoint baru) —
-   cuma dikasih prefiks "KELUAR:" biar asesmen.html bisa bedakan
-   ini scan untuk KELUAR, bukan scan untuk MASUK ujian.
+   IZIN KELUAR — pengawas scan/ketik NISN siswa yang benar-benar
+   darurat perlu keluar ujian sebelum jam selesai, lalu kirim izin.
+   Ditulis ke sheet "IzinKeluar" (lewat Apps Script action
+   izinKeluarManual) — asesmen.html polling sheet ini dan otomatis
+   lanjut begitu ketemu, TANPA pengawasan anti-contek sempat mati
+   sebelum izin ini benar-benar terkonfirmasi di server.
 ========================================================= */
-let qrKeluarObj = null;
+let qrScannerKeluar = null;
 
-async function muatQrKeluar(){
-  els.qrKeluarStatus.textContent = '';
-  els.qrKeluarStatus.className = 'status-msg';
-  els.btnRefreshQrKeluar.disabled = true;
-  els.qrKeluarStage.innerHTML = '<div class="spinner"></div>';
-  try {
-    const value = await ambilTokenValue();
-    els.qrKeluarStage.innerHTML = '';
-    qrKeluarObj = new QRCode(els.qrKeluarStage, {
-      text: 'KELUAR:' + value,
-      width: 200,
-      height: 200,
-      colorDark: '#0F1B33',
-      colorLight: '#FFFFFF',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  } catch (err) {
-    els.qrKeluarStage.innerHTML = '<div class="qr-error">Gagal memuat.<br>Coba refresh.</div>';
-    els.qrKeluarStatus.textContent = 'Gagal memuat QR: ' + err.message;
-    els.qrKeluarStatus.className = 'status-msg err';
-  } finally {
-    els.btnRefreshQrKeluar.disabled = false;
+async function tampilkanPreviewSiswaQrKeluar(){
+  const nisn = els.inputNisnQrKeluar.value.trim();
+  els.previewSiswaQrKeluar.style.display = 'none';
+  els.previewNotFoundQrKeluar.style.display = 'none';
+  if (!nisn) return;
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+
+  if (siswa){
+    els.previewNamaQrKeluar.textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
+    els.previewKelasQrKeluar.textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
+    els.previewSiswaQrKeluar.style.display = 'block';
+  } else {
+    els.previewNotFoundQrKeluar.style.display = 'block';
   }
 }
+
+async function kirimIzinKeluar(nisn){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      action: 'izinKeluarManual',
+      nisn,
+      ruang: els.metaRuang.textContent,
+      pengawas: els.metaPengawas.textContent,
+    })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal mengirim izin');
+  return json;
+}
+
+els.btnKirimIzinKeluar.addEventListener('click', async () => {
+  const nisn = els.inputNisnQrKeluar.value.trim();
+  els.izinKeluarStatus.textContent = '';
+  els.izinKeluarStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.izinKeluarStatus.textContent = 'Ketik atau scan NISN siswa terlebih dahulu.';
+    els.izinKeluarStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnKirimIzinKeluar.disabled = true;
+  els.btnKirimIzinKeluarLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    await kirimIzinKeluar(nisn);
+    els.izinKeluarStatus.textContent = `✅ Izin terkirim untuk NISN ${nisn}. Halaman ujian siswa akan otomatis lanjut dalam beberapa detik.`;
+    els.izinKeluarStatus.className = 'status-msg ok';
+    els.inputNisnQrKeluar.value = '';
+    els.previewSiswaQrKeluar.style.display = 'none';
+    els.previewNotFoundQrKeluar.style.display = 'none';
+  } catch (err) {
+    els.izinKeluarStatus.textContent = 'Gagal mengirim izin: ' + err.message;
+    els.izinKeluarStatus.className = 'status-msg err';
+  } finally {
+    els.btnKirimIzinKeluar.disabled = false;
+    els.btnKirimIzinKeluarLabel.textContent = '🚪 Izinkan Keluar Sekarang';
+  }
+});
+
+els.inputNisnQrKeluar.addEventListener('input', () => {
+  clearTimeout(window._debounceLookupQrKeluar);
+  window._debounceLookupQrKeluar = setTimeout(tampilkanPreviewSiswaQrKeluar, 350);
+});
+els.inputNisnQrKeluar.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnKirimIzinKeluar.click();
+});
+
+function bukaQrScanKeluar(){
+  els.qrReaderKeluarWrap.style.display = 'block';
+  els.qrStatusKeluarScan.textContent = 'Memulai kamera...';
+  setTimeout(() => {
+    try {
+      qrScannerKeluar = new Html5Qrcode('qr-reader-keluar');
+      qrScannerKeluar.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const teks = decodedText.trim();
+          els.inputNisnQrKeluar.value = teks;
+          els.qrStatusKeluarScan.textContent = '✅ Terbaca: ' + teks;
+          tampilkanPreviewSiswaQrKeluar();
+          if (qrScannerKeluar) { try { qrScannerKeluar.pause(true); } catch(e){} }
+          setTimeout(tutupQrScanKeluar, 700);
+        },
+        () => {}
+      ).then(() => { els.qrStatusKeluarScan.textContent = '🔍 Arahkan ke QR Code kartu siswa...'; })
+       .catch(err => { els.qrStatusKeluarScan.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
+    } catch (e) {
+      els.qrStatusKeluarScan.textContent = '❌ ' + e.message;
+    }
+  }, 300);
+}
+
+function tutupQrScanKeluar(){
+  if (qrScannerKeluar){
+    qrScannerKeluar.stop().catch(() => {}).finally(() => {
+      try { qrScannerKeluar.clear(); } catch(e){}
+      qrScannerKeluar = null;
+    });
+  }
+  els.qrReaderKeluarWrap.style.display = 'none';
+}
+
+els.btnScanQrKeluar.addEventListener('click', bukaQrScanKeluar);
+els.btnTutupQrScanKeluar.addEventListener('click', tutupQrScanKeluar);
+
 
 /* =========================================================
    TOKEN MANUAL — layar terpisah dari QR. Tombol "Tampilkan
@@ -1521,7 +1638,7 @@ const HEADER_LAYAR = {
   resetpw:     { judul: 'Reset Password',tampilkanIkon: false },
   kartusiswa:  { judul: 'Kartu Siswa',   tampilkanIkon: false },
   tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
-  qrkeluar:    { judul: 'QR Keluar',     tampilkanIkon: false },
+  qrkeluar:    { judul: 'Izin Keluar',    tampilkanIkon: false },
 };
 function aturHeader(kunci){
   const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
@@ -1715,14 +1832,19 @@ els.cardQrKeluar.addEventListener('click', () => {
   aturHeader('qrkeluar');
   els.screenHome.classList.add('hidden');
   els.screenQrKeluar.classList.remove('hidden');
-  muatQrKeluar();
+  els.inputNisnQrKeluar.value = '';
+  els.previewSiswaQrKeluar.style.display = 'none';
+  els.previewNotFoundQrKeluar.style.display = 'none';
+  els.izinKeluarStatus.textContent = '';
+  els.izinKeluarStatus.className = 'status-msg';
+  els.inputNisnQrKeluar.focus();
 });
 els.btnKembaliDariQrKeluar.addEventListener('click', () => {
+  tutupQrScanKeluar();
   aturHeader('home');
   els.screenQrKeluar.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
 });
-els.btnRefreshQrKeluar.addEventListener('click', muatQrKeluar);
 
 els.btnKembaliDariToken.addEventListener('click', () => {
   stopTimers();

@@ -486,6 +486,9 @@
         </div>
       </button>
     </div>
+    <button type="button" id="btnBukaPetunjuk" class="btn btn-ghost" style="width:100%;margin-top:14px">
+      ❓ Petunjuk Penggunaan
+    </button>
   </div>
 
   <!-- ===================== SCREEN 1 : JENDELA MASUK (TOKEN ASESMEN) ===================== -->
@@ -749,6 +752,37 @@
     </div>
   </div>
 
+  <!-- ===================== MODAL: PETUNJUK PENGGUNAAN ===================== -->
+  <div id="popupPetunjuk" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="position:relative;background:#fff;border-radius:20px;padding:26px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <button id="btnTutupPetunjuk" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;line-height:1;color:var(--ink-soft);cursor:pointer">×</button>
+
+      <div id="petunjukLangkah" style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;text-align:center">Langkah 1 dari 6</div>
+
+      <div style="display:flex;justify-content:center;margin:14px 0 10px">
+        <div id="petunjukIkon" class="menu-icon" style="width:56px;height:56px"></div>
+      </div>
+      <h3 id="petunjukJudul" style="text-align:center;margin:0 0 16px;font-family:'Poppins',sans-serif;font-weight:800;font-size:17px;color:var(--navy-950)"></h3>
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--teal-500);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">🎯 Fungsi</div>
+        <div id="petunjukFungsi" style="font-size:13px;color:var(--ink);line-height:1.55"></div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--teal-500);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">📋 Cara Pakai</div>
+        <ol id="petunjukCaraPakai" style="font-size:13px;color:var(--ink);line-height:1.65;padding-left:19px;margin:0"></ol>
+      </div>
+
+      <div id="petunjukDots" style="display:flex;justify-content:center;gap:6px;margin-top:18px"></div>
+
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button id="btnPetunjukSebelumnya" type="button" class="btn btn-ghost" style="flex:1">← Sebelumnya</button>
+        <button id="btnPetunjukLanjut" type="button" class="btn btn-primary" style="flex:1">Lanjut →</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -872,6 +906,17 @@ const els = {
   popupBintangLayer: document.getElementById('popupBintangLayer'),
   popupSuksesNama: document.getElementById('popupSuksesNama'),
   btnTutupPopupSukses: document.getElementById('btnTutupPopupSukses'),
+  btnBukaPetunjuk: document.getElementById('btnBukaPetunjuk'),
+  popupPetunjuk: document.getElementById('popupPetunjuk'),
+  btnTutupPetunjuk: document.getElementById('btnTutupPetunjuk'),
+  petunjukLangkah: document.getElementById('petunjukLangkah'),
+  petunjukIkon: document.getElementById('petunjukIkon'),
+  petunjukJudul: document.getElementById('petunjukJudul'),
+  petunjukFungsi: document.getElementById('petunjukFungsi'),
+  petunjukCaraPakai: document.getElementById('petunjukCaraPakai'),
+  petunjukDots: document.getElementById('petunjukDots'),
+  btnPetunjukSebelumnya: document.getElementById('btnPetunjukSebelumnya'),
+  btnPetunjukLanjut: document.getElementById('btnPetunjukLanjut'),
   cardKartuSiswa: document.getElementById('cardKartuSiswa'),
   screenKartuSiswa: document.getElementById('screenKartuSiswa'),
   btnTutupKartuSiswa: document.getElementById('btnTutupKartuSiswa'),
@@ -2044,6 +2089,136 @@ els.btnKembaliDariEntry.addEventListener('click', () => {
 
 /* ---- Logo sekolah dari data/sekolah.csv (GitHub), tampil di Menu Utama ---- */
 
+/* =========================================================
+   PETUNJUK PENGGUNAAN — modal bertahap menjelaskan tiap menu:
+   fungsinya apa & cara pakainya, satu per satu.
+========================================================= */
+const DATA_PETUNJUK = [
+  {
+    judul: 'Token Asesmen', accent: 'var(--teal-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <path d="M14 14h3.2M14 18h7M20.5 14v7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Menampilkan QR Code token ujian yang berlaku untuk ruang & sesi saat ini. Siswa scan QR ini dari halaman ujian mereka supaya bisa mulai mengerjakan soal.',
+    caraPakai: [
+      'Pilih <b>Ruang Asesmen</b> dan <b>Nama Pengawas</b>.',
+      'Tap tombol <b>Buka Token</b>.',
+      'QR Code tampil dan otomatis refresh tiap beberapa menit.',
+      'Tunjukkan layar HP ke siswa satu per satu untuk di-scan.',
+    ],
+  },
+  {
+    judul: 'Token Manual', accent: 'var(--indigo-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.8"/>
+      <path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13.5h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Menampilkan kode token dalam bentuk TEKS (bukan QR) — dipakai kalau ada siswa yang kameranya bermasalah dan tidak bisa scan QR sama sekali.',
+    caraPakai: [
+      'Tap tombol <b>Tampilkan Kode Token</b>.',
+      'Bacakan atau tunjukkan kode yang muncul ke siswa.',
+      'Siswa mengetik kode itu manual lewat tombol pensil ✏️ di halaman ujiannya.',
+      'Tombol ini dibatasi <b>10 kali dibuka</b> per token, supaya tidak disalahgunakan.',
+    ],
+  },
+  {
+    judul: 'Izin Keluar', accent: 'var(--emerald-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M11 12h9m0 0-3-3m3 3-3 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Memberi izin RESMI ke siswa yang benar-benar darurat perlu keluar ujian sebelum jadwal selesai — tanpa dihitung pelanggaran oleh sistem anti-contek.',
+    caraPakai: [
+      'Scan QR kartu siswa, atau ketik NISN-nya manual.',
+      'Cek dulu nama & kelas yang muncul sudah benar.',
+      'Tap tombol <b>Izinkan Keluar Sekarang</b>.',
+      'Dalam beberapa detik, halaman ujian siswa itu otomatis lanjut keluar sendiri.',
+    ],
+  },
+  {
+    judul: 'Rekap Nilai', accent: 'var(--amber-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 20V10M12 20V4M20 20v-7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Melihat rekap nilai semua siswa, disusun rapi dalam tabel: satu baris per siswa, satu kolom per mata pelajaran.',
+    caraPakai: [
+      '(Opsional) pilih filter <b>Kelas</b> dan/atau <b>Mapel</b>.',
+      'Tap tombol <b>Muat / Refresh Rekap</b>.',
+      'Tabel nilai akan tampil — kolom "—" berarti siswa itu belum ada nilai di mapel tersebut.',
+      'Bisa diurutkan (Nama/Nilai) dan diunduh sebagai file Excel.',
+    ],
+  },
+  {
+    judul: 'Reset Password', accent: 'var(--red-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+      <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Membantu siswa yang gagal login karena password bermasalah, dengan mereset akunnya balik ke password default.',
+    caraPakai: [
+      'Scan QR kartu siswa, atau ketik NISN-nya manual.',
+      'Cek dulu nama & kelas yang muncul sudah benar.',
+      'Tap tombol <b>Reset ke Password Default</b>.',
+      'Siswa login lagi pakai password default <b>user123</b>, lalu diminta ganti password baru sendiri.',
+    ],
+  },
+  {
+    judul: 'Kartu Siswa', accent: 'var(--violet-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.8"/>
+      <circle cx="8.5" cy="11" r="2" stroke="white" stroke-width="1.8"/>
+      <path d="M5.5 16c0-1.7 1.4-2.8 3-2.8s3 1.1 3 2.8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M14 10h4.2M14 13h4.2" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Melihat detail nilai satu siswa tertentu secara lengkap — semua mata pelajaran sekaligus rata-ratanya.',
+    caraPakai: [
+      'Pilih <b>Kelas</b> siswa yang dicari.',
+      'Pilih <b>Nama</b> siswa dari daftar yang muncul.',
+      'Nilai per mapel dan rata-ratanya langsung tampil.',
+    ],
+  },
+];
+
+let petunjukIndeks = 0;
+
+function renderPetunjuk(){
+  const d = DATA_PETUNJUK[petunjukIndeks];
+  els.petunjukLangkah.textContent = `Langkah ${petunjukIndeks + 1} dari ${DATA_PETUNJUK.length}`;
+  els.petunjukIkon.style.setProperty('--accent', d.accent);
+  els.petunjukIkon.innerHTML = d.ikonSvg;
+  els.petunjukJudul.textContent = d.judul;
+  els.petunjukFungsi.textContent = d.fungsi;
+  els.petunjukCaraPakai.innerHTML = d.caraPakai.map(langkah => `<li style="margin-bottom:4px">${langkah}</li>`).join('');
+
+  els.petunjukDots.innerHTML = DATA_PETUNJUK.map((_, i) => `
+    <span style="width:7px;height:7px;border-radius:50%;background:${i === petunjukIndeks ? 'var(--navy-800)' : '#D8DEE8'};transition:.15s"></span>
+  `).join('');
+
+  els.btnPetunjukSebelumnya.style.visibility = petunjukIndeks === 0 ? 'hidden' : 'visible';
+  els.btnPetunjukLanjut.textContent = petunjukIndeks === DATA_PETUNJUK.length - 1 ? 'Selesai ✓' : 'Lanjut →';
+}
+
+function bukaPetunjuk(){
+  petunjukIndeks = 0;
+  renderPetunjuk();
+  els.popupPetunjuk.classList.remove('hidden');
+}
+function tutupPetunjuk(){
+  els.popupPetunjuk.classList.add('hidden');
+}
+
+els.btnBukaPetunjuk.addEventListener('click', bukaPetunjuk);
+els.btnTutupPetunjuk.addEventListener('click', tutupPetunjuk);
+els.btnPetunjukSebelumnya.addEventListener('click', () => {
+  if (petunjukIndeks > 0){ petunjukIndeks--; renderPetunjuk(); }
+});
+els.btnPetunjukLanjut.addEventListener('click', () => {
+  if (petunjukIndeks < DATA_PETUNJUK.length - 1){ petunjukIndeks++; renderPetunjuk(); }
+  else tutupPetunjuk();
+});
 
 validateForm();
 </script>

@@ -2,498 +2,2225 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Akses Asesmen - SMP Negeri 1 Kaliwedi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #f0f2f5;
-    color: #333;
-    min-height: 100vh;
+  :root{
+    --navy-950:#0F1B33;
+    --navy-800:#1B2A4A;
+    --navy-700:#243a63;
+    --teal-500:#17A6A0;
+    --teal-400:#3FC7C1;
+    --amber-500:#E2A63B;
+    --red-500:#E15C5C;
+    --violet-500:#8B6BD8;
+    --indigo-500:#4C6FE0;
+    --emerald-500:#22A06B;
+    --bg:#EAF6EE;
+    --card:#FFFFFF;
+    --ink:#151A26;
+    --ink-soft:#5B6478;
+    --ring-track:#E4E8F0;
+    --radius-lg:22px;
+    --radius-md:14px;
+    --shadow:0 10px 30px -12px rgba(15,27,51,0.25);
   }
-  .header {
-    background: linear-gradient(135deg, #1e3a8a, #2563eb);
-    color: #fff;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    background:var(--bg);
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
   }
-  .header img { width: 40px; height: 40px; }
-  .header h1 { font-size: 18px; font-weight: 600; }
-  .header p { font-size: 12px; opacity: 0.9; }
+  #app{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 20px 40px;
+  }
+  .hidden{display:none !important;}
 
-  .container { max-width: 480px; margin: 0 auto; padding: 16px; }
-
-  /* Menu Grid */
-  .menu-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 16px;
+  /* ---------- Header ---------- */
+  .brand{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    margin-bottom:26px;
+    text-align:center;
   }
-  .menu-card {
-    background: #fff;
-    border-radius: 10px;
-    padding: 16px 12px;
-    text-align: center;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    transition: transform 0.15s, box-shadow 0.15s;
-    border: 1px solid #e5e7eb;
+  .brand-badge{
+    width:56px;height:56px;border-radius:16px;
+    background:linear-gradient(155deg,var(--navy-800),var(--navy-950));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:var(--shadow);
+    margin-bottom:6px;
   }
-  .menu-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  .brand-badge svg{width:30px;height:30px;}
+  .brand h1{
+    font-family:'Poppins',sans-serif;
+    font-weight:800;
+    font-size:22px;
+    margin:0;
+    color:var(--navy-950);
+    letter-spacing:-0.3px;
   }
-  .menu-card .icon { font-size: 28px; margin-bottom: 6px; }
-  .menu-card .label { font-size: 13px; font-weight: 500; color: #1f2937; }
-  .menu-card .desc { font-size: 10px; color: #6b7280; margin-top: 2px; }
-
-  /* Tombol Petunjuk */
-  .help-btn {
-    display: block;
-    width: 100%;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 12px;
-    font-size: 14px;
-    color: #1e3a8a;
-    cursor: pointer;
-    margin-bottom: 16px;
-    text-align: left;
-  }
-
-  /* Modal / Panel */
-  .panel {
-    display: none;
-    background: #fff;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  }
-  .panel.active { display: block; }
-  .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  .panel-header h2 { font-size: 15px; color: #1e3a8a; }
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: #6b7280;
+  .brand p{
+    margin:0;
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:500;
   }
 
-  /* Form elements */
-  label { font-size: 12px; color: #4b5563; display: block; margin-bottom: 4px; margin-top: 10px; }
-  input, select {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 13px;
-  }
-  .btn {
-    width: 100%;
-    padding: 10px;
-    background: #2563eb;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-top: 12px;
-  }
-  .btn:hover { background: #1d4ed8; }
-  .btn-secondary { background: #6b7280; }
-  .btn-danger { background: #dc2626; }
-  .btn-success { background: #16a34a; }
-
-  /* Token display */
-  .token-display {
-    background: #f3f4f6;
-    border: 2px dashed #9ca3af;
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    color: #1e3a8a;
-    margin: 12px 0;
+  /* ---------- Card ---------- */
+  .card{
+    width:100%;
+    max-width:420px;
+    background:var(--card);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);
+    padding:26px 22px;
   }
 
-  /* Alert */
-  .alert {
-    padding: 10px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    margin: 10px 0;
+  /* ---------- Form ---------- */
+  .field{margin-bottom:18px;}
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy-800);
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
   }
-  .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-  .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
-
-  /* ============================================ */
-  /* TOMBOL NAVIGASI TUTORIAL - SIMPEL & KECIL    */
-  /* ============================================ */
-  .tutorial-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid #e5e7eb;
+  .select-wrap{position:relative;}
+  .select-wrap::after{
+    content:'';
+    position:absolute;
+    right:16px;top:50%;
+    width:10px;height:10px;
+    border-right:2.5px solid var(--ink-soft);
+    border-bottom:2.5px solid var(--ink-soft);
+    transform:translateY(-70%) rotate(45deg);
+    pointer-events:none;
   }
-  .tutorial-nav button {
-    font-size: 12px;
-    padding: 5px 12px;
-    border-radius: 4px;
-    border: 1px solid #d1d5db;
-    background: #f9fafb;
-    color: #374151;
-    cursor: pointer;
-    transition: background 0.2s;
-    line-height: 1.4;
-    font-weight: 500;
+  .field select{
+    width:100%;
+    padding:16px 40px 16px 16px;
+    font-size:16px;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    border:2px solid var(--ring-track);
+    border-radius:var(--radius-md);
+    background:#FAFBFD;
+    color:var(--ink);
+    outline:none;
+    appearance:none;
+    -webkit-appearance:none;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
   }
-  .tutorial-nav button:hover:not(:disabled) {
-    background: #e5e7eb;
+  .field select:focus{
+    border-color:var(--teal-500);
+    background:#fff;
   }
-  .tutorial-nav button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .tutorial-nav .btn-next {
-    background: #2563eb;
-    color: #fff;
-    border-color: #2563eb;
-  }
-  .tutorial-nav .btn-next:hover:not(:disabled) {
-    background: #1d4ed8;
-  }
-  .tutorial-step-info {
-    font-size: 11px;
-    color: #6b7280;
-    text-align: center;
-    flex: 1;
+  .field select:disabled{
+    color:#A7AEC0;
+    cursor:not-allowed;
   }
 
-  /* Tutorial content */
-  .tutorial-content {
-    font-size: 13px;
-    line-height: 1.6;
-    color: #374151;
+  .btn{
+    width:100%;
+    border:none;
+    border-radius:var(--radius-md);
+    padding:17px 18px;
+    font-size:16px;
+    font-family:'Poppins',sans-serif;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
   }
-  .tutorial-content h3 {
-    font-size: 14px;
-    color: #1e3a8a;
-    margin-bottom: 8px;
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{
+    background:linear-gradient(135deg,var(--teal-500),var(--navy-800));
+    color:#fff;
+    box-shadow:0 8px 20px -8px rgba(23,166,160,0.55);
   }
-  .tutorial-content ul {
-    padding-left: 18px;
-    margin: 6px 0;
+  .btn-primary:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+    box-shadow:none;
   }
-  .tutorial-content li { margin-bottom: 4px; }
-  .tutorial-content .tip {
-    background: #eff6ff;
-    border-left: 3px solid #2563eb;
-    padding: 8px 10px;
-    margin: 8px 0;
-    font-size: 12px;
-    border-radius: 4px;
+  .btn-ghost{
+    background:#EEF1F6;
+    color:var(--navy-800);
+    margin-top:10px;
+  }
+  .btn svg{width:18px;height:18px;flex-shrink:0;}
+
+  .status-msg{
+    margin-top:14px;
+    font-size:13.5px;
+    font-weight:600;
+    text-align:center;
+    min-height:18px;
+  }
+  .status-msg.ok{color:var(--teal-500);}
+  .status-msg.err{color:var(--red-500);}
+
+  .spinner{
+    width:18px;height:18px;
+    border:2.5px solid rgba(255,255,255,0.4);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- Token screen ---------- */
+  .token-meta{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .token-meta .chip{
+    flex:1;
+    background:#F0F3F9;
+    border-radius:12px;
+    padding:10px 12px;
+    text-align:center;
+  }
+  .token-meta .chip .label{
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin-bottom:3px;
+  }
+  .token-meta .chip .value{
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--navy-950);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
   }
 
-  .info-box {
-    background: #f9fafb;
-    border-left: 3px solid #2563eb;
-    padding: 10px 12px;
-    margin: 10px 0;
-    font-size: 12px;
-    border-radius: 4px;
-    color: #374151;
+  .qr-stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    max-width:280px;
+    margin:0 auto 20px;
+    background:#fff;
+    border-radius:var(--radius-md);
+    border:2px solid var(--ring-track);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .qr-stage img,.qr-stage canvas{
+    width:82% !important;
+    height:82% !important;
+  }
+  .live-dot{
+    position:absolute;
+    top:10px;right:10px;
+    display:flex;align-items:center;gap:6px;
+    background:rgba(15,27,51,0.9);
+    padding:4px 9px 4px 7px;
+    border-radius:999px;
+  }
+  .live-dot .pulse{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--teal-400);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  .live-dot span{color:#fff;font-size:10px;font-weight:700;letter-spacing:0.5px;}
+  @keyframes pulse{
+    0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(63,199,193,0.5);}
+    50%{opacity:0.6;box-shadow:0 0 0 5px rgba(63,199,193,0);}
+  }
+  .qr-loading{
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    color:var(--ink-soft);font-size:12.5px;font-weight:600;
+  }
+  .qr-loading .spinner{border-color:rgba(23,42,74,0.15);border-top-color:var(--navy-800);}
+  .qr-error{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    color:var(--red-500);font-size:12.5px;font-weight:600;text-align:center;padding:0 16px;
   }
 
-  /* Camera placeholder */
-  .camera-box {
-    background: #111;
-    color: #fff;
-    border-radius: 8px;
-    padding: 30px;
-    text-align: center;
-    font-size: 12px;
-    margin: 10px 0;
+  .refresh-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin-bottom:6px;
   }
+  .ring-btn{
+    position:relative;
+    width:64px;height:64px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    background:conic-gradient(var(--teal-500) calc(var(--pct,0)*1%), var(--ring-track) 0);
+    transition:transform .12s ease;
+  }
+  .ring-btn:active{transform:scale(0.94);}
+  .ring-btn::after{
+    content:'';
+    position:absolute;
+    inset:5px;
+    border-radius:50%;
+    background:var(--card);
+  }
+  .ring-btn svg{
+    position:relative;z-index:1;
+    width:22px;height:22px;
+    color:var(--navy-800);
+    transition:transform .5s ease;
+  }
+  .ring-btn.spinning svg{animation:spin .8s linear infinite;}
+
+  .refresh-info{
+    text-align:center;
+  }
+  .refresh-info .countdown{
+    font-family:'JetBrains Mono',monospace;
+    font-size:20px;
+    font-weight:700;
+    color:var(--navy-950);
+    letter-spacing:0.5px;
+  }
+  .refresh-info .caption{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-top:2px;
+  }
+
+  .updated-at{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    font-weight:500;
+    margin-top:16px;
+  }
+@keyframes jatuhBintang {
+  0%   { transform: translateY(-30px) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(340px) rotate(360deg); opacity: 0; }
+}
+@keyframes munculPop {
+  0%   { transform: scale(.6); opacity: 0; }
+  60%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.bintang-jatuh {
+  position: absolute;
+  top: -20px;
+  font-size: 18px;
+  animation-name: jatuhBintang;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+#popupSuksesBox { animation: munculPop .35s ease-out; }
+  /* ---------- Menu Utama (Home) ---------- */
+  .menu-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .menu-card{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    width:100%;padding:18px 10px;
+    background:#FAFBFD;
+    border:1.5px solid var(--ring-track);
+    border-radius:var(--radius-md);
+    cursor:pointer;
+    font-family:inherit;
+    text-align:center;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .menu-card:hover{border-color:var(--accent, var(--teal-500));background:#fff;}
+  .menu-card:active{transform:scale(0.96);}
+  .menu-icon{
+    flex:none;
+    width:46px;height:46px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--accent, var(--teal-500));
+    box-shadow:0 6px 16px -6px var(--accent, var(--teal-500));
+  }
+  .menu-icon svg{width:22px;height:22px;}
+  .menu-text{width:100%;}
+  .menu-title{
+    font-family:'Poppins',sans-serif;
+    font-weight:700;font-size:13.5px;
+    color:var(--navy-950);
+    line-height:1.25;
+    margin-bottom:2px;
+  }
+  .menu-desc{
+    font-size:10.5px;color:var(--ink-soft);
+    line-height:1.3;
+  }
+  .menu-back{
+    display:flex;align-items:center;gap:6px;
+    background:none;border:none;cursor:pointer;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+    color:var(--ink-soft);
+    padding:8px 2px;margin-bottom:14px;
+  }
+  .menu-back svg{width:16px;height:16px;}
+  .menu-back:hover{color:var(--navy-800);}
 </style>
 </head>
 <body>
+<div id="app">
 
-<div class="header">
-  <img src="https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/assets/logo_smp.png" alt="Logo">
-  <div>
-    <h1>Akses Asesmen</h1>
+  <div class="brand">
+    <div class="brand-badge" id="brandBadge" style="background:#fff;padding:6px">
+      <img src="https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/assets/logo_smp.png"
+           alt="Logo SMP Negeri 1 Kaliwedi"
+           style="width:100%;height:100%;object-fit:contain;border-radius:inherit"
+           onerror="this.parentElement.style.background='linear-gradient(155deg,var(--navy-800),var(--navy-950))';this.parentElement.style.padding='0';this.style.display='none'">
+    </div>
+    <h1 id="brandTitle">Akses Asesmen</h1>
     <p>SMP Negeri 1 Kaliwedi</p>
   </div>
-</div>
 
-<div class="container">
+  <!-- ===================== SCREEN 0 : MENU UTAMA ===================== -->
+  <div id="screenHome" class="card">
+    <div class="menu-list">
+      <button type="button" id="cardTokenAsesmen" class="menu-card" style="--accent:var(--teal-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <path d="M14 14h3.2M14 18h7M20.5 14v7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Token Asesmen</div>
+          <div class="menu-desc">QR untuk ruang ujian</div>
+        </div>
+      </button>
 
-  <!-- MENU UTAMA -->
-  <div id="mainMenu">
-    <button class="help-btn" onclick="openPanel('panelPetunjuk')">❓ Petunjuk Penggunaan</button>
+      <button type="button" id="cardTokenManual" class="menu-card" style="--accent:var(--indigo-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.8"/>
+            <path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13.5h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Token Manual</div>
+          <div class="menu-desc">Kode token tanpa QR</div>
+        </div>
+      </button>
 
-    <div class="menu-grid">
-      <div class="menu-card" onclick="openPanel('panelRuang')">
-        <div class="icon">🏫</div>
-        <div class="label">Ruang Asesmen</div>
-        <div class="desc">Token QR untuk ruang ujian</div>
+      <button type="button" id="cardQrKeluar" class="menu-card" style="--accent:var(--emerald-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11 12h9m0 0-3-3m3 3-3 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Izin Keluar</div>
+          <div class="menu-desc">Scan NISN, izin darurat</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardRekapNilai" class="menu-card" style="--accent:var(--amber-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 20V10M12 20V4M20 20v-7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Rekap Nilai</div>
+          <div class="menu-desc">Nilai per kelas</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardResetPw" class="menu-card" style="--accent:var(--red-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+            <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Reset Password</div>
+          <div class="menu-desc">Bantu siswa gagal login</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardKartuSiswa" class="menu-card" style="--accent:var(--violet-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.8"/>
+            <circle cx="8.5" cy="11" r="2" stroke="white" stroke-width="1.8"/>
+            <path d="M5.5 16c0-1.7 1.4-2.8 3-2.8s3 1.1 3 2.8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M14 10h4.2M14 13h4.2" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Kartu Siswa</div>
+          <div class="menu-desc">Nilai satu siswa</div>
+        </div>
+      </button>
+    </div>
+    <button type="button" id="btnBukaPetunjuk" class="btn btn-ghost" style="width:100%;margin-top:14px">
+      ❓ Petunjuk Penggunaan
+    </button>
+  </div>
+
+  <!-- ===================== SCREEN 1 : JENDELA MASUK (TOKEN ASESMEN) ===================== -->
+  <div id="screenEntry" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariEntry">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div class="field">
+      <label for="inputRuang">Ruang Asesmen</label>
+      <div class="select-wrap">
+        <select id="inputRuang">
+          <option value="">Pilih ruang…</option>
+        </select>
       </div>
-      <div class="menu-card" onclick="openPanel('panelTokenManual')">
-        <div class="icon">🔑</div>
-        <div class="label">Token Manual</div>
-        <div class="desc">Kode token tanpa QR</div>
+    </div>
+    <div class="field">
+      <label for="inputPengawas">Nama Pengawas</label>
+      <div class="select-wrap">
+        <select id="inputPengawas" disabled>
+          <option value="">Memuat daftar guru…</option>
+        </select>
       </div>
-      <div class="menu-card" onclick="openPanel('panelIzinKeluar')">
-        <div class="icon">🚪</div>
-        <div class="label">Izin Keluar</div>
-        <div class="desc">Scan NISN, izin darurat</div>
+    </div>
+    <button id="btnBukaToken" class="btn btn-primary" disabled>
+      <span id="btnBukaTokenLabel">Buka Token</span>
+    </button>
+    <div id="entryStatus" class="status-msg"></div>
+  </div>
+
+  <!-- ===================== SCREEN 2 : TOKEN QR ===================== -->
+  <div id="screenToken" class="card hidden">
+    <button type="button" class="menu-back" id="btnKembaliDariToken">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div class="token-meta">
+      <div class="chip">
+        <div class="label">Ruang</div>
+        <div class="value" id="metaRuang">-</div>
       </div>
-      <div class="menu-card" onclick="openPanel('panelRekap')">
-        <div class="icon">📊</div>
-        <div class="label">Rekap Nilai</div>
-        <div class="desc">Nilai per kelas</div>
+      <div class="chip">
+        <div class="label">Pengawas</div>
+        <div class="value" id="metaPengawas">-</div>
       </div>
-      <div class="menu-card" onclick="openPanel('panelReset')">
-        <div class="icon">🔐</div>
-        <div class="label">Reset Password</div>
-        <div class="desc">Bantu siswa gagal login</div>
+    </div>
+
+    <div class="qr-stage" id="qrStage">
+      <div class="live-dot"><span class="pulse"></span><span>LIVE</span></div>
+      <div class="qr-loading" id="qrLoading">
+        <div class="spinner"></div>
+        <span>Memuat token…</span>
       </div>
-      <div class="menu-card" onclick="openPanel('panelKartu')">
-        <div class="icon">🪪</div>
-        <div class="label">Kartu Siswa</div>
-        <div class="desc">Nilai satu siswa</div>
+      <div id="qrCanvasWrap" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></div>
+    </div>
+
+    <div class="refresh-row">
+      <div class="refresh-info">
+        <div class="countdown" id="countdownText">05:00</div>
+        <div class="caption">refresh otomatis</div>
       </div>
+      <div class="ring-btn" id="btnRefresh" style="--pct:0;">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="updated-at" id="updatedAt">-</div>
+
+    <button id="btnBukaManual" class="btn btn-ghost" style="margin-top:16px">
+      🧑‍🎓 Kamera Siswa Gagal? Konfirmasi Manual
+    </button>
+  </div>
+
+  <!-- ===================== SCREEN 3 : KONFIRMASI MANUAL ===================== -->
+  <div id="screenManual" class="card hidden" style="margin-top:16px">
+    <div class="field">
+      <label for="inputNisnManual">NISN Siswa</label>
+      <input type="text" id="inputNisnManual" placeholder="Ketik NISN siswa yang kameranya gagal"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnKonfirmasiManual" class="btn btn-primary">
+      <span id="btnKonfirmasiManualLabel">✅ Konfirmasi Masuk</span>
+    </button>
+    <div id="manualStatus" class="status-msg"></div>
+
+    <div id="manualLog" style="margin-top:18px;max-height:200px;overflow-y:auto"></div>
+  </div>
+
+  <!-- ===================== SCREEN 4 : REKAP NILAI ===================== -->
+  <div id="screenRekap" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnTutupRekap">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div class="field">
+      <label for="filterKelas">Filter Kelas</label>
+      <div class="select-wrap">
+        <select id="filterKelas">
+          <option value="">Semua Kelas</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="filterMapel">Filter Mapel</label>
+      <div class="select-wrap">
+        <select id="filterMapel">
+          <option value="">Semua Mapel</option>
+        </select>
+      </div>
+    </div>
+    <button id="btnMuatRekap" class="btn btn-primary">
+      <span id="btnMuatRekapLabel">🔄 Muat / Refresh Rekap</span>
+    </button>
+    <button id="btnSortNilai" type="button" class="btn btn-ghost" style="width:100%;margin-top:8px">↕️ Urutkan: Nama (A–Z)</button>
+    <div id="rekapStatus" class="status-msg"></div>
+    <div id="rekapContainer" style="margin-top:14px;max-height:420px;overflow-y:auto"></div>
+    <button id="btnDownloadXLS" class="btn btn-ghost" style="margin-top:14px;width:100%" disabled>
+      ⬇️ Download Excel (.xlsx)
+    </button>
+  </div>
+
+  <!-- ===================== SCREEN 5 : RESET PASSWORD SISWA ===================== -->
+  <div id="screenResetPw" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnTutupResetPw">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div class="field">
+      <label for="inputNisnResetPw">NISN Siswa</label>
+      <input type="text" id="inputNisnResetPw" placeholder="Ketik atau scan QR NISN siswa"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnScanQrResetPw" class="btn btn-ghost" style="width:100%">📷 Scan QR Kartu Siswa</button>
+    <div id="qrReaderResetPwWrap" style="margin-top:10px;display:none">
+      <div id="qr-reader-resetpw" style="border-radius:12px;overflow:hidden"></div>
+      <div id="qrStatusResetPw" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
+      <button id="btnTutupQrResetPw" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
+    </div>
+
+    <div id="previewSiswaResetPw" style="display:none;margin-top:12px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px">Siswa ditemukan</div>
+      <div id="previewNamaResetPw" style="font-size:15px;font-weight:700;color:var(--navy-800)">-</div>
+      <div id="previewKelasResetPw" style="font-size:12.5px;color:var(--ink-soft)">-</div>
+    </div>
+    <div id="previewNotFoundResetPw" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF6E5;border:1.5px solid #F3DFA8;border-radius:var(--radius-md);font-size:12.5px;color:#8A6A17">
+      ⚠️ NISN belum ditemukan di data siswa — cek lagi penulisannya. Reset tetap bisa dicoba.
+    </div>
+
+    <button id="btnResetPwSubmit" class="btn btn-primary" style="margin-top:12px">
+      <span id="btnResetPwSubmitLabel">🔑 Reset ke Password Default</span>
+    </button>
+    <div id="resetPwStatus" class="status-msg"></div>
+    <div style="margin-top:10px;font-size:12px;color:var(--ink-soft);line-height:1.5">
+      Setelah direset, siswa login pakai NISN + password default <b>user123</b>, lalu akan diminta ganti password baru sendiri.
     </div>
   </div>
 
-  <!-- PANEL PETUNJUK PENGGUNAAN -->
-  <div id="panelPetunjuk" class="panel">
-    <div class="panel-header">
-      <h2>❓ Petunjuk Penggunaan</h2>
-      <button class="close-btn" onclick="closePanel('panelPetunjuk')">✕</button>
+  <!-- ===================== SCREEN 6 : KARTU SISWA ===================== -->
+  <div id="screenKartuSiswa" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnTutupKartuSiswa">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div class="field">
+      <label for="kartuFilterKelas">Pilih Kelas</label>
+      <div class="select-wrap">
+        <select id="kartuFilterKelas">
+          <option value="">Pilih kelas…</option>
+        </select>
+      </div>
     </div>
-
-    <div class="tutorial-content" id="tutorialContent">
-      <!-- Konten tutorial akan di-render oleh JS -->
+    <div class="field">
+      <label for="kartuFilterNama">Pilih Nama Siswa</label>
+      <div class="select-wrap">
+        <select id="kartuFilterNama" disabled>
+          <option value="">Pilih kelas dulu…</option>
+        </select>
+      </div>
     </div>
-
-    <!-- TOMBOL NAVIGASI TUTORIAL (SIMPEL & KECIL) -->
-    <div class="tutorial-nav">
-      <button class="btn-prev" id="btnPrev" onclick="prevStep()">← Prev</button>
-      <span class="tutorial-step-info">Langkah <span id="stepNum">1</span> / <span id="stepTotal">6</span></span>
-      <button class="btn-next" id="btnNext" onclick="nextStep()">Next →</button>
-    </div>
+    <div id="kartuSiswaStatus" class="status-msg"></div>
+    <div id="kartuSiswaHasil" style="margin-top:8px"></div>
   </div>
 
-  <!-- PANEL RUANG ASEMEN -->
-  <div id="panelRuang" class="panel">
-    <div class="panel-header">
-      <h2>🏫 Ruang Asesmen</h2>
-      <button class="close-btn" onclick="closePanel('panelRuang')">✕</button>
-    </div>
-    <label>Pilih Ruang</label>
-    <select><option>Ruang 01</option><option>Ruang 02</option></select>
-    <label>Nama Pengawas</label>
-    <input type="text" placeholder="Memuat daftar guru...">
-    <button class="btn">Buka Token</button>
-  </div>
-
-  <!-- PANEL TOKEN MANUAL -->
-  <div id="panelTokenManual" class="panel">
-    <div class="panel-header">
-      <h2>🔑 Token Manual</h2>
-      <button class="close-btn" onclick="closePanel('panelTokenManual')">✕</button>
-    </div>
-    <div class="info-box">
+  <!-- ===================== SCREEN 7 : TOKEN MANUAL ===================== -->
+  <div id="screenTokenManual" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariTokenManual">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
       Dipakai kalau siswa perlu tahu kode token tapi kameranya gagal scan QR. Dibatasi 10 kali dibuka per token supaya tidak disalahgunakan.
     </div>
-    <div class="token-display" id="tokenDisplay">------</div>
-    <button class="btn" onclick="document.getElementById('tokenDisplay').textContent='ABCD12'">👁️ Tampilkan Kode Token</button>
-    <button class="btn btn-secondary">🔄 Muat Ulang Token</button>
+    <button type="button" id="btnBukaTokenTeks" class="btn btn-primary" style="width:100%" onclick="toggleTokenTeks()">👁️ Tampilkan Kode Token</button>
+    <div id="tokenTeksBox" style="display:none;margin-top:14px;text-align:center;padding:20px;background:var(--bg);border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Kode Token Saat Ini</div>
+      <div id="tokenTeks" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:28px;letter-spacing:.14em;color:var(--navy-800)">-</div>
+    </div>
+    <div id="tokenManualStatus" class="status-msg" style="margin-top:10px"></div>
+    <button type="button" id="btnRefreshTokenManual" class="btn btn-ghost" style="width:100%;margin-top:10px">🔄 Muat Ulang Token</button>
   </div>
 
-  <!-- PANEL IZIN KELUAR -->
-  <div id="panelIzinKeluar" class="panel">
-    <div class="panel-header">
-      <h2>🚪 Izin Keluar</h2>
-      <button class="close-btn" onclick="closePanel('panelIzinKeluar')">✕</button>
+  <!-- ===================== SCREEN 8 : QR KELUAR (izin darurat) ===================== -->
+  <div id="screenQrKeluar" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariQrKeluar">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Untuk siswa yang <b>benar-benar darurat</b> perlu keluar ujian sebelum waktunya. Scan atau ketik NISN siswa, lalu konfirmasi — halaman ujian siswa itu akan otomatis lanjut keluar tanpa dihitung pelanggaran.
     </div>
-    <div class="info-box">
-      Untuk siswa yang <b>benar-benar darurat</b> perlu keluar ujian sebelum waktunya. Scan atau ketik NISN siswa, lalu konfirmasi.
+    <div class="field">
+      <label for="inputNisnQrKeluar">NISN Siswa</label>
+      <input type="text" id="inputNisnQrKeluar" placeholder="Ketik atau scan QR NISN siswa"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
     </div>
-    <label>NISN Siswa</label>
-    <input type="text" placeholder="Masukkan NISN">
-    <div class="camera-box">📷 Scan QR Kartu Siswa<br><small>Memulai kamera...</small></div>
-    <button class="btn btn-danger">🚪 Izinkan Keluar Sekarang</button>
+    <button id="btnScanQrKeluar" class="btn btn-ghost" style="width:100%">📷 Scan QR Kartu Siswa</button>
+    <div id="qrReaderKeluarWrap" style="margin-top:10px;display:none">
+      <div id="qr-reader-keluar" style="border-radius:12px;overflow:hidden"></div>
+      <div id="qrStatusKeluarScan" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
+      <button id="btnTutupQrScanKeluar" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
+    </div>
+
+    <div id="previewSiswaQrKeluar" style="display:none;margin-top:12px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px">Siswa ditemukan</div>
+      <div id="previewNamaQrKeluar" style="font-size:15px;font-weight:700;color:var(--navy-800)">-</div>
+      <div id="previewKelasQrKeluar" style="font-size:12.5px;color:var(--ink-soft)">-</div>
+    </div>
+    <div id="previewNotFoundQrKeluar" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF6E5;border:1.5px solid #F3DFA8;border-radius:var(--radius-md);font-size:12.5px;color:#8A6A17">
+      ⚠️ NISN belum ditemukan di data siswa — cek lagi penulisannya. Izin tetap bisa dikirim.
+    </div>
+
+    <button id="btnKirimIzinKeluar" class="btn btn-primary" style="margin-top:12px">
+      <span id="btnKirimIzinKeluarLabel">🚪 Izinkan Keluar Sekarang</span>
+    </button>
+    <div id="izinKeluarStatus" class="status-msg"></div>
+  </div>
+  <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+      <div id="popupBintangLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
+      <div style="position:relative;font-size:46px;line-height:1">🎉</div>
+      <div style="position:relative;margin-top:10px;font-size:19px;font-weight:800;color:var(--navy-800);letter-spacing:.02em">RESET BERHASIL</div>
+      <div id="popupSuksesNama" style="position:relative;margin-top:4px;font-size:13.5px;color:var(--ink-soft)"></div>
+      <button id="btnTutupPopupSukses" class="btn btn-primary" style="position:relative;margin-top:18px">Oke</button>
+    </div>
   </div>
 
-  <!-- PANEL REKAP NILAI -->
-  <div id="panelRekap" class="panel">
-    <div class="panel-header">
-      <h2>📊 Rekap Nilai</h2>
-      <button class="close-btn" onclick="closePanel('panelRekap')">✕</button>
-    </div>
-    <label>Filter Kelas</label>
-    <select><option>Semua Kelas</option><option>7A</option><option>7B</option></select>
-    <label>Filter Mapel</label>
-    <select><option>Semua Mapel</option><option>Matematika</option><option>B. Indonesia</option></select>
-    <button class="btn">🔄 Muat / Refresh Rekap</button>
-    <button class="btn btn-success">⬇️ Download Excel (.xlsx)</button>
-  </div>
+  <!-- ===================== MODAL: PETUNJUK PENGGUNAAN ===================== -->
+  <div id="popupPetunjuk" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="position:relative;background:#fff;border-radius:20px;padding:26px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <button id="btnTutupPetunjuk" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;line-height:1;color:var(--ink-soft);cursor:pointer">×</button>
 
-  <!-- PANEL RESET PASSWORD -->
-  <div id="panelReset" class="panel">
-    <div class="panel-header">
-      <h2>🔐 Reset Password</h2>
-      <button class="close-btn" onclick="closePanel('panelReset')">✕</button>
-    </div>
-    <label>NISN Siswa</label>
-    <input type="text" placeholder="Masukkan NISN">
-    <div class="camera-box">📷 Scan QR Kartu Siswa<br><small>Memulai kamera...</small></div>
-    <div class="alert alert-warning">⚠️ Setelah direset, siswa login pakai NISN + password default <b>user123</b>, lalu akan diminta ganti password baru.</div>
-    <button class="btn btn-danger">🔑 Reset ke Password Default</button>
-  </div>
+      <div id="petunjukLangkah" style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;text-align:center">Langkah 1 dari 6</div>
 
-  <!-- PANEL KARTU SISWA -->
-  <div id="panelKartu" class="panel">
-    <div class="panel-header">
-      <h2>🪪 Kartu Siswa</h2>
-      <button class="close-btn" onclick="closePanel('panelKartu')">✕</button>
+      <div style="display:flex;justify-content:center;margin:14px 0 10px">
+        <div id="petunjukIkon" class="menu-icon" style="width:56px;height:56px"></div>
+      </div>
+      <h3 id="petunjukJudul" style="text-align:center;margin:0 0 16px;font-family:'Poppins',sans-serif;font-weight:800;font-size:17px;color:var(--navy-950)"></h3>
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--teal-500);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">🎯 Fungsi</div>
+        <div id="petunjukFungsi" style="font-size:13px;color:var(--ink);line-height:1.55"></div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--teal-500);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">📋 Cara Pakai</div>
+        <ol id="petunjukCaraPakai" style="font-size:13px;color:var(--ink);line-height:1.65;padding-left:19px;margin:0"></ol>
+      </div>
+
+      <div id="petunjukDots" style="display:flex;justify-content:center;gap:6px;margin-top:18px"></div>
+
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button id="btnPetunjukSebelumnya" type="button" class="btn btn-ghost" style="flex:1">← Sebelumnya</button>
+        <button id="btnPetunjukLanjut" type="button" class="btn btn-primary" style="flex:1">Lanjut →</button>
+      </div>
     </div>
-    <label>Pilih Kelas</label>
-    <select><option>Pilih kelas...</option></select>
-    <label>Pilih Nama Siswa</label>
-    <select><option>Pilih kelas dulu...</option></select>
   </div>
 
 </div>
 
 <script>
-  // ===== Navigasi Panel =====
-  function openPanel(id) {
-    document.getElementById('mainMenu').style.display = 'none';
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    if (id === 'panelPetunjuk') { currentStep = 0; renderStep(); }
-  }
-  function closePanel(id) {
-    document.getElementById(id).classList.remove('active');
-    document.getElementById('mainMenu').style.display = 'block';
-  }
+/* =========================================================
+   KONFIGURASI
+   Ganti APPS_SCRIPT_URL dengan URL Web App hasil deploy
+   Google Apps Script (lihat catatan penyerahan).
+========================================================= */
+const CONFIG = {
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyI3ZLv-jOhSxINB10yz8wMuUPwPUo3VeSw6hrkLCFdsuM8Hka49cvfBNzePgfgJAYbow/exec',
+  REFRESH_INTERVAL_MS: 5 * 60 * 1000 // 5 menit
+};
 
-  // ===== Tutorial Petunjuk Penggunaan =====
-  const tutorialSteps = [
-    {
-      title: "🎯 Fungsi Aplikasi",
-      content: `<p>Aplikasi <b>Akses Asesmen</b> membantu pengawas & admin dalam mengelola ujian:</p>
-        <ul>
-          <li>Membuka token ujian per ruang</li>
-          <li>Memberikan token manual jika QR gagal</li>
-          <li>Mengizinkan siswa keluar darurat</li>
-          <li>Me-reset password siswa</li>
-          <li>Melihat rekap nilai & kartu siswa</li>
-        </ul>
-        <div class="tip">💡 Gunakan menu sesuai kebutuhan. Semua aksi tercatat untuk keamanan.</div>`
-    },
-    {
-      title: "🏫 Membuka Ruang Asesmen",
-      content: `<p>Langkah membuka token untuk ruang ujian:</p>
-        <ul>
-          <li>Pilih <b>Ruang Asesmen</b> di menu utama</li>
-          <li>Pilih nomor ruang & nama pengawas</li>
-          <li>Tekan <b>Buka Token</b> → muncul QR & kode</li>
-        </ul>
-        <div class="tip">💡 Token otomatis refresh tiap 5 menit.</div>`
-    },
-    {
-      title: "🔑 Token Manual",
-      content: `<p>Jika kamera siswa rusak / gagal scan QR:</p>
-        <ul>
-          <li>Buka menu <b>Token Manual</b></li>
-          <li>Kode token akan ditampilkan</li>
-          <li>Siswa ketik kode tersebut di perangkatnya</li>
-        </ul>
-        <div class="tip">⚠️ Dibatasi 10 kali dibuka per token untuk mencegah penyalahgunaan.</div>`
-    },
-    {
-      title: "🚪 Izin Keluar Darurat",
-      content: `<p>Untuk siswa yang perlu keluar sebelum waktu habis:</p>
-        <ul>
-          <li>Buka menu <b>Izin Keluar</b></li>
-          <li>Scan QR kartu siswa atau ketik NISN</li>
-          <li>Tekan <b>Izinkan Keluar Sekarang</b></li>
-        </ul>
-        <div class="tip">✅ Ujian siswa otomatis ditutup tanpa dihitung pelanggaran.</div>`
-    },
-    {
-      title: "🔐 Reset Password",
-      content: `<p>Jika siswa lupa password:</p>
-        <ul>
-          <li>Buka menu <b>Reset Password</b></li>
-          <li>Scan/ketik NISN siswa</li>
-          <li>Tekan <b>Reset ke Password Default</b></li>
-          <li>Password menjadi <b>user123</b></li>
-        </ul>
-        <div class="tip">🔑 Siswa akan diminta mengganti password saat login berikutnya.</div>`
-    },
-    {
-      title: "📊 Rekap & Kartu Siswa",
-      content: `<p><b>Rekap Nilai:</b> Lihat nilai per kelas/mapel, bisa diunduh sebagai Excel.</p>
-        <p><b>Kartu Siswa:</b> Lihat detail nilai satu siswa tertentu.</p>
-        <div class="tip">💡 Gunakan filter kelas & mapel untuk mempercepat pencarian.</div>`
+/* =========================================================
+   PWA MANIFEST (embedded, tanpa file terpisah)
+========================================================= */
+(function setupManifest(){
+  // Ikon dibuat langsung (sinkron, tanpa nunggu fetch jaringan) supaya
+  // pasti kebaca browser saat "Add to Home Screen" — versi sebelumnya
+  // ambil logo lewat fetch async yang kadang belum selesai saat browser
+  // sudah keburu mengecek manifest, jadi ikon sering gagal muncul.
+  const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <rect width="200" height="200" rx="40" fill="#0F1B33"/>
+    <text x="100" y="135" font-size="105" text-anchor="middle" font-family="'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif">⛓️‍💥</text>
+  </svg>`;
+  const iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(iconSvg)));
+
+  const manifest = {
+    id: 'pengawas-ruang-smpn1kaliwedi',
+    name: 'Akses Asesmen - SMPN 1 Kaliwedi',
+    short_name: 'Akses Asesmen',
+    start_url: '.',
+    display: 'standalone',
+    background_color: '#F3F5F9',
+    theme_color: '#0F1B33',
+    icons: [
+      { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+      { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = URL.createObjectURL(blob);
+  document.head.appendChild(link);
+
+  const linkIcon = document.createElement('link');
+  linkIcon.rel = 'icon';
+  linkIcon.href = iconUrl;
+  document.head.appendChild(linkIcon);
+
+  const linkApple = document.createElement('link');
+  linkApple.rel = 'apple-touch-icon';
+  linkApple.href = iconUrl;
+  document.head.appendChild(linkApple);
+})();
+
+/* =========================================================
+   STATE
+========================================================= */
+let refreshTimer = null;
+let countdownTimer = null;
+let secondsLeft = CONFIG.REFRESH_INTERVAL_MS / 1000;
+let qrObj = null;
+
+const els = {
+  inputRuang: document.getElementById('inputRuang'),
+  inputPengawas: document.getElementById('inputPengawas'),
+  btnBukaToken: document.getElementById('btnBukaToken'),
+  btnBukaTokenLabel: document.getElementById('btnBukaTokenLabel'),
+  entryStatus: document.getElementById('entryStatus'),
+  screenEntry: document.getElementById('screenEntry'),
+  screenToken: document.getElementById('screenToken'),
+  metaRuang: document.getElementById('metaRuang'),
+  metaPengawas: document.getElementById('metaPengawas'),
+  qrStage: document.getElementById('qrStage'),
+  qrLoading: document.getElementById('qrLoading'),
+  qrCanvasWrap: document.getElementById('qrCanvasWrap'),
+  countdownText: document.getElementById('countdownText'),
+  btnRefresh: document.getElementById('btnRefresh'),
+  updatedAt: document.getElementById('updatedAt'),
+  btnBukaManual: document.getElementById('btnBukaManual'),
+  screenManual: document.getElementById('screenManual'),
+  inputNisnManual: document.getElementById('inputNisnManual'),
+  btnKonfirmasiManual: document.getElementById('btnKonfirmasiManual'),
+  btnKonfirmasiManualLabel: document.getElementById('btnKonfirmasiManualLabel'),
+  manualStatus: document.getElementById('manualStatus'),
+  manualLog: document.getElementById('manualLog'),
+  brandBadge: document.getElementById('brandBadge'),
+  brandTitle: document.getElementById('brandTitle'),
+  screenHome: document.getElementById('screenHome'),
+  cardTokenAsesmen: document.getElementById('cardTokenAsesmen'),
+  cardRekapNilai: document.getElementById('cardRekapNilai'),
+  cardResetPw: document.getElementById('cardResetPw'),
+  btnKembaliDariEntry: document.getElementById('btnKembaliDariEntry'),
+  screenRekap: document.getElementById('screenRekap'),
+  filterKelas: document.getElementById('filterKelas'),
+  filterMapel: document.getElementById('filterMapel'),
+  btnMuatRekap: document.getElementById('btnMuatRekap'),
+  btnMuatRekapLabel: document.getElementById('btnMuatRekapLabel'),
+  rekapStatus: document.getElementById('rekapStatus'),
+  rekapContainer: document.getElementById('rekapContainer'),
+  btnDownloadXLS: document.getElementById('btnDownloadXLS'),
+  btnSortNilai: document.getElementById('btnSortNilai'),
+  btnTutupRekap: document.getElementById('btnTutupRekap'),
+  screenResetPw: document.getElementById('screenResetPw'),
+  inputNisnResetPw: document.getElementById('inputNisnResetPw'),
+  btnScanQrResetPw: document.getElementById('btnScanQrResetPw'),
+  qrReaderResetPwWrap: document.getElementById('qrReaderResetPwWrap'),
+  qrStatusResetPw: document.getElementById('qrStatusResetPw'),
+  btnTutupQrResetPw: document.getElementById('btnTutupQrResetPw'),
+  btnResetPwSubmit: document.getElementById('btnResetPwSubmit'),
+  btnResetPwSubmitLabel: document.getElementById('btnResetPwSubmitLabel'),
+  resetPwStatus: document.getElementById('resetPwStatus'),
+  btnTutupResetPw: document.getElementById('btnTutupResetPw'),
+  previewSiswaResetPw: document.getElementById('previewSiswaResetPw'),
+  previewNamaResetPw: document.getElementById('previewNamaResetPw'),
+  previewKelasResetPw: document.getElementById('previewKelasResetPw'),
+  previewNotFoundResetPw: document.getElementById('previewNotFoundResetPw'),
+  popupSuksesReset: document.getElementById('popupSuksesReset'),
+  popupBintangLayer: document.getElementById('popupBintangLayer'),
+  popupSuksesNama: document.getElementById('popupSuksesNama'),
+  btnTutupPopupSukses: document.getElementById('btnTutupPopupSukses'),
+  btnBukaPetunjuk: document.getElementById('btnBukaPetunjuk'),
+  popupPetunjuk: document.getElementById('popupPetunjuk'),
+  btnTutupPetunjuk: document.getElementById('btnTutupPetunjuk'),
+  petunjukLangkah: document.getElementById('petunjukLangkah'),
+  petunjukIkon: document.getElementById('petunjukIkon'),
+  petunjukJudul: document.getElementById('petunjukJudul'),
+  petunjukFungsi: document.getElementById('petunjukFungsi'),
+  petunjukCaraPakai: document.getElementById('petunjukCaraPakai'),
+  petunjukDots: document.getElementById('petunjukDots'),
+  btnPetunjukSebelumnya: document.getElementById('btnPetunjukSebelumnya'),
+  btnPetunjukLanjut: document.getElementById('btnPetunjukLanjut'),
+  cardKartuSiswa: document.getElementById('cardKartuSiswa'),
+  screenKartuSiswa: document.getElementById('screenKartuSiswa'),
+  btnTutupKartuSiswa: document.getElementById('btnTutupKartuSiswa'),
+  kartuFilterKelas: document.getElementById('kartuFilterKelas'),
+  kartuFilterNama: document.getElementById('kartuFilterNama'),
+  kartuSiswaStatus: document.getElementById('kartuSiswaStatus'),
+  kartuSiswaHasil: document.getElementById('kartuSiswaHasil'),
+  btnKembaliDariToken: document.getElementById('btnKembaliDariToken'),
+  cardTokenManual: document.getElementById('cardTokenManual'),
+  screenTokenManual: document.getElementById('screenTokenManual'),
+  btnKembaliDariTokenManual: document.getElementById('btnKembaliDariTokenManual'),
+  btnBukaTokenTeks: document.getElementById('btnBukaTokenTeks'),
+  tokenTeksBox: document.getElementById('tokenTeksBox'),
+  tokenManualStatus: document.getElementById('tokenManualStatus'),
+  btnRefreshTokenManual: document.getElementById('btnRefreshTokenManual'),
+  cardQrKeluar: document.getElementById('cardQrKeluar'),
+  screenQrKeluar: document.getElementById('screenQrKeluar'),
+  btnKembaliDariQrKeluar: document.getElementById('btnKembaliDariQrKeluar'),
+  inputNisnQrKeluar: document.getElementById('inputNisnQrKeluar'),
+  btnScanQrKeluar: document.getElementById('btnScanQrKeluar'),
+  qrReaderKeluarWrap: document.getElementById('qrReaderKeluarWrap'),
+  qrStatusKeluarScan: document.getElementById('qrStatusKeluarScan'),
+  btnTutupQrScanKeluar: document.getElementById('btnTutupQrScanKeluar'),
+  previewSiswaQrKeluar: document.getElementById('previewSiswaQrKeluar'),
+  previewNamaQrKeluar: document.getElementById('previewNamaQrKeluar'),
+  previewKelasQrKeluar: document.getElementById('previewKelasQrKeluar'),
+  previewNotFoundQrKeluar: document.getElementById('previewNotFoundQrKeluar'),
+  btnKirimIzinKeluar: document.getElementById('btnKirimIzinKeluar'),
+  btnKirimIzinKeluarLabel: document.getElementById('btnKirimIzinKeluarLabel'),
+  izinKeluarStatus: document.getElementById('izinKeluarStatus'),
+};
+
+/* =========================================================
+   ISI PILIHAN RUANG (Ruang 01 - Ruang 30)
+========================================================= */
+function isiPilihanRuang(){
+  const frag = document.createDocumentFragment();
+  for (let i = 1; i <= 30; i++){
+    const kode = 'Ruang ' + String(i).padStart(2, '0');
+    const opt = document.createElement('option');
+    opt.value = kode;
+    opt.textContent = kode;
+    frag.appendChild(opt);
+  }
+  els.inputRuang.appendChild(frag);
+}
+isiPilihanRuang();
+
+/* =========================================================
+   MUAT DAFTAR NAMA GURU — dari GitHub CSV (cepat, lewat CDN)
+   karena datanya jarang berubah. Kalau file belum ada/gagal,
+   otomatis jatuh ke Apps Script (Sheet2!A:A) sebagai cadangan.
+========================================================= */
+const GURU_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/guru.csv';
+
+function isiDropdownGuru(daftar){
+  els.inputPengawas.innerHTML = '';
+  const optKosong = document.createElement('option');
+  optKosong.value = '';
+  optKosong.textContent = 'Pilih nama guru…';
+  els.inputPengawas.appendChild(optKosong);
+
+  daftar.forEach(nama => {
+    const opt = document.createElement('option');
+    opt.value = nama;
+    opt.textContent = nama;
+    els.inputPengawas.appendChild(opt);
+  });
+  els.inputPengawas.disabled = false;
+}
+
+function parseCSVGuru(text){
+  return text.trim().split('\n')
+    .map(baris => baris.trim())
+    .filter(baris => baris && baris.toLowerCase() !== 'nama' && baris.toLowerCase() !== 'nama guru');
+}
+
+async function muatDaftarGuruDariCSV(){
+  const res = await fetch(GURU_CSV_URL + '?t=' + Math.floor(Date.now()/60000), { cache: 'no-store' });
+  if (!res.ok) throw new Error('guru.csv belum tersedia (HTTP ' + res.status + ')');
+  const daftar = parseCSVGuru(await res.text());
+  if (!daftar.length) throw new Error('guru.csv kosong');
+  return daftar;
+}
+
+async function muatDaftarGuruDariAppsScript(){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=guru', { method: 'GET' });
+  const json = await res.json();
+  if (json.status !== 'ok' || !Array.isArray(json.daftar)) throw new Error('Daftar guru tidak tersedia');
+  return json.daftar;
+}
+
+async function muatDaftarGuru(){
+  try {
+    const daftar = await muatDaftarGuruDariCSV();
+    isiDropdownGuru(daftar);
+  } catch (errCSV) {
+    console.warn('⚠️ Gagal ambil guru.csv, coba Apps Script sebagai cadangan:', errCSV.message);
+    try {
+      const daftar = await muatDaftarGuruDariAppsScript();
+      isiDropdownGuru(daftar);
+    } catch (errAS) {
+      els.inputPengawas.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
+      els.entryStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
+      els.entryStatus.className = 'status-msg err';
     }
-  ];
+  }
+}
+muatDaftarGuru();
+function validateForm(){
+  const ok = els.inputRuang.value.trim().length > 0 && els.inputPengawas.value.trim().length > 0;
+  els.btnBukaToken.disabled = !ok;
+}
+els.inputRuang.addEventListener('change', validateForm);
+els.inputPengawas.addEventListener('change', validateForm);
 
-  let currentStep = 0;
+/* =========================================================
+   SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
+========================================================= */
+async function simpanPengawas(ruang, pengawas){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'simpan', ruang, pengawas })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan data');
+  return json;
+}
 
-  function renderStep() {
-    const step = tutorialSteps[currentStep];
-    document.getElementById('tutorialContent').innerHTML =
-      `<h3>${step.title}</h3>${step.content}`;
-    document.getElementById('stepNum').textContent = currentStep + 1;
-    document.getElementById('stepTotal').textContent = tutorialSteps.length;
-    document.getElementById('btnPrev').disabled = (currentStep === 0);
-    document.getElementById('btnNext').textContent =
-      (currentStep === tutorialSteps.length - 1) ? 'Selesai ✓' : 'Next →';
+els.btnBukaToken.addEventListener('click', async () => {
+  const ruang = els.inputRuang.value.trim();
+  const pengawas = els.inputPengawas.value.trim();
+  if (!ruang || !pengawas) return;
+
+  els.btnBukaToken.disabled = true;
+  els.btnBukaTokenLabel.innerHTML = '<span class="spinner"></span> Sedang membuat token...';
+  els.entryStatus.textContent = '';
+  els.entryStatus.className = 'status-msg';
+
+  try {
+    await simpanPengawas(ruang, pengawas);
+    els.metaRuang.textContent = ruang;
+    els.metaRuang.title = ruang;
+    els.metaPengawas.textContent = pengawas;
+    els.metaPengawas.title = pengawas;
+    openTokenScreen();
+  } catch (err) {
+    els.entryStatus.textContent = 'Gagal menyimpan data. Periksa koneksi lalu coba lagi.';
+    els.entryStatus.className = 'status-msg err';
+  } finally {
+    els.btnBukaToken.disabled = false;
+    els.btnBukaTokenLabel.textContent = 'Buka Token';
+    validateForm();
+  }
+});
+
+/* =========================================================
+   AMBIL NILAI TOKEN (sumber data tidak ditampilkan ke UI;
+   permintaan hanya menuju Apps Script milik aplikasi ini)
+========================================================= */
+async function ambilTokenValue(){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=token', { method: 'GET' });
+  const json = await res.json();
+  if (json.status !== 'ok' || !json.value) throw new Error('Token tidak tersedia');
+  return json.value;
+}
+
+/* =========================================================
+   IZIN KELUAR — pengawas scan/ketik NISN siswa yang benar-benar
+   darurat perlu keluar ujian sebelum jam selesai, lalu kirim izin.
+   Ditulis ke sheet "IzinKeluar" (lewat Apps Script action
+   izinKeluarManual) — asesmen.html polling sheet ini dan otomatis
+   lanjut begitu ketemu, TANPA pengawasan anti-contek sempat mati
+   sebelum izin ini benar-benar terkonfirmasi di server.
+========================================================= */
+let qrScannerKeluar = null;
+
+async function tampilkanPreviewSiswaQrKeluar(){
+  const nisn = els.inputNisnQrKeluar.value.trim();
+  els.previewSiswaQrKeluar.style.display = 'none';
+  els.previewNotFoundQrKeluar.style.display = 'none';
+  if (!nisn) return;
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+
+  if (siswa){
+    els.previewNamaQrKeluar.textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
+    els.previewKelasQrKeluar.textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
+    els.previewSiswaQrKeluar.style.display = 'block';
+  } else {
+    els.previewNotFoundQrKeluar.style.display = 'block';
+  }
+}
+
+async function kirimIzinKeluar(nisn){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      action: 'izinKeluarManual',
+      nisn,
+      ruang: els.metaRuang.textContent,
+      pengawas: els.metaPengawas.textContent,
+    })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal mengirim izin');
+  return json;
+}
+
+els.btnKirimIzinKeluar.addEventListener('click', async () => {
+  const nisn = els.inputNisnQrKeluar.value.trim();
+  els.izinKeluarStatus.textContent = '';
+  els.izinKeluarStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.izinKeluarStatus.textContent = 'Ketik atau scan NISN siswa terlebih dahulu.';
+    els.izinKeluarStatus.className = 'status-msg err';
+    return;
   }
 
-  function nextStep() {
-    if (currentStep < tutorialSteps.length - 1) {
-      currentStep++;
-      renderStep();
+  els.btnKirimIzinKeluar.disabled = true;
+  els.btnKirimIzinKeluarLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    await kirimIzinKeluar(nisn);
+    els.izinKeluarStatus.textContent = `✅ Izin terkirim untuk NISN ${nisn}. Halaman ujian siswa akan otomatis lanjut dalam beberapa detik.`;
+    els.izinKeluarStatus.className = 'status-msg ok';
+    els.inputNisnQrKeluar.value = '';
+    els.previewSiswaQrKeluar.style.display = 'none';
+    els.previewNotFoundQrKeluar.style.display = 'none';
+  } catch (err) {
+    els.izinKeluarStatus.textContent = 'Gagal mengirim izin: ' + err.message;
+    els.izinKeluarStatus.className = 'status-msg err';
+  } finally {
+    els.btnKirimIzinKeluar.disabled = false;
+    els.btnKirimIzinKeluarLabel.textContent = '🚪 Izinkan Keluar Sekarang';
+  }
+});
+
+els.inputNisnQrKeluar.addEventListener('input', () => {
+  clearTimeout(window._debounceLookupQrKeluar);
+  window._debounceLookupQrKeluar = setTimeout(tampilkanPreviewSiswaQrKeluar, 350);
+});
+els.inputNisnQrKeluar.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnKirimIzinKeluar.click();
+});
+
+function bukaQrScanKeluar(){
+  els.qrReaderKeluarWrap.style.display = 'block';
+  els.qrStatusKeluarScan.textContent = 'Memulai kamera...';
+  setTimeout(() => {
+    try {
+      qrScannerKeluar = new Html5Qrcode('qr-reader-keluar');
+      qrScannerKeluar.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const teks = decodedText.trim();
+          els.inputNisnQrKeluar.value = teks;
+          els.qrStatusKeluarScan.textContent = '✅ Terbaca: ' + teks;
+          tampilkanPreviewSiswaQrKeluar();
+          if (qrScannerKeluar) { try { qrScannerKeluar.pause(true); } catch(e){} }
+          setTimeout(tutupQrScanKeluar, 700);
+        },
+        () => {}
+      ).then(() => { els.qrStatusKeluarScan.textContent = '🔍 Arahkan ke QR Code kartu siswa...'; })
+       .catch(err => { els.qrStatusKeluarScan.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
+    } catch (e) {
+      els.qrStatusKeluarScan.textContent = '❌ ' + e.message;
+    }
+  }, 300);
+}
+
+function tutupQrScanKeluar(){
+  if (qrScannerKeluar){
+    qrScannerKeluar.stop().catch(() => {}).finally(() => {
+      try { qrScannerKeluar.clear(); } catch(e){}
+      qrScannerKeluar = null;
+    });
+  }
+  els.qrReaderKeluarWrap.style.display = 'none';
+}
+
+els.btnScanQrKeluar.addEventListener('click', bukaQrScanKeluar);
+els.btnTutupQrScanKeluar.addEventListener('click', tutupQrScanKeluar);
+
+
+/* =========================================================
+   TOKEN MANUAL — layar terpisah dari QR. Tombol "Tampilkan
+   Kode Token" dibatasi 10 kali DIBUKA per token (bukan per
+   refresh). Counter cuma reset kalau nilai tokennya benar-benar
+   berubah, supaya tidak bisa di-reset dengan spam refresh.
+========================================================= */
+let tokenManualSebelumnya = null;
+let tokenTeksSisaBuka = 10;
+let tokenTeksSedangTampil = false;
+
+function resetTombolTokenTeks(){
+  if (!els.btnBukaTokenTeks || !els.tokenTeksBox) return;
+  tokenTeksSedangTampil = false;
+  els.tokenTeksBox.style.display = 'none';
+  els.btnBukaTokenTeks.disabled = false;
+  els.btnBukaTokenTeks.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
+}
+
+function toggleTokenTeks(){
+  if (tokenTeksSedangTampil){
+    // Sembunyikan lagi — tidak mengurangi jatah, cuma menutup pandangan
+    tokenTeksSedangTampil = false;
+    els.tokenTeksBox.style.display = 'none';
+    els.btnBukaTokenTeks.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
+    return;
+  }
+
+  if (tokenTeksSisaBuka <= 0){
+    els.btnBukaTokenTeks.disabled = true;
+    els.btnBukaTokenTeks.textContent = '🚫 Batas tampil token habis — pakai QR atau Otorisasi Manual';
+    return;
+  }
+
+  tokenTeksSisaBuka--;
+  tokenTeksSedangTampil = true;
+  els.tokenTeksBox.style.display = 'block';
+  els.btnBukaTokenTeks.textContent = tokenTeksSisaBuka > 0
+    ? `🙈 Sembunyikan (sisa ${tokenTeksSisaBuka}x)`
+    : `🙈 Sembunyikan (jatah habis, jangan dibuka lagi)`;
+}
+
+async function muatTokenManual(){
+  els.tokenManualStatus.textContent = '';
+  els.tokenManualStatus.className = 'status-msg';
+  els.btnRefreshTokenManual.disabled = true;
+  try {
+    const value = await ambilTokenValue();
+    const elTokenTeks = document.getElementById('tokenTeks');
+    if (elTokenTeks) elTokenTeks.textContent = value;
+
+    if (value !== tokenManualSebelumnya){
+      tokenManualSebelumnya = value;
+      tokenTeksSisaBuka = 10;
+    }
+    resetTombolTokenTeks();
+  } catch (err) {
+    els.tokenManualStatus.textContent = 'Gagal memuat token: ' + err.message;
+    els.tokenManualStatus.className = 'status-msg err';
+  } finally {
+    els.btnRefreshTokenManual.disabled = false;
+  }
+}
+
+function renderQR(value){
+  els.qrCanvasWrap.innerHTML = '';
+  qrObj = new QRCode(els.qrCanvasWrap, {
+    text: value,
+    width: 260,
+    height: 260,
+    colorDark: '#0F1B33',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+
+function formatJam(d){
+  return d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+async function loadToken(showSpinnerOverlay){
+  if (showSpinnerOverlay){
+    els.qrLoading.classList.remove('hidden');
+    els.qrCanvasWrap.style.opacity = '0.25';
+  }
+  els.btnRefresh.classList.add('spinning');
+
+  try {
+    const value = await ambilTokenValue();
+    renderQR(value);
+    els.qrLoading.classList.add('hidden');
+    els.qrCanvasWrap.style.opacity = '1';
+    els.updatedAt.textContent = 'Diperbarui pukul ' + formatJam(new Date());
+    resetCountdown();
+  } catch (err) {
+    els.qrCanvasWrap.innerHTML = '<div class="qr-error">Token belum bisa dimuat.<br>Coba refresh kembali.</div>';
+    els.qrLoading.classList.add('hidden');
+    els.qrCanvasWrap.style.opacity = '1';
+    els.updatedAt.textContent = 'Gagal memuat pada ' + formatJam(new Date());
+  } finally {
+    els.btnRefresh.classList.remove('spinning');
+  }
+}
+
+/* =========================================================
+   COUNTDOWN + AUTO REFRESH 5 MENIT
+========================================================= */
+function resetCountdown(){
+  secondsLeft = CONFIG.REFRESH_INTERVAL_MS / 1000;
+  updateCountdownUI();
+}
+function updateCountdownUI(){
+  const m = Math.floor(secondsLeft / 60).toString().padStart(2,'0');
+  const s = Math.floor(secondsLeft % 60).toString().padStart(2,'0');
+  els.countdownText.textContent = `${m}:${s}`;
+  const pct = 100 - (secondsLeft / (CONFIG.REFRESH_INTERVAL_MS/1000) * 100);
+  els.btnRefresh.style.setProperty('--pct', pct.toFixed(1));
+}
+function startTimers(){
+  stopTimers();
+  countdownTimer = setInterval(() => {
+    secondsLeft -= 1;
+    if (secondsLeft <= 0){
+      loadToken(false);
+      return;
+    }
+    updateCountdownUI();
+  }, 1000);
+}
+function stopTimers(){
+  if (countdownTimer) clearInterval(countdownTimer);
+  if (refreshTimer) clearInterval(refreshTimer);
+  countdownTimer = null;
+  refreshTimer = null;
+}
+
+els.btnRefresh.addEventListener('click', () => loadToken(true));
+
+/* =========================================================
+   NAVIGASI ANTAR LAYAR
+========================================================= */
+function openTokenScreen(){
+  els.screenEntry.classList.add('hidden');
+  els.screenToken.classList.remove('hidden');
+  els.qrCanvasWrap.innerHTML = '';
+  els.qrLoading.classList.remove('hidden');
+  loadToken(true);
+  startTimers();
+}
+
+/* =========================================================
+   KONFIRMASI MANUAL — untuk siswa yang kamera HP-nya gagal
+   scan QR Token di aplikasi Asesmen. Menulis NISN + waktu ke
+   sheet "Otorisasi" (lewat Apps Script), yang nanti dibaca
+   langsung oleh asesmen.html.
+========================================================= */
+els.btnBukaManual.addEventListener('click', () => {
+  const buka = els.screenManual.classList.contains('hidden');
+  els.screenManual.classList.toggle('hidden');
+  els.btnBukaManual.textContent = buka
+    ? '⬆️ Tutup Panel Konfirmasi Manual'
+    : '🧑‍🎓 Kamera Siswa Gagal? Konfirmasi Manual';
+  if (buka) els.inputNisnManual.focus();
+});
+
+async function kirimOtorisasiManual(nisn){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      action: 'otorisasiManual',
+      nisn,
+      ruang: els.metaRuang.textContent,
+      pengawas: els.metaPengawas.textContent,
+    })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal mengonfirmasi');
+  return json;
+}
+
+function tambahLogManual(nisn){
+  const item = document.createElement('div');
+  item.style.cssText = 'display:flex;justify-content:space-between;padding:9px 4px;border-bottom:1px solid var(--ring-track);font-size:13px;';
+  item.innerHTML = `<span style="font-weight:700;color:var(--navy-950)">${nisn}</span><span style="color:var(--ink-soft)">${formatJam(new Date())}</span>`;
+  els.manualLog.prepend(item);
+}
+
+els.btnKonfirmasiManual.addEventListener('click', async () => {
+  const nisn = els.inputNisnManual.value.trim();
+  els.manualStatus.textContent = '';
+  els.manualStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.manualStatus.textContent = 'Ketik NISN siswa terlebih dahulu.';
+    els.manualStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnKonfirmasiManual.disabled = true;
+  els.btnKonfirmasiManualLabel.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.4);border-top-color:#fff;"></span>';
+
+  try {
+    await kirimOtorisasiManual(nisn);
+    els.manualStatus.textContent = `✅ ${nisn} dikonfirmasi. Minta siswa tekan "Cek Status" di HP-nya.`;
+    els.manualStatus.className = 'status-msg ok';
+    tambahLogManual(nisn);
+    els.inputNisnManual.value = '';
+  } catch (err) {
+    els.manualStatus.textContent = 'Gagal mengonfirmasi. Periksa koneksi lalu coba lagi.';
+    els.manualStatus.className = 'status-msg err';
+  } finally {
+    els.btnKonfirmasiManual.disabled = false;
+    els.btnKonfirmasiManualLabel.textContent = '✅ Konfirmasi Masuk';
+  }
+});
+
+els.inputNisnManual.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnKonfirmasiManual.click();
+});
+
+/* =========================================================
+   REKAP NILAI — baca data/nilai.csv & data/siswa.csv dari
+   GitHub (di-generate otomatis oleh Apps Script dari Sheet3
+   & Sheet2), gabungkan lewat KODE SISWA, kelompokkan per
+   kelas, render tabel + tombol download Excel per kelas.
+========================================================= */
+const SEKOLAH_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/sekolah.csv';
+const NILAI_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/nilai.csv';
+const SISWA_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/siswa.csv';
+
+// Parser CSV umum (mendukung koma di dalam tanda kutip)
+function parseCSVGenerik(text){
+  const baris = [];
+  const lines = text.trim().split('\n');
+  for (const line of lines){
+    if (!line.trim()) continue;
+    const cols = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < line.length; i++){
+      const ch = line[i];
+      if (ch === '"'){
+        if (inQ && line[i+1] === '"'){ cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (ch === ',' && !inQ){ cols.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim());
+    baris.push(cols);
+  }
+  return baris;
+}
+// Array 2D → array objek berdasarkan NAMA KOLOM (baris header pertama)
+function csvKeObjek(rows){
+  if (!rows || rows.length < 2) return [];
+  const header = rows[0].map(h => (h||'').trim().toUpperCase());
+  const data = [];
+  for (let i = 1; i < rows.length; i++){
+    const row = rows[i];
+    if (!row || !row.some(c => c && c.trim())) continue;
+    const obj = {};
+    header.forEach((h, idx) => { if (h) obj[h] = (row[idx] || '').trim(); });
+    data.push(obj);
+  }
+  return data;
+}
+function ambilKolomRekap(obj, ...namaAlternatif){
+  for (const n of namaAlternatif){ const v = obj[n.toUpperCase()]; if (v !== undefined) return v; }
+  return '';
+}
+function escapeHtmlRekap(s){
+  const d = document.createElement('div');
+  d.textContent = (s === undefined || s === null) ? '' : String(s);
+  return d.innerHTML;
+}
+
+let matriksTerakhir = null; // { data: {kode: {nama, kelas, nilai:{mapel:val}}}, kolom: [mapel,...] }
+
+async function muatDataRekap(){
+  els.btnMuatRekap.disabled = true;
+  els.btnMuatRekapLabel.innerHTML = '<span class="spinner"></span>';
+  els.rekapStatus.textContent = '';
+  els.rekapStatus.className = 'status-msg';
+  els.btnDownloadXLS.disabled = true;
+
+  try {
+    const t = Math.floor(Date.now() / 60000); // cache-bust per menit
+    const [resNilai, resSiswa] = await Promise.all([
+      fetch(NILAI_CSV_URL + '?t=' + t, { cache: 'no-store' }),
+      fetch(SISWA_CSV_URL + '?t=' + t, { cache: 'no-store' }),
+    ]);
+    if (!resNilai.ok) throw new Error('data/nilai.csv belum tersedia (HTTP ' + resNilai.status + ')');
+    if (!resSiswa.ok) throw new Error('data/siswa.csv belum tersedia (HTTP ' + resSiswa.status + ')');
+
+    const objNilai = csvKeObjek(parseCSVGenerik(await resNilai.text()));
+    const objSiswa = csvKeObjek(parseCSVGenerik(await resSiswa.text()));
+
+    // Peta KODE SISWA -> { nama, kelas } dari siswa.csv
+    // (header CSV-nya tetap "KODE SOAL" — nama lama, nilainya sama dengan KODE SISWA)
+    const lookup = {};
+    const semuaKelas = new Set();
+    objSiswa.forEach(o => {
+      const kode = ambilKolomRekap(o, 'KODE SOAL', 'KODE SISWA', 'KODE').toUpperCase();
+      if (!kode) return;
+      const kelas = ambilKolomRekap(o, 'KLS', 'KELAS') || '-';
+      lookup[kode] = { nama: ambilKolomRekap(o, 'NAMA') || '-', kelas };
+      semuaKelas.add(kelas);
+    });
+    isiFilterKelas([...semuaKelas]);
+
+    const kelasFilter = els.filterKelas.value.trim().toUpperCase();
+    const mapelFilter = els.filterMapel.value.trim().toUpperCase();
+
+    // ---- Bangun matriks: satu baris per siswa, satu kolom per mapel ----
+    const matriks = {};
+    Object.entries(lookup).forEach(([kode, info]) => {
+      if (kelasFilter && info.kelas.toUpperCase() !== kelasFilter) return;
+      matriks[kode] = { nama: info.nama, kelas: info.kelas, nilai: {} };
+    });
+
+    const semuaMapelSet = new Set(); // dari SEMUA baris nilai siswa yg tampil, dipakai isi dropdown filter
+    objNilai.forEach(o => {
+      const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
+      if (!kode || !matriks[kode]) return;
+      const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
+      semuaMapelSet.add(mapel);
+      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
+      matriks[kode].nilai[mapel] = ambilKolomRekap(o, 'NILAI');
+    });
+    isiFilterMapel([...semuaMapelSet]);
+
+    // Kolom mapel yang ditampilkan: kalau ada filter Mapel aktif → cuma
+    // 1 kolom itu; kalau tidak → semua mapel yang ada di kelas yg tampil,
+    // urut abjad.
+    let kolomMapel;
+    if (mapelFilter) {
+      const labelAsli = (els.filterMapel.selectedOptions[0] && els.filterMapel.value)
+        ? els.filterMapel.selectedOptions[0].textContent
+        : mapelFilter;
+      kolomMapel = [labelAsli];
     } else {
-      closePanel('panelPetunjuk');
+      const mapelDiKelasTampil = new Set();
+      Object.values(matriks).forEach(s => Object.keys(s.nilai).forEach(m => mapelDiKelasTampil.add(m)));
+      kolomMapel = [...mapelDiKelasTampil].sort((a, b) => a.localeCompare(b));
     }
+
+    // Urutkan berdasarkan Nilai cuma masuk akal kalau 1 kolom mapel aktif
+    els.btnSortNilai.disabled = !mapelFilter;
+    els.btnSortNilai.title = mapelFilter ? '' : 'Pilih 1 mata pelajaran dulu untuk urutkan berdasarkan nilai';
+    if (!mapelFilter && modeUrutanNilai !== 'nama') {
+      modeUrutanNilai = 'nama';
+      els.btnSortNilai.textContent = LABEL_URUTAN_NILAI.nama;
+    }
+
+    matriksTerakhir = { data: matriks, kolom: kolomMapel };
+    renderRekapMatriks(matriks, kolomMapel);
+
+    const totalSiswa = Object.keys(matriks).length;
+    els.btnDownloadXLS.disabled = totalSiswa === 0;
+    if (totalSiswa === 0){
+      els.rekapStatus.textContent = 'Tidak ada siswa untuk ditampilkan (cek filter kelas).';
+      els.rekapStatus.className = 'status-msg';
+    }
+  } catch (err){
+    els.rekapContainer.innerHTML = '';
+    els.rekapStatus.textContent = 'Gagal memuat rekap: ' + err.message;
+    els.rekapStatus.className = 'status-msg err';
+  } finally {
+    els.btnMuatRekap.disabled = false;
+    els.btnMuatRekapLabel.textContent = '🔄 Muat / Refresh Rekap';
+  }
+}
+
+function isiFilterKelas(daftarKelas){
+  const nilaiSekarang = els.filterKelas.value;
+  els.filterKelas.innerHTML = '<option value="">Semua Kelas</option>';
+  daftarKelas.filter(Boolean).sort().forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = k;
+    els.filterKelas.appendChild(opt);
+  });
+  els.filterKelas.value = nilaiSekarang;
+}
+function isiFilterMapel(daftarMapel){
+  const nilaiSekarang = els.filterMapel.value;
+  els.filterMapel.innerHTML = '<option value="">Semua Mapel (jadi kolom)</option>';
+  daftarMapel.filter(Boolean).sort().forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    els.filterMapel.appendChild(opt);
+  });
+  els.filterMapel.value = nilaiSekarang;
+}
+
+let modeUrutanNilai = 'nama'; // 'nama' | 'desc' (tertinggi dulu) | 'asc' (terendah dulu) — desc/asc cuma aktif kalau 1 mapel difilter
+const LABEL_URUTAN_NILAI = {
+  nama: '↕️ Urutkan: Nama (A–Z)',
+  desc: '↕️ Urutkan: Nilai Tertinggi',
+  asc:  '↕️ Urutkan: Nilai Terendah',
+};
+
+function urutkanSiswaMatriks(daftarSiswa, mode, kolomTunggal){
+  const salinan = [...daftarSiswa];
+  if (mode === 'nama' || !kolomTunggal) {
+    return salinan.sort((a, b) => a.kelas.localeCompare(b.kelas) || a.nama.localeCompare(b.nama));
+  }
+  const angka = s => {
+    const v = s.nilai[kolomTunggal];
+    if (v === undefined || v === '') return null;
+    const n = parseFloat(v);
+    return isNaN(n) ? null : n;
+  };
+  return salinan.sort((a, b) => {
+    const na = angka(a), nb = angka(b);
+    if (na === null && nb === null) return a.nama.localeCompare(b.nama);
+    if (na === null) return 1;  // yang belum ada nilai ditaruh di bawah
+    if (nb === null) return -1;
+    return mode === 'asc' ? na - nb : nb - na;
+  });
+}
+
+function renderRekapMatriks(matriks, kolomMapel){
+  const daftarSiswa = Object.values(matriks);
+  if (daftarSiswa.length === 0){ els.rekapContainer.innerHTML = ''; return; }
+
+  const kolomTunggal = (kolomMapel.length === 1 && els.filterMapel.value) ? kolomMapel[0] : null;
+  const terurut = urutkanSiswaMatriks(daftarSiswa, modeUrutanNilai, kolomTunggal);
+
+  const headerKolom = kolomMapel.map(m =>
+    `<th style="padding:7px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(m)}</th>`
+  ).join('');
+
+  const baris = terurut.map(s => {
+    const selMapel = kolomMapel.map(m => {
+      const v = s.nilai[m];
+      const kosong = (v === undefined || v === '');
+      return `<td style="padding:6px 8px;text-align:center;font-weight:700;${kosong ? 'color:#C98A1F' : ''}">${kosong ? '—' : escapeHtmlRekap(v)}</td>`;
+    }).join('');
+    return `
+      <tr style="border-bottom:1px solid var(--ring-track)">
+        <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.nama)}</td>
+        <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.kelas)}</td>
+        ${selMapel}
+      </tr>`;
+  }).join('');
+
+  els.rekapContainer.innerHTML = `
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+        <thead>
+          <tr style="background:var(--navy-800);color:#fff">
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Nama</th>
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Kelas</th>
+            ${headerKolom}
+          </tr>
+        </thead>
+        <tbody>${baris}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--ink-soft)">${daftarSiswa.length} siswa &middot; ${kolomMapel.length} mata pelajaran &middot; <span style="color:#C98A1F">—</span> = belum ada nilai</div>
+  `;
+}
+
+function downloadRekapXLS(){
+  if (!matriksTerakhir || typeof XLSX === 'undefined') return;
+  const { data, kolom } = matriksTerakhir;
+  const kolomTunggal = (kolom.length === 1 && els.filterMapel.value) ? kolom[0] : null;
+  const daftarSiswa = urutkanSiswaMatriks(Object.values(data), modeUrutanNilai, kolomTunggal);
+
+  const rows = daftarSiswa.map(s => {
+    const row = { 'Nama': s.nama, 'Kelas': s.kelas };
+    kolom.forEach(m => { row[m] = (s.nilai[m] === undefined || s.nilai[m] === '') ? '' : s.nilai[m]; });
+    return row;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Rekap Nilai');
+  XLSX.writeFile(wb, `Rekap-Nilai-${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
+/* =========================================================
+   HEADER DINAMIS PER LAYAR — badge/logo hanya di Menu Utama,
+   layar lain tampilkan judul sesuai fiturnya, tanpa ikon.
+========================================================= */
+const HEADER_LAYAR = {
+  home:        { judul: 'Akses Asesmen', tampilkanIkon: true  },
+  token:       { judul: 'Token Asesmen', tampilkanIkon: false },
+  rekap:       { judul: 'REKAP NILAI',   tampilkanIkon: false },
+  resetpw:     { judul: 'Reset Password',tampilkanIkon: false },
+  kartusiswa:  { judul: 'Kartu Siswa',   tampilkanIkon: false },
+  tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
+  qrkeluar:    { judul: 'Izin Keluar',    tampilkanIkon: false },
+};
+function aturHeader(kunci){
+  const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
+  els.brandTitle.textContent = cfg.judul;
+  els.brandBadge.style.display = cfg.tampilkanIkon ? 'flex' : 'none';
+}
+
+els.cardRekapNilai.addEventListener('click', () => {
+  aturHeader('rekap');
+  els.screenHome.classList.add('hidden');
+  els.screenRekap.classList.remove('hidden');
+  if (!matriksTerakhir) muatDataRekap();
+});
+els.btnMuatRekap.addEventListener('click', muatDataRekap);
+els.filterKelas.addEventListener('change', muatDataRekap);
+els.filterMapel.addEventListener('change', muatDataRekap);
+els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
+els.btnSortNilai.addEventListener('click', () => {
+  if (els.btnSortNilai.disabled) return;
+  modeUrutanNilai = modeUrutanNilai === 'nama' ? 'desc' : (modeUrutanNilai === 'desc' ? 'asc' : 'nama');
+  els.btnSortNilai.textContent = LABEL_URUTAN_NILAI[modeUrutanNilai];
+  if (matriksTerakhir) renderRekapMatriks(matriksTerakhir.data, matriksTerakhir.kolom);
+});
+els.btnTutupRekap.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenRekap.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+let daftarSiswaCache = null; // cache hasil siswa.csv, dipakai bareng utk preview & rekap
+
+async function muatDaftarSiswaCache(){
+  if (daftarSiswaCache) return daftarSiswaCache;
+  try {
+    const t = Math.floor(Date.now() / 60000);
+    const res = await fetch(SISWA_CSV_URL + '?t=' + t, { cache: 'no-store' });
+    if (!res.ok) return [];
+    daftarSiswaCache = csvKeObjek(parseCSVGenerik(await res.text()));
+    return daftarSiswaCache;
+  } catch (e) {
+    return [];
+  }
+}
+
+function cariSiswaByNisn(daftar, nisn){
+  const nisnCari = String(nisn || '').trim();
+  if (!nisnCari) return null;
+  return daftar.find(o => ambilKolomRekap(o, 'NISN') === nisnCari) || null;
+}
+
+function cariSiswaByKode(daftar, kode){
+  const kodeCari = String(kode || '').trim().toUpperCase();
+  if (!kodeCari) return null;
+  return daftar.find(o => ambilKolomRekap(o, 'KODE SOAL', 'KODE SISWA', 'KODE').toUpperCase() === kodeCari) || null;
+}
+
+/* =========================================================
+   KARTU SISWA — pilih kelas → pilih nama → tampilkan semua
+   nilai yang sudah diperoleh siswa tsb (dari data/nilai.csv).
+========================================================= */
+async function isiKartuFilterKelas(){
+  const daftar = await muatDaftarSiswaCache();
+  const kelasSet = new Set(daftar.map(o => ambilKolomRekap(o, 'KLS', 'KELAS')).filter(Boolean));
+  els.kartuFilterKelas.innerHTML = '<option value="">Pilih kelas…</option>' +
+    [...kelasSet].sort().map(k => `<option value="${escapeHtmlRekap(k)}">${escapeHtmlRekap(k)}</option>`).join('');
+}
+
+els.kartuFilterKelas.addEventListener('change', async () => {
+  const kelas = els.kartuFilterKelas.value;
+  els.kartuSiswaHasil.innerHTML = '';
+  els.kartuSiswaStatus.textContent = '';
+  if (!kelas){
+    els.kartuFilterNama.innerHTML = '<option value="">Pilih kelas dulu…</option>';
+    els.kartuFilterNama.disabled = true;
+    return;
+  }
+  const daftar = await muatDaftarSiswaCache();
+  const siswaKelas = daftar
+    .filter(o => (ambilKolomRekap(o, 'KLS', 'KELAS') || '').toUpperCase() === kelas.toUpperCase())
+    .map(o => ({ kode: ambilKolomRekap(o, 'KODE SOAL', 'KODE SISWA', 'KODE').toUpperCase(), nama: ambilKolomRekap(o, 'NAMA') || '(tanpa nama)' }))
+    .filter(s => s.kode)
+    .sort((a, b) => a.nama.localeCompare(b.nama));
+
+  els.kartuFilterNama.innerHTML = '<option value="">Pilih nama…</option>' +
+    siswaKelas.map(s => `<option value="${escapeHtmlRekap(s.kode)}">${escapeHtmlRekap(s.nama)}</option>`).join('');
+  els.kartuFilterNama.disabled = siswaKelas.length === 0;
+  if (siswaKelas.length === 0){
+    els.kartuSiswaStatus.textContent = 'Tidak ada siswa terdaftar di kelas ini.';
+    els.kartuSiswaStatus.className = 'status-msg';
+  }
+});
+
+els.kartuFilterNama.addEventListener('change', () => {
+  const kode = els.kartuFilterNama.value;
+  if (!kode){ els.kartuSiswaHasil.innerHTML = ''; return; }
+  tampilkanKartuSiswa(kode);
+});
+
+async function tampilkanKartuSiswa(kode){
+  els.kartuSiswaStatus.textContent = '';
+  els.kartuSiswaStatus.className = 'status-msg';
+  els.kartuSiswaHasil.innerHTML = '<div style="text-align:center;padding:24px"><span class="spinner"></span></div>';
+
+  try {
+    const daftarSiswa = await muatDaftarSiswaCache();
+    const siswa = cariSiswaByKode(daftarSiswa, kode);
+    const nama = siswa ? (ambilKolomRekap(siswa, 'NAMA') || '-') : '-';
+    const kelas = siswa ? (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-') : '-';
+
+    const t = Math.floor(Date.now() / 60000);
+    const resNilai = await fetch(NILAI_CSV_URL + '?t=' + t, { cache: 'no-store' });
+    if (!resNilai.ok) throw new Error('data/nilai.csv belum tersedia (HTTP ' + resNilai.status + ')');
+    const objNilai = csvKeObjek(parseCSVGenerik(await resNilai.text()));
+
+    const daftarNilai = objNilai
+      .filter(o => ambilKolomRekap(o, 'KODE').toUpperCase() === kode.toUpperCase())
+      .map(o => ({
+        mapel: ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-',
+        nilai: ambilKolomRekap(o, 'NILAI'),
+        waktu: ambilKolomRekap(o, 'TIMESTAMP'),
+      }))
+      .sort((a, b) => a.mapel.localeCompare(b.mapel));
+
+    const nilaiNumerik = daftarNilai.map(n => parseFloat(n.nilai)).filter(n => !isNaN(n));
+    const rataRata = nilaiNumerik.length
+      ? (nilaiNumerik.reduce((a, b) => a + b, 0) / nilaiNumerik.length).toFixed(1)
+      : null;
+
+    els.kartuSiswaHasil.innerHTML = `
+      <div style="padding:16px;background:linear-gradient(135deg,var(--violet-500),#6E4FC2);border-radius:var(--radius-md);color:#fff;margin-bottom:14px">
+        <div style="font-size:17px;font-weight:800">${escapeHtmlRekap(nama)}</div>
+        <div style="font-size:12.5px;opacity:.9;margin-top:2px">Kelas ${escapeHtmlRekap(kelas)} • Kode ${escapeHtmlRekap(kode)}</div>
+      </div>
+      ${daftarNilai.length === 0 ? `
+        <div style="text-align:center;padding:20px;color:var(--ink-soft);font-size:13px">
+          ⚠️ Belum ada nilai untuk siswa ini.
+        </div>` : `
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead>
+            <tr style="background:var(--navy-800);color:#fff">
+              <th style="padding:7px 8px;text-align:left">Mapel</th>
+              <th style="padding:7px 8px;text-align:center">Nilai</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${daftarNilai.map(n => `
+              <tr style="border-bottom:1px solid var(--ring-track)">
+                <td style="padding:6px 8px">${escapeHtmlRekap(n.mapel)}</td>
+                <td style="padding:6px 8px;text-align:center;font-weight:700">${escapeHtmlRekap(n.nilai)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+        ${rataRata !== null ? `
+        <div style="margin-top:10px;text-align:right;font-size:13px;font-weight:800;color:var(--navy-800)">
+          Rata-rata: ${rataRata}
+        </div>` : ''}
+      `}
+    `;
+  } catch (err){
+    els.kartuSiswaHasil.innerHTML = '';
+    els.kartuSiswaStatus.textContent = 'Gagal memuat nilai: ' + err.message;
+    els.kartuSiswaStatus.className = 'status-msg err';
+  }
+}
+
+els.cardKartuSiswa.addEventListener('click', () => {
+  aturHeader('kartusiswa');
+  els.screenHome.classList.add('hidden');
+  els.screenKartuSiswa.classList.remove('hidden');
+  isiKartuFilterKelas();
+});
+els.btnTutupKartuSiswa.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenKartuSiswa.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+els.cardTokenManual.addEventListener('click', () => {
+  aturHeader('tokenmanual');
+  els.screenHome.classList.add('hidden');
+  els.screenTokenManual.classList.remove('hidden');
+  muatTokenManual();
+});
+els.btnKembaliDariTokenManual.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenTokenManual.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+els.btnRefreshTokenManual.addEventListener('click', muatTokenManual);
+
+els.cardQrKeluar.addEventListener('click', () => {
+  aturHeader('qrkeluar');
+  els.screenHome.classList.add('hidden');
+  els.screenQrKeluar.classList.remove('hidden');
+  els.inputNisnQrKeluar.value = '';
+  els.previewSiswaQrKeluar.style.display = 'none';
+  els.previewNotFoundQrKeluar.style.display = 'none';
+  els.izinKeluarStatus.textContent = '';
+  els.izinKeluarStatus.className = 'status-msg';
+  els.inputNisnQrKeluar.focus();
+});
+els.btnKembaliDariQrKeluar.addEventListener('click', () => {
+  tutupQrScanKeluar();
+  aturHeader('home');
+  els.screenQrKeluar.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+els.btnKembaliDariToken.addEventListener('click', () => {
+  stopTimers();
+  aturHeader('home');
+  els.screenToken.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+async function tampilkanPreviewSiswaResetPw(){
+  const nisn = els.inputNisnResetPw.value.trim();
+  els.previewSiswaResetPw.style.display = 'none';
+  els.previewNotFoundResetPw.style.display = 'none';
+  if (!nisn) return;
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+
+  if (siswa){
+    els.previewNamaResetPw.textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
+    els.previewKelasResetPw.textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
+    els.previewSiswaResetPw.style.display = 'block';
+  } else {
+    els.previewNotFoundResetPw.style.display = 'block';
+  }
+}
+
+/* =========================================================
+   RESET PASSWORD SISWA — panggil Apps Script AbsensiKu
+   (spreadsheet ROSTER, terpisah dari spreadsheet asesmen)
+   untuk menghapus password custom siswa yang gagal login,
+   sehingga otomatis balik ke password default "user123".
+========================================================= */
+const APPS_SCRIPT_URL_PW = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
+
+async function resetPasswordSiswa(){
+  const nisn = els.inputNisnResetPw.value.trim();
+  els.resetPwStatus.textContent = '';
+  els.resetPwStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.resetPwStatus.textContent = 'Ketik NISN siswa terlebih dahulu.';
+    els.resetPwStatus.className = 'status-msg err';
+    return;
   }
 
-  function prevStep() {
-    if (currentStep > 0) {
-      currentStep--;
-      renderStep();
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+  const namaSiswa = siswa ? (ambilKolomRekap(siswa, 'NAMA') || '') : '';
+
+  els.btnResetPwSubmit.disabled = true;
+  els.btnResetPwSubmitLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 12000);
+    const res = await fetch(APPS_SCRIPT_URL_PW + '?' + new URLSearchParams({ action: 'resetPassword', nisn }), { signal: ctrl.signal });
+    clearTimeout(tid);
+    const data = await res.json();
+
+    if (data.status === 'ok'){
+      els.resetPwStatus.textContent = '✅ ' + (data.pesan || 'Password berhasil direset.');
+      els.resetPwStatus.className = 'status-msg ok';
+      els.inputNisnResetPw.value = '';
+      els.previewSiswaResetPw.style.display = 'none';
+      els.previewNotFoundResetPw.style.display = 'none';
+      tampilkanPopupSukses(namaSiswa);
+    } else {
+      els.resetPwStatus.textContent = '❌ ' + (data.pesan || 'Gagal mereset password.');
+      els.resetPwStatus.className = 'status-msg err';
     }
+  } catch (err){
+    els.resetPwStatus.textContent = '❌ Gagal menghubungi server: ' + err.message;
+    els.resetPwStatus.className = 'status-msg err';
+  } finally {
+    els.btnResetPwSubmit.disabled = false;
+    els.btnResetPwSubmitLabel.textContent = '🔑 Reset ke Password Default';
   }
+}
+
+/* ---- Popup "RESET BERHASIL" dengan bintang warna-warni ---- */
+const WARNA_BINTANG = ['#FFC93C', '#FF6B6B', '#4D96FF', '#6BCB77', '#C780FA', '#FF9F45'];
+const SIMBOL_BINTANG = ['⭐', '✨', '🌟', '💫'];
+
+function tampilkanPopupSukses(nama){
+  els.popupSuksesNama.textContent = nama ? `Password ${nama} sudah direset` : '';
+  els.popupBintangLayer.innerHTML = '';
+
+  const jumlah = 22;
+  for (let i = 0; i < jumlah; i++){
+    const b = document.createElement('span');
+    b.className = 'bintang-jatuh';
+    b.textContent = SIMBOL_BINTANG[Math.floor(Math.random() * SIMBOL_BINTANG.length)];
+    b.style.left = Math.random() * 100 + '%';
+    b.style.color = WARNA_BINTANG[Math.floor(Math.random() * WARNA_BINTANG.length)];
+    b.style.fontSize = (14 + Math.random() * 14) + 'px';
+    b.style.animationDuration = (1.4 + Math.random() * 1.6) + 's';
+    b.style.animationDelay = (Math.random() * 0.8) + 's';
+    els.popupBintangLayer.appendChild(b);
+  }
+
+  els.popupSuksesReset.classList.remove('hidden');
+}
+
+function tutupPopupSukses(){
+  els.popupSuksesReset.classList.add('hidden');
+  els.popupBintangLayer.innerHTML = '';
+}
+
+els.btnTutupPopupSukses.addEventListener('click', tutupPopupSukses);
+
+els.cardResetPw.addEventListener('click', () => {
+  aturHeader('resetpw');
+  els.screenHome.classList.add('hidden');
+  els.screenResetPw.classList.remove('hidden');
+});
+els.btnResetPwSubmit.addEventListener('click', resetPasswordSiswa);
+els.inputNisnResetPw.addEventListener('input', () => {
+  clearTimeout(window._debounceLookupResetPw);
+  window._debounceLookupResetPw = setTimeout(tampilkanPreviewSiswaResetPw, 350);
+});
+els.inputNisnResetPw.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnResetPwSubmit.click();
+});
+els.btnTutupResetPw.addEventListener('click', () => {
+  aturHeader('home');
+  tutupQrResetPw();
+  els.screenResetPw.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+/* ---- Scan QR NISN (kartu siswa) untuk Reset Password ---- */
+let qrScannerResetPw = null;
+
+function bukaQrResetPw(){
+  els.qrReaderResetPwWrap.style.display = 'block';
+  els.qrStatusResetPw.textContent = 'Memulai kamera...';
+  setTimeout(() => {
+    try {
+      qrScannerResetPw = new Html5Qrcode('qr-reader-resetpw');
+      qrScannerResetPw.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const teks = decodedText.trim();
+          els.inputNisnResetPw.value = teks;
+          els.qrStatusResetPw.textContent = '✅ Terbaca: ' + teks;
+          tampilkanPreviewSiswaResetPw();
+          if (qrScannerResetPw) { try { qrScannerResetPw.pause(true); } catch(e){} }
+          setTimeout(tutupQrResetPw, 700);
+        },
+        () => {}
+      ).then(() => { els.qrStatusResetPw.textContent = '🔍 Arahkan ke QR Code kartu siswa...'; })
+       .catch(err => { els.qrStatusResetPw.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
+    } catch (e) {
+      els.qrStatusResetPw.textContent = '❌ ' + e.message;
+    }
+  }, 300);
+}
+
+function tutupQrResetPw(){
+  if (qrScannerResetPw){
+    qrScannerResetPw.stop().catch(() => {}).finally(() => {
+      try { qrScannerResetPw.clear(); } catch(e){}
+      qrScannerResetPw = null;
+    });
+  }
+  els.qrReaderResetPwWrap.style.display = 'none';
+}
+
+els.btnScanQrResetPw.addEventListener('click', bukaQrResetPw);
+els.btnTutupQrResetPw.addEventListener('click', tutupQrResetPw);
+els.cardTokenAsesmen.addEventListener('click', () => {
+  aturHeader('token');
+  els.screenHome.classList.add('hidden');
+  els.screenEntry.classList.remove('hidden');
+});
+els.btnKembaliDariEntry.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenEntry.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+/* ---- Logo sekolah dari data/sekolah.csv (GitHub), tampil di Menu Utama ---- */
+
+/* =========================================================
+   PETUNJUK PENGGUNAAN — modal bertahap menjelaskan tiap menu:
+   fungsinya apa & cara pakainya, satu per satu.
+========================================================= */
+const DATA_PETUNJUK = [
+  {
+    judul: 'Token Asesmen', accent: 'var(--teal-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <path d="M14 14h3.2M14 18h7M20.5 14v7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Menampilkan QR Code token ujian yang berlaku untuk ruang & sesi saat ini. Siswa scan QR ini dari halaman ujian mereka supaya bisa mulai mengerjakan soal.',
+    caraPakai: [
+      'Pilih <b>Ruang Asesmen</b> dan <b>Nama Pengawas</b>.',
+      'Tap tombol <b>Buka Token</b>.',
+      'QR Code tampil dan otomatis refresh tiap beberapa menit.',
+      'Tunjukkan layar HP ke siswa satu per satu untuk di-scan.',
+    ],
+  },
+  {
+    judul: 'Token Manual', accent: 'var(--indigo-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.8"/>
+      <path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13.5h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Menampilkan kode token dalam bentuk TEKS (bukan QR) — dipakai kalau ada siswa yang kameranya bermasalah dan tidak bisa scan QR sama sekali.',
+    caraPakai: [
+      'Tap tombol <b>Tampilkan Kode Token</b>.',
+      'Bacakan atau tunjukkan kode yang muncul ke siswa.',
+      'Siswa mengetik kode itu manual lewat tombol pensil ✏️ di halaman ujiannya.',
+      'Tombol ini dibatasi <b>10 kali dibuka</b> per token, supaya tidak disalahgunakan.',
+    ],
+  },
+  {
+    judul: 'Izin Keluar', accent: 'var(--emerald-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M11 12h9m0 0-3-3m3 3-3 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Memberi izin RESMI ke siswa yang benar-benar darurat perlu keluar ujian sebelum jadwal selesai — tanpa dihitung pelanggaran oleh sistem anti-contek.',
+    caraPakai: [
+      'Scan QR kartu siswa, atau ketik NISN-nya manual.',
+      'Cek dulu nama & kelas yang muncul sudah benar.',
+      'Tap tombol <b>Izinkan Keluar Sekarang</b>.',
+      'Dalam beberapa detik, halaman ujian siswa itu otomatis lanjut keluar sendiri.',
+    ],
+  },
+  {
+    judul: 'Rekap Nilai', accent: 'var(--amber-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 20V10M12 20V4M20 20v-7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Melihat rekap nilai semua siswa, disusun rapi dalam tabel: satu baris per siswa, satu kolom per mata pelajaran.',
+    caraPakai: [
+      '(Opsional) pilih filter <b>Kelas</b> dan/atau <b>Mapel</b>.',
+      'Tap tombol <b>Muat / Refresh Rekap</b>.',
+      'Tabel nilai akan tampil — kolom "—" berarti siswa itu belum ada nilai di mapel tersebut.',
+      'Bisa diurutkan (Nama/Nilai) dan diunduh sebagai file Excel.',
+    ],
+  },
+  {
+    judul: 'Reset Password', accent: 'var(--red-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+      <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Membantu siswa yang gagal login karena password bermasalah, dengan mereset akunnya balik ke password default.',
+    caraPakai: [
+      'Scan QR kartu siswa, atau ketik NISN-nya manual.',
+      'Cek dulu nama & kelas yang muncul sudah benar.',
+      'Tap tombol <b>Reset ke Password Default</b>.',
+      'Siswa login lagi pakai password default <b>user123</b>, lalu diminta ganti password baru sendiri.',
+    ],
+  },
+  {
+    judul: 'Kartu Siswa', accent: 'var(--violet-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.8"/>
+      <circle cx="8.5" cy="11" r="2" stroke="white" stroke-width="1.8"/>
+      <path d="M5.5 16c0-1.7 1.4-2.8 3-2.8s3 1.1 3 2.8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M14 10h4.2M14 13h4.2" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Melihat detail nilai satu siswa tertentu secara lengkap — semua mata pelajaran sekaligus rata-ratanya.',
+    caraPakai: [
+      'Pilih <b>Kelas</b> siswa yang dicari.',
+      'Pilih <b>Nama</b> siswa dari daftar yang muncul.',
+      'Nilai per mapel dan rata-ratanya langsung tampil.',
+    ],
+  },
+];
+
+let petunjukIndeks = 0;
+
+function renderPetunjuk(){
+  const d = DATA_PETUNJUK[petunjukIndeks];
+  els.petunjukLangkah.textContent = `Langkah ${petunjukIndeks + 1} dari ${DATA_PETUNJUK.length}`;
+  els.petunjukIkon.style.setProperty('--accent', d.accent);
+  els.petunjukIkon.innerHTML = d.ikonSvg;
+  els.petunjukJudul.textContent = d.judul;
+  els.petunjukFungsi.textContent = d.fungsi;
+  els.petunjukCaraPakai.innerHTML = d.caraPakai.map(langkah => `<li style="margin-bottom:4px">${langkah}</li>`).join('');
+
+  els.petunjukDots.innerHTML = DATA_PETUNJUK.map((_, i) => `
+    <span style="width:7px;height:7px;border-radius:50%;background:${i === petunjukIndeks ? 'var(--navy-800)' : '#D8DEE8'};transition:.15s"></span>
+  `).join('');
+
+  els.btnPetunjukSebelumnya.style.visibility = petunjukIndeks === 0 ? 'hidden' : 'visible';
+  els.btnPetunjukLanjut.textContent = petunjukIndeks === DATA_PETUNJUK.length - 1 ? 'Selesai ✓' : 'Lanjut →';
+}
+
+function bukaPetunjuk(){
+  petunjukIndeks = 0;
+  renderPetunjuk();
+  els.popupPetunjuk.classList.remove('hidden');
+}
+function tutupPetunjuk(){
+  els.popupPetunjuk.classList.add('hidden');
+}
+
+els.btnBukaPetunjuk.addEventListener('click', bukaPetunjuk);
+els.btnTutupPetunjuk.addEventListener('click', tutupPetunjuk);
+els.btnPetunjukSebelumnya.addEventListener('click', () => {
+  if (petunjukIndeks > 0){ petunjukIndeks--; renderPetunjuk(); }
+});
+els.btnPetunjukLanjut.addEventListener('click', () => {
+  if (petunjukIndeks < DATA_PETUNJUK.length - 1){ petunjukIndeks++; renderPetunjuk(); }
+  else tutupPetunjuk();
+});
+
+validateForm();
 </script>
-
 </body>
 </html>

@@ -1436,7 +1436,7 @@ function escapeHtmlRekap(s){
   return d.innerHTML;
 }
 
-let rekapTerakhir = null; // { "Kelas": [ {nama, kode, mapel, nilai, waktu}, ... ] }
+let matriksTerakhir = null; // { data: {kode: {nama, kelas, nilai:{mapel:val}}}, kolom: [mapel,...] }
 
 async function muatDataRekap(){
   els.btnMuatRekap.disabled = true;
@@ -1472,53 +1472,55 @@ async function muatDataRekap(){
 
     const kelasFilter = els.filterKelas.value.trim().toUpperCase();
     const mapelFilter = els.filterMapel.value.trim().toUpperCase();
-    const semuaMapel = new Set();
-    const rekap = {};
-    objNilai.forEach(o => {
-      const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
-      if (!kode) return;
-      const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
-      semuaMapel.add(mapel);
-      const nilai = ambilKolomRekap(o, 'NILAI');
-      const waktu = ambilKolomRekap(o, 'TIMESTAMP');
-      const info = lookup[kode] || { nama: '(tidak dikenal — cek Sheet2)', kelas: '(tanpa kelas)' };
-      if (kelasFilter && info.kelas.toUpperCase() !== kelasFilter) return;
-      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
-      if (!rekap[info.kelas]) rekap[info.kelas] = [];
-      rekap[info.kelas].push({ nama: info.nama, kode, mapel, nilai, waktu });
-    });
-    isiFilterMapel([...semuaMapel]);
 
-    // ---- Lengkapi dengan siswa yang BELUM punya nilai (sesuai filter aktif) ----
-    // Kalau filter Mapel aktif: cek siapa yang belum punya nilai utk mapel itu.
-    // Kalau filter Mapel kosong: cek siapa yang belum punya nilai SAMA SEKALI.
-    const sudahAdaNilai = new Set();
-    objNilai.forEach(o => {
-      const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
-      if (!kode) return;
-      const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
-      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
-      sudahAdaNilai.add(kode);
-    });
-    const labelMapelBelum = els.filterMapel.selectedOptions[0] && els.filterMapel.value
-      ? els.filterMapel.selectedOptions[0].textContent
-      : '-';
+    // ---- Bangun matriks: satu baris per siswa, satu kolom per mapel ----
+    const matriks = {};
     Object.entries(lookup).forEach(([kode, info]) => {
       if (kelasFilter && info.kelas.toUpperCase() !== kelasFilter) return;
-      if (sudahAdaNilai.has(kode)) return;
-      if (!rekap[info.kelas]) rekap[info.kelas] = [];
-      rekap[info.kelas].push({ nama: info.nama, kode, mapel: labelMapelBelum, nilai: null, waktu: '', belumAda: true });
+      matriks[kode] = { nama: info.nama, kelas: info.kelas, nilai: {} };
     });
 
-    // Urutkan tiap kelas berdasarkan nama
-    Object.values(rekap).forEach(list => list.sort((a, b) => a.nama.localeCompare(b.nama)));
+    const semuaMapelSet = new Set(); // dari SEMUA baris nilai siswa yg tampil, dipakai isi dropdown filter
+    objNilai.forEach(o => {
+      const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
+      if (!kode || !matriks[kode]) return;
+      const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
+      semuaMapelSet.add(mapel);
+      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
+      matriks[kode].nilai[mapel] = ambilKolomRekap(o, 'NILAI');
+    });
+    isiFilterMapel([...semuaMapelSet]);
 
-    renderRekap(rekap);
-    rekapTerakhir = rekap;
-    const totalBaris = Object.values(rekap).reduce((n, l) => n + l.length, 0);
-    els.btnDownloadXLS.disabled = totalBaris === 0;
-    if (totalBaris === 0){
-      els.rekapStatus.textContent = 'Belum ada data nilai untuk ditampilkan.';
+    // Kolom mapel yang ditampilkan: kalau ada filter Mapel aktif → cuma
+    // 1 kolom itu; kalau tidak → semua mapel yang ada di kelas yg tampil,
+    // urut abjad.
+    let kolomMapel;
+    if (mapelFilter) {
+      const labelAsli = (els.filterMapel.selectedOptions[0] && els.filterMapel.value)
+        ? els.filterMapel.selectedOptions[0].textContent
+        : mapelFilter;
+      kolomMapel = [labelAsli];
+    } else {
+      const mapelDiKelasTampil = new Set();
+      Object.values(matriks).forEach(s => Object.keys(s.nilai).forEach(m => mapelDiKelasTampil.add(m)));
+      kolomMapel = [...mapelDiKelasTampil].sort((a, b) => a.localeCompare(b));
+    }
+
+    // Urutkan berdasarkan Nilai cuma masuk akal kalau 1 kolom mapel aktif
+    els.btnSortNilai.disabled = !mapelFilter;
+    els.btnSortNilai.title = mapelFilter ? '' : 'Pilih 1 mata pelajaran dulu untuk urutkan berdasarkan nilai';
+    if (!mapelFilter && modeUrutanNilai !== 'nama') {
+      modeUrutanNilai = 'nama';
+      els.btnSortNilai.textContent = LABEL_URUTAN_NILAI.nama;
+    }
+
+    matriksTerakhir = { data: matriks, kolom: kolomMapel };
+    renderRekapMatriks(matriks, kolomMapel);
+
+    const totalSiswa = Object.keys(matriks).length;
+    els.btnDownloadXLS.disabled = totalSiswa === 0;
+    if (totalSiswa === 0){
+      els.rekapStatus.textContent = 'Tidak ada siswa untuk ditampilkan (cek filter kelas).';
       els.rekapStatus.className = 'status-msg';
     }
   } catch (err){
@@ -1543,7 +1545,7 @@ function isiFilterKelas(daftarKelas){
 }
 function isiFilterMapel(daftarMapel){
   const nilaiSekarang = els.filterMapel.value;
-  els.filterMapel.innerHTML = '<option value="">Semua Mapel</option>';
+  els.filterMapel.innerHTML = '<option value="">Semua Mapel (jadi kolom)</option>';
   daftarMapel.filter(Boolean).sort().forEach(m => {
     const opt = document.createElement('option');
     opt.value = m; opt.textContent = m;
@@ -1552,78 +1554,90 @@ function isiFilterMapel(daftarMapel){
   els.filterMapel.value = nilaiSekarang;
 }
 
-let modeUrutanNilai = 'nama'; // 'nama' | 'desc' (tertinggi dulu) | 'asc' (terendah dulu)
+let modeUrutanNilai = 'nama'; // 'nama' | 'desc' (tertinggi dulu) | 'asc' (terendah dulu) — desc/asc cuma aktif kalau 1 mapel difilter
 const LABEL_URUTAN_NILAI = {
   nama: '↕️ Urutkan: Nama (A–Z)',
   desc: '↕️ Urutkan: Nilai Tertinggi',
   asc:  '↕️ Urutkan: Nilai Terendah',
 };
 
-function urutkanBarisRekap(rows, mode){
-  const salinan = [...rows];
-  if (mode === 'nama') return salinan.sort((a, b) => a.nama.localeCompare(b.nama));
-
-  const angka = r => {
-    if (r.belumAda) return null;
-    const n = parseFloat(r.nilai);
+function urutkanSiswaMatriks(daftarSiswa, mode, kolomTunggal){
+  const salinan = [...daftarSiswa];
+  if (mode === 'nama' || !kolomTunggal) {
+    return salinan.sort((a, b) => a.kelas.localeCompare(b.kelas) || a.nama.localeCompare(b.nama));
+  }
+  const angka = s => {
+    const v = s.nilai[kolomTunggal];
+    if (v === undefined || v === '') return null;
+    const n = parseFloat(v);
     return isNaN(n) ? null : n;
   };
   return salinan.sort((a, b) => {
     const na = angka(a), nb = angka(b);
     if (na === null && nb === null) return a.nama.localeCompare(b.nama);
-    if (na === null) return 1;  // yang belum ada nilai/nilai non-angka ditaruh di bawah
+    if (na === null) return 1;  // yang belum ada nilai ditaruh di bawah
     if (nb === null) return -1;
     return mode === 'asc' ? na - nb : nb - na;
   });
 }
 
-function renderRekap(rekap){
-  const kelasList = Object.keys(rekap).sort();
-  if (kelasList.length === 0){ els.rekapContainer.innerHTML = ''; return; }
+function renderRekapMatriks(matriks, kolomMapel){
+  const daftarSiswa = Object.values(matriks);
+  if (daftarSiswa.length === 0){ els.rekapContainer.innerHTML = ''; return; }
 
-  els.rekapContainer.innerHTML = kelasList.map(kelas => {
-    const rows = urutkanBarisRekap(rekap[kelas], modeUrutanNilai);
-    const jumlahBelum = rows.filter(r => r.belumAda).length;
-    const jumlahAda = rows.length - jumlahBelum;
+  const kolomTunggal = (kolomMapel.length === 1 && els.filterMapel.value) ? kolomMapel[0] : null;
+  const terurut = urutkanSiswaMatriks(daftarSiswa, modeUrutanNilai, kolomTunggal);
+
+  const headerKolom = kolomMapel.map(m =>
+    `<th style="padding:7px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(m)}</th>`
+  ).join('');
+
+  const baris = terurut.map(s => {
+    const selMapel = kolomMapel.map(m => {
+      const v = s.nilai[m];
+      const kosong = (v === undefined || v === '');
+      return `<td style="padding:6px 8px;text-align:center;font-weight:700;${kosong ? 'color:#C98A1F' : ''}">${kosong ? '—' : escapeHtmlRekap(v)}</td>`;
+    }).join('');
     return `
-      <div style="margin-bottom:18px">
-        <div style="font-weight:700;font-size:13.5px;color:var(--navy-800);margin-bottom:6px">
-          Kelas ${escapeHtmlRekap(kelas)}
-          <span style="color:var(--ink-soft);font-weight:500">(${jumlahAda} ada${jumlahBelum ? `, <span style="color:#C98A1F">${jumlahBelum} belum</span>` : ''})</span>
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
-          <thead>
-            <tr style="background:var(--navy-800);color:#fff">
-              <th style="padding:7px 8px;text-align:left">Nama</th>
-              <th style="padding:7px 8px;text-align:left">Mapel</th>
-              <th style="padding:7px 8px;text-align:center">Nilai</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map(r => `
-              <tr style="border-bottom:1px solid var(--ring-track);${r.belumAda ? 'background:#FFF8EA' : ''}">
-                <td style="padding:6px 8px">${escapeHtmlRekap(r.nama)}</td>
-                <td style="padding:6px 8px">${escapeHtmlRekap(r.mapel)}</td>
-                <td style="padding:6px 8px;text-align:center;font-weight:700;${r.belumAda ? 'color:#C98A1F' : ''}">${r.belumAda ? '⚠️ Belum ada' : escapeHtmlRekap(r.nilai)}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
+      <tr style="border-bottom:1px solid var(--ring-track)">
+        <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.nama)}</td>
+        <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.kelas)}</td>
+        ${selMapel}
+      </tr>`;
   }).join('');
+
+  els.rekapContainer.innerHTML = `
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+        <thead>
+          <tr style="background:var(--navy-800);color:#fff">
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Nama</th>
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Kelas</th>
+            ${headerKolom}
+          </tr>
+        </thead>
+        <tbody>${baris}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--ink-soft)">${daftarSiswa.length} siswa &middot; ${kolomMapel.length} mata pelajaran &middot; <span style="color:#C98A1F">—</span> = belum ada nilai</div>
+  `;
 }
 
 function downloadRekapXLS(){
-  if (!rekapTerakhir || typeof XLSX === 'undefined') return;
-  const wb = XLSX.utils.book_new();
-  Object.keys(rekapTerakhir).sort().forEach(kelas => {
-    const rows = urutkanBarisRekap(rekapTerakhir[kelas], modeUrutanNilai).map(r => ({
-      'Nama': r.nama, 'Kode Siswa': r.kode, 'Mapel': r.mapel,
-      'Nilai': r.belumAda ? 'Belum ada nilai' : r.nilai, 'Waktu': r.waktu
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const namaSheet = String(kelas).substring(0, 31).replace(/[\\/?*[\]:]/g, '-') || 'Kelas';
-    XLSX.utils.book_append_sheet(wb, ws, namaSheet);
+  if (!matriksTerakhir || typeof XLSX === 'undefined') return;
+  const { data, kolom } = matriksTerakhir;
+  const kolomTunggal = (kolom.length === 1 && els.filterMapel.value) ? kolom[0] : null;
+  const daftarSiswa = urutkanSiswaMatriks(Object.values(data), modeUrutanNilai, kolomTunggal);
+
+  const rows = daftarSiswa.map(s => {
+    const row = { 'Nama': s.nama, 'Kelas': s.kelas };
+    kolom.forEach(m => { row[m] = (s.nilai[m] === undefined || s.nilai[m] === '') ? '' : s.nilai[m]; });
+    return row;
   });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Rekap Nilai');
   XLSX.writeFile(wb, `Rekap-Nilai-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
@@ -1650,16 +1664,17 @@ els.cardRekapNilai.addEventListener('click', () => {
   aturHeader('rekap');
   els.screenHome.classList.add('hidden');
   els.screenRekap.classList.remove('hidden');
-  if (!rekapTerakhir) muatDataRekap();
+  if (!matriksTerakhir) muatDataRekap();
 });
 els.btnMuatRekap.addEventListener('click', muatDataRekap);
 els.filterKelas.addEventListener('change', muatDataRekap);
 els.filterMapel.addEventListener('change', muatDataRekap);
 els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
 els.btnSortNilai.addEventListener('click', () => {
+  if (els.btnSortNilai.disabled) return;
   modeUrutanNilai = modeUrutanNilai === 'nama' ? 'desc' : (modeUrutanNilai === 'desc' ? 'asc' : 'nama');
   els.btnSortNilai.textContent = LABEL_URUTAN_NILAI[modeUrutanNilai];
-  if (rekapTerakhir) renderRekap(rekapTerakhir);
+  if (matriksTerakhir) renderRekapMatriks(matriksTerakhir.data, matriksTerakhir.kolom);
 });
 els.btnTutupRekap.addEventListener('click', () => {
   aturHeader('home');

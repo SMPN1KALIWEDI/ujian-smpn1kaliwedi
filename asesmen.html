@@ -297,7 +297,7 @@ table.tn tbody tr:nth-child(even){background:#f8fbff}
 </div>
 
 <!-- MODAL: MENUNGGU IZIN KELUAR DARURAT — dipakai kalau siswa tap
-     "Selesai" SEBELUM jendela waktu wajar (10 menit sebelum jam
+     "Selesai" SEBELUM jendela waktu wajar (15 menit sebelum jam
      SELESAI). Pengawasan TIDAK dimatikan di sini — baru dimatikan
      setelah server mengonfirmasi pengawas sudah scan kartu NISN
      siswa ini di menu "Izin Keluar" (pengawas-ruang.html). Dicek
@@ -1511,7 +1511,7 @@ let timerTombolSelesai = null;
 // SELALU tampil sejak ujian dimulai — supaya siswa yang perlu
 // keluar darurat tetap punya jalan RESMI (bukan pindah tab dsb).
 // Tapi perilakunya beda tergantung waktu:
-//  - Sudah masuk jendela wajar (10 menit sebelum jam SELESAI,
+//  - Sudah masuk jendela wajar (15 menit sebelum jam SELESAI,
 //    atau jadwal tanpa jam selesai) → langsung keluar, tinggal
 //    konfirmasi biasa.
 //  - Masih jauh dari jam selesai → dianggap KELUAR DARURAT, wajib
@@ -1535,7 +1535,7 @@ function aturTombolSelesaiUjian() {
   }
 
   const targetAktif = new Date();
-  targetAktif.setHours(Math.floor(menitSelesai / 60), (menitSelesai % 60) - 10, 0, 0);
+  targetAktif.setHours(Math.floor(menitSelesai / 60), (menitSelesai % 60) - 15, 0, 0);
   const selisihMs = targetAktif.getTime() - Date.now();
 
   if (selisihMs <= 0) {
@@ -1548,22 +1548,32 @@ function aturTombolSelesaiUjian() {
 
 function selesaiUjianManual() {
   if (selesaiNormalAktif) {
-    // Sudah masuk jendela waktu wajar (dekat/lewat jam SELESAI) — cukup
-    // konfirmasi biasa. Pengawasan dimatikan sesaat SEBELUM confirm()
-    // muncul (soalnya dialog itu sendiri memicu blur), lalu dinyalakan
-    // lagi kalau siswa batal.
+    // Sudah masuk jendela waktu wajar (≤15 menit / lewat jam SELESAI) —
+    // pengawasan dimatikan dulu SEBELUM popup muncul (dialog konfirmasi
+    // itu sendiri memicu event blur), baru tanya apakah jawaban sudah
+    // dikirim. Kalau batal, pengawasan dinyalakan lagi.
     sedangUjian = false;
     nonaktifkanPengawas();
-    const yakin = confirm('Yakin sudah selesai mengerjakan? Anda akan kembali ke halaman utama Asesmen.');
-    if (!yakin) { lanjutkanPengawasanSetelahBatal(); return; }
+    const sudahKirim = confirm('Apakah jawaban Anda sudah dikirim?\n\nJika sudah, Anda akan keluar dari ujian dan kembali ke halaman utama Asesmen.');
+    if (!sudahKirim) { lanjutkanPengawasanSetelahBatal(); return; }
     tutupUjianTanpaPelanggaran();
     return;
   }
-  // Masih jauh dari jam selesai → KELUAR DARURAT. Pengawasan TIDAK
-  // disentuh sama sekali di sini — baru dimatikan setelah server
-  // benar-benar mengonfirmasi pengawas sudah scan kartu NISN siswa ini
-  // (lewat menu "Izin Keluar" di Akses Asesmen). Jadi tidak ada celah
-  // waktu tanpa pengawasan sebelum izin resmi benar-benar didapat.
+
+  // Masih jauh dari jam selesai → dianggap KELUAR DARURAT, wajib izin
+  // pengawas dulu. Pengawasan pada dasarnya TIDAK boleh dimatikan di
+  // sini — baru benar-benar dimatikan setelah server mengonfirmasi
+  // pengawas sudah scan kartu NISN siswa ini (menu "Izin Keluar" di
+  // Akses Asesmen). Tapi popup confirm() native tetap memicu event
+  // blur, jadi dijeda SESAAT hanya selama dialog tampil, lalu langsung
+  // dinyalakan lagi apa pun jawabannya — supaya tidak ada celah waktu
+  // tanpa pengawasan.
+  const pengawasanAktifSebelum = sedangUjian;
+  sedangUjian = false;
+  const sudahKirim = confirm('Apakah jawaban Anda sudah dikirim?\n\nIni masih jauh dari jadwal selesai ujian, jadi keluar sekarang wajib izin pengawas. Pengawas perlu men-scan NISN Anda lewat menu "Izin Keluar" di Akses Asesmen.');
+  if (pengawasanAktifSebelum && !sudahPelanggaran) sedangUjian = true;
+
+  if (!sudahKirim) return; // batal — tetap di halaman ujian, pengawasan tetap aktif seperti biasa
   bukaTungguIzinKeluar();
 }
 

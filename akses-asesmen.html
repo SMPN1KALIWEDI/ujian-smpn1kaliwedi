@@ -562,6 +562,18 @@
           <div class="menu-desc">Scan NISN, izin darurat</div>
         </div>
       </button>
+
+      <button type="button" id="cardPengawasAktif" class="menu-card" style="--accent:var(--indigo-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 19h16M6 19v-5.5M12 19V8M18 19v-9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Pengawas Aktif</div>
+          <div class="menu-desc">Ruang/Kelas & nama pengawas saat ini</div>
+        </div>
+      </button>
       </div>
     </div>
 
@@ -877,6 +889,25 @@
     </button>
     <div id="izinKeluarStatus" class="status-msg"></div>
   </div>
+
+  <!-- ===================== SCREEN : DAFTAR PENGAWAS AKTIF ===================== -->
+  <div id="screenPengawasAktif" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariPengawasAktif">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Daftar Ruang/Kelas yang sedang ada pengawasnya saat ini (status Aktif), diurutkan dari Ruang/Kelas terkecil.
+    </div>
+    <button id="btnRefreshPengawasAktif" class="btn btn-primary">
+      <span id="btnRefreshPengawasAktifLabel">🔄 Muat / Refresh</span>
+    </button>
+    <div id="pengawasAktifStatus" class="status-msg"></div>
+    <div id="pengawasAktifContainer" style="margin-top:14px;max-height:460px;overflow-y:auto"></div>
+  </div>
+
   <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
     <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
       <div id="popupBintangLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
@@ -1095,6 +1126,13 @@ const els = {
   btnKirimIzinKeluar: document.getElementById('btnKirimIzinKeluar'),
   btnKirimIzinKeluarLabel: document.getElementById('btnKirimIzinKeluarLabel'),
   izinKeluarStatus: document.getElementById('izinKeluarStatus'),
+  cardPengawasAktif: document.getElementById('cardPengawasAktif'),
+  screenPengawasAktif: document.getElementById('screenPengawasAktif'),
+  btnKembaliDariPengawasAktif: document.getElementById('btnKembaliDariPengawasAktif'),
+  btnRefreshPengawasAktif: document.getElementById('btnRefreshPengawasAktif'),
+  btnRefreshPengawasAktifLabel: document.getElementById('btnRefreshPengawasAktifLabel'),
+  pengawasAktifStatus: document.getElementById('pengawasAktifStatus'),
+  pengawasAktifContainer: document.getElementById('pengawasAktifContainer'),
 };
 
 /* =========================================================
@@ -2021,6 +2059,12 @@ function renderRekapMatriks(matriks, kolomMapel){
   const kolomTunggal = (kolomMapel.length === 1 && els.filterMapel.value) ? kolomMapel[0] : null;
   const terurut = urutkanSiswaMatriks(daftarSiswa, modeUrutanNilai, kolomTunggal);
 
+  // Kolom Nama: lebar dibatasi (~10% lebih kecil dari lebar alami
+  // sebelumnya) + boleh membungkus ke 2 baris kalau nama panjang tidak
+  // muat, supaya tidak "memakan" lebar tabel di layar kecil.
+  const styleThNama = 'padding:7px 8px;text-align:left;max-width:117px;white-space:normal;word-break:break-word;line-height:1.25';
+  const styleTdNama = 'padding:6px 8px;max-width:117px;white-space:normal;word-break:break-word;line-height:1.25';
+
   const headerKolom = kolomMapel.map(m =>
     `<th style="padding:7px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(m)}</th>`
   ).join('');
@@ -2033,7 +2077,7 @@ function renderRekapMatriks(matriks, kolomMapel){
     }).join('');
     return `
       <tr style="border-bottom:1px solid var(--ring-track)">
-        <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.nama)}</td>
+        <td style="${styleTdNama}">${escapeHtmlRekap(s.nama)}</td>
         <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.kelas)}</td>
         ${selMapel}
       </tr>`;
@@ -2044,9 +2088,9 @@ function renderRekapMatriks(matriks, kolomMapel){
       <table style="width:100%;border-collapse:collapse;font-size:12.5px">
         <thead>
           <tr style="background:var(--navy-800);color:#fff">
-            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Nama</th>
-            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Kelas</th>
-            ${headerKolom}
+            <th style="${styleThNama};position:sticky;top:0;background:var(--navy-800);z-index:2">Nama</th>
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap;position:sticky;top:0;background:var(--navy-800);z-index:2">Kelas</th>
+            ${headerKolom.replace(/<th style="/g, '<th style="position:sticky;top:0;background:var(--navy-800);z-index:2;')}
           </tr>
         </thead>
         <tbody>${baris}</tbody>
@@ -2087,6 +2131,7 @@ const HEADER_LAYAR = {
   kartusiswa:  { judul: 'Kartu Siswa',   tampilkanIkon: false },
   tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
   qrkeluar:    { judul: 'Izin Keluar',    tampilkanIkon: false },
+  pengawasaktif: { judul: 'Pengawas Aktif', tampilkanIkon: false },
 };
 function aturHeader(kunci){
   const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
@@ -2104,6 +2149,77 @@ els.btnMuatRekap.addEventListener('click', muatDataRekap);
 els.filterKelas.addEventListener('change', muatDataRekap);
 els.filterMapel.addEventListener('change', muatDataRekap);
 els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
+
+/* =========================================================
+   DAFTAR PENGAWAS AKTIF — daftar Ruang/Kelas yang sedang ada
+   pengawasnya saat ini (status Aktif di Sheet1), diurutkan dari
+   Ruang/Kelas terkecil (ascending). Murni layar lihat-data, jadi
+   TIDAK lewat bukaGrupPengawas (tidak perlu isi Ruang/Nama dulu).
+========================================================= */
+function escapeHtmlPengawasAktif(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function muatPengawasAktif(){
+  els.btnRefreshPengawasAktif.disabled = true;
+  els.btnRefreshPengawasAktifLabel.innerHTML = '<span class="spinner"></span> Memuat...';
+  els.pengawasAktifStatus.textContent = '';
+  els.pengawasAktifStatus.className = 'status-msg';
+
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=pengawasAktif', { method: 'GET' });
+    const json = await res.json();
+    if (json.status !== 'ok' || !Array.isArray(json.daftar)) throw new Error(json.message || 'Data tidak tersedia');
+
+    if (!json.daftar.length){
+      els.pengawasAktifContainer.innerHTML = `
+        <div style="padding:18px;text-align:center;color:var(--ink-soft);font-size:13px">
+          Belum ada Ruang/Kelas yang sedang diawasi.
+        </div>`;
+    } else {
+      const baris = json.daftar.map(p => `
+        <tr style="border-bottom:1px solid var(--ring-track)">
+          <td style="padding:8px 10px;font-weight:700;white-space:nowrap">${escapeHtmlPengawasAktif(p.ruang)}</td>
+          <td style="padding:8px 10px">${escapeHtmlPengawasAktif(p.pengawas)}</td>
+        </tr>`).join('');
+
+      els.pengawasAktifContainer.innerHTML = `
+        <div class="tabel-scroll" style="overflow-x:auto;max-height:400px;overflow-y:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:var(--navy-800);color:#fff">
+                <th style="padding:8px 10px;text-align:left;white-space:nowrap;position:sticky;top:0;background:var(--navy-800);z-index:2">Ruang / Kelas</th>
+                <th style="padding:8px 10px;text-align:left;position:sticky;top:0;background:var(--navy-800);z-index:2">Nama Pengawas</th>
+              </tr>
+            </thead>
+            <tbody>${baris}</tbody>
+          </table>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--ink-soft)">${json.daftar.length} Ruang/Kelas sedang diawasi</div>`;
+    }
+    els.pengawasAktifStatus.textContent = '';
+  } catch (e) {
+    els.pengawasAktifContainer.innerHTML = '';
+    els.pengawasAktifStatus.textContent = 'Gagal memuat data: ' + e.message;
+    els.pengawasAktifStatus.className = 'status-msg err';
+  } finally {
+    els.btnRefreshPengawasAktif.disabled = false;
+    els.btnRefreshPengawasAktifLabel.textContent = '🔄 Muat / Refresh';
+  }
+}
+
+els.cardPengawasAktif.addEventListener('click', () => {
+  aturHeader('pengawasaktif');
+  els.screenHome.classList.add('hidden');
+  els.screenPengawasAktif.classList.remove('hidden');
+  muatPengawasAktif();
+});
+els.btnKembaliDariPengawasAktif.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenPengawasAktif.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+els.btnRefreshPengawasAktif.addEventListener('click', muatPengawasAktif);
 els.btnSortNilai.addEventListener('click', () => {
   if (els.btnSortNilai.disabled) return;
   modeUrutanNilai = modeUrutanNilai === 'nama' ? 'desc' : (modeUrutanNilai === 'desc' ? 'asc' : 'nama');

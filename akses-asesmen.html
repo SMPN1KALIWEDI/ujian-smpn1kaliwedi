@@ -386,6 +386,83 @@
   }
   .menu-back svg{width:16px;height:16px;}
   .menu-back:hover{color:var(--navy-800);}
+
+  /* ---------- Grup Menu ---------- */
+  .menu-group{margin-bottom:18px;}
+  .menu-group:last-child{margin-bottom:0;}
+  .menu-group-title{
+    display:flex;align-items:center;gap:7px;
+    font-family:'Poppins',sans-serif;
+    font-weight:700;font-size:12px;
+    color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.06em;
+    margin-bottom:10px;
+  }
+  .menu-group-title .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--accent, var(--teal-500));
+    flex:none;
+  }
+
+  /* ---------- Bar Nama Guru ---------- */
+  .guru-bar{
+    width:100%;max-width:420px;
+    background:var(--card);
+    border-radius:var(--radius-md);
+    box-shadow:var(--shadow);
+    padding:12px 14px;
+    margin-bottom:14px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .guru-bar .guru-ic{
+    flex:none;width:38px;height:38px;border-radius:11px;
+    background:linear-gradient(135deg,var(--teal-500),var(--navy-800));
+    display:flex;align-items:center;justify-content:center;
+    font-size:17px;
+  }
+  .guru-bar .guru-info{flex:1;min-width:0;}
+  .guru-bar .guru-label{
+    font-size:10px;font-weight:700;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px;
+  }
+  .guru-bar .guru-nama{
+    font-size:14.5px;font-weight:700;color:var(--navy-950);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .guru-bar .guru-nama.kosong{color:var(--ink-soft);font-weight:600;font-style:italic;}
+  .guru-bar .btn-edit-guru{
+    flex:none;width:34px;height:34px;border-radius:10px;
+    border:1.5px solid var(--ring-track);background:#FAFBFD;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;font-size:15px;
+  }
+  .guru-bar .btn-edit-guru:hover{border-color:var(--teal-500);}
+  .guru-bar .guru-edit-row{display:flex;gap:8px;width:100%;}
+  .guru-bar .guru-edit-row select{flex:1;}
+  .guru-bar .btn-simpan-guru{
+    flex:none;border:none;border-radius:10px;
+    background:var(--teal-500);color:#fff;font-weight:700;
+    padding:0 14px;cursor:pointer;font-size:13px;
+  }
+
+  /* ---------- Indikator Sesi Pengawasan Aktif ---------- */
+  .sesi-bar{
+    width:100%;max-width:420px;
+    background:linear-gradient(135deg,var(--emerald-500),var(--teal-500));
+    border-radius:var(--radius-md);
+    padding:11px 14px;
+    margin-bottom:14px;
+    display:flex;align-items:center;gap:10px;
+    color:#fff;
+  }
+  .sesi-bar .sesi-teks{flex:1;font-size:13px;font-weight:600;line-height:1.4;}
+  .sesi-bar .sesi-teks b{font-weight:800;}
+  .sesi-bar button{
+    flex:none;border:none;border-radius:9px;
+    background:rgba(255,255,255,.22);color:#fff;font-weight:700;
+    font-size:12px;padding:8px 11px;cursor:pointer;
+  }
+  .sesi-bar button:hover{background:rgba(255,255,255,.34);}
 </style>
 </head>
 <body>
@@ -402,9 +479,35 @@
     <p>SMP Negeri 1 Kaliwedi</p>
   </div>
 
+  <!-- ===================== BAR NAMA GURU (persisten, semua screen) ===================== -->
+  <div class="guru-bar" id="guruBar">
+    <div class="guru-ic">🧑‍🏫</div>
+    <div class="guru-info" id="guruBarTampil">
+      <div class="guru-label">Pengawas</div>
+      <div class="guru-nama kosong" id="guruBarNama">Belum diisi — tap ✏️</div>
+    </div>
+    <button type="button" class="btn-edit-guru" id="btnEditGuru" title="Ubah nama pengawas">✏️</button>
+    <div class="guru-edit-row hidden" id="guruBarEdit" style="display:none">
+      <div class="select-wrap" style="flex:1">
+        <select id="selectGuruBar" disabled>
+          <option value="">Memuat daftar guru…</option>
+        </select>
+      </div>
+      <button type="button" class="btn-simpan-guru" id="btnSimpanGuruBar">Simpan</button>
+    </div>
+  </div>
+
+  <!-- ===================== INDIKATOR SESI PENGAWASAN AKTIF ===================== -->
+  <div class="sesi-bar hidden" id="sesiBar">
+    <div class="sesi-teks">📍 Sedang mengawasi <b id="sesiBarRuang">-</b></div>
+    <button type="button" id="btnSelesaikanSesiBar">Selesai</button>
+  </div>
+
   <!-- ===================== SCREEN 0 : MENU UTAMA ===================== -->
   <div id="screenHome" class="card">
-    <div class="menu-list">
+    <div class="menu-group">
+      <div class="menu-group-title"><span class="dot" style="--accent:var(--teal-500)"></span>Pengawas Asesmen</div>
+      <div class="menu-list">
       <button type="button" id="cardTokenAsesmen" class="menu-card" style="--accent:var(--teal-500)">
         <div class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -445,7 +548,12 @@
           <div class="menu-desc">Scan NISN, izin darurat</div>
         </div>
       </button>
+      </div>
+    </div>
 
+    <div class="menu-group">
+      <div class="menu-group-title"><span class="dot" style="--accent:var(--amber-500)"></span>Hasil Asesmen</div>
+      <div class="menu-list">
       <button type="button" id="cardRekapNilai" class="menu-card" style="--accent:var(--amber-500)">
         <div class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -455,19 +563,6 @@
         <div class="menu-text">
           <div class="menu-title">Rekap Nilai</div>
           <div class="menu-desc">Nilai per kelas</div>
-        </div>
-      </button>
-
-      <button type="button" id="cardResetPw" class="menu-card" style="--accent:var(--red-500)">
-        <div class="menu-icon">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
-            <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="menu-text">
-          <div class="menu-title">Reset Password</div>
-          <div class="menu-desc">Bantu siswa gagal login</div>
         </div>
       </button>
 
@@ -485,13 +580,28 @@
           <div class="menu-desc">Nilai satu siswa</div>
         </div>
       </button>
+
+      <button type="button" id="cardResetPw" class="menu-card" style="--accent:var(--red-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+            <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Reset Password</div>
+          <div class="menu-desc">Bantu siswa gagal login</div>
+        </div>
+      </button>
+      </div>
     </div>
+
     <button type="button" id="btnBukaPetunjuk" class="btn btn-ghost" style="width:100%;margin-top:14px">
       ❓ Petunjuk Penggunaan
     </button>
   </div>
 
-  <!-- ===================== SCREEN 1 : JENDELA MASUK (TOKEN ASESMEN) ===================== -->
+  <!-- ===================== SCREEN 1 : JENDELA MASUK (ISI RUANG/KELAS PENGAWASAN) ===================== -->
   <div id="screenEntry" class="card hidden" style="margin-top:16px">
     <button type="button" class="menu-back" id="btnKembaliDariEntry">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -499,24 +609,19 @@
       </svg>
       Menu Utama
     </button>
-    <div class="field">
-      <label for="inputRuang">Ruang Asesmen</label>
-      <div class="select-wrap">
-        <select id="inputRuang">
-          <option value="">Pilih ruang…</option>
-        </select>
-      </div>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Isi sekali di awal — dipakai bersama untuk Token Asesmen, Token Manual, dan Izin Keluar sampai Anda menandai pengawasan selesai.
     </div>
     <div class="field">
-      <label for="inputPengawas">Nama Pengawas</label>
+      <label for="inputRuang">Ruang / Kelas Asesmen</label>
       <div class="select-wrap">
-        <select id="inputPengawas" disabled>
-          <option value="">Memuat daftar guru…</option>
+        <select id="inputRuang">
+          <option value="">Pilih ruang atau kelas…</option>
         </select>
       </div>
     </div>
     <button id="btnBukaToken" class="btn btn-primary" disabled>
-      <span id="btnBukaTokenLabel">Buka Token</span>
+      <span id="btnBukaTokenLabel">Mulai Pengawasan</span>
     </button>
     <div id="entryStatus" class="status-msg"></div>
   </div>
@@ -850,7 +955,6 @@ let qrObj = null;
 
 const els = {
   inputRuang: document.getElementById('inputRuang'),
-  inputPengawas: document.getElementById('inputPengawas'),
   btnBukaToken: document.getElementById('btnBukaToken'),
   btnBukaTokenLabel: document.getElementById('btnBukaTokenLabel'),
   entryStatus: document.getElementById('entryStatus'),
@@ -858,6 +962,16 @@ const els = {
   screenToken: document.getElementById('screenToken'),
   metaRuang: document.getElementById('metaRuang'),
   metaPengawas: document.getElementById('metaPengawas'),
+  guruBar: document.getElementById('guruBar'),
+  guruBarTampil: document.getElementById('guruBarTampil'),
+  guruBarNama: document.getElementById('guruBarNama'),
+  btnEditGuru: document.getElementById('btnEditGuru'),
+  guruBarEdit: document.getElementById('guruBarEdit'),
+  selectGuruBar: document.getElementById('selectGuruBar'),
+  btnSimpanGuruBar: document.getElementById('btnSimpanGuruBar'),
+  sesiBar: document.getElementById('sesiBar'),
+  sesiBarRuang: document.getElementById('sesiBarRuang'),
+  btnSelesaikanSesiBar: document.getElementById('btnSelesaikanSesiBar'),
   qrStage: document.getElementById('qrStage'),
   qrLoading: document.getElementById('qrLoading'),
   qrCanvasWrap: document.getElementById('qrCanvasWrap'),
@@ -950,42 +1064,130 @@ const els = {
 };
 
 /* =========================================================
-   ISI PILIHAN RUANG (Ruang 01 - Ruang 30)
+   NAMA GURU (PENGAWAS) — dipilih SEKALI dari pulldown saat
+   aplikasi dibuka, disimpan di localStorage, dan bisa diubah
+   lagi kapan saja lewat tombol pensil ✏️ di bar atas.
 ========================================================= */
+const NAMA_GURU_KEY = 'aksesAsesmen_namaGuru_v1';
+
+function ambilNamaGuruTersimpan(){
+  try { return localStorage.getItem(NAMA_GURU_KEY) || ''; } catch(e){ return ''; }
+}
+function simpanNamaGuruLokal(nama){
+  try { localStorage.setItem(NAMA_GURU_KEY, nama); } catch(e){}
+}
+function tampilkanNamaGuruDiBar(){
+  const nama = ambilNamaGuruTersimpan();
+  if (nama){
+    els.guruBarNama.textContent = nama;
+    els.guruBarNama.classList.remove('kosong');
+  } else {
+    els.guruBarNama.textContent = 'Belum diisi — tap ✏️';
+    els.guruBarNama.classList.add('kosong');
+  }
+}
+function bukaEditNamaGuru(){
+  els.guruBarTampil.style.display = 'none';
+  els.btnEditGuru.style.display = 'none';
+  els.guruBarEdit.style.display = 'flex';
+  const namaSekarang = ambilNamaGuruTersimpan();
+  if (namaSekarang) els.selectGuruBar.value = namaSekarang;
+}
+function tutupEditNamaGuru(){
+  els.guruBarTampil.style.display = '';
+  els.btnEditGuru.style.display = '';
+  els.guruBarEdit.style.display = 'none';
+}
+els.btnEditGuru.addEventListener('click', bukaEditNamaGuru);
+els.btnSimpanGuruBar.addEventListener('click', () => {
+  const nama = els.selectGuruBar.value.trim();
+  if (!nama){ els.selectGuruBar.focus(); return; }
+  simpanNamaGuruLokal(nama);
+  tampilkanNamaGuruDiBar();
+  tutupEditNamaGuru();
+});
+
+/* =========================================================
+   ISI PILIHAN RUANG / KELAS
+   Grup 1 "Ruang" = Ruang 01..30 (nomor ruang fisik).
+   Grup 2 "Kelas" = daftar kelas asli, diambil dari
+   data/siswa.csv di GitHub (sama seperti dipakai Rekap Nilai
+   & Kartu Siswa) supaya pengawas bisa pilih nama kelas kalau
+   itu yang dipakai sekolah, bukan nomor ruang.
+========================================================= */
+const SISWA_CSV_URL_RUANG = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/siswa.csv';
+
 function isiPilihanRuang(){
-  const frag = document.createDocumentFragment();
+  const grupRuang = document.createElement('optgroup');
+  grupRuang.label = 'Ruang';
   for (let i = 1; i <= 30; i++){
     const kode = 'Ruang ' + String(i).padStart(2, '0');
     const opt = document.createElement('option');
     opt.value = kode;
     opt.textContent = kode;
-    frag.appendChild(opt);
+    grupRuang.appendChild(opt);
   }
-  els.inputRuang.appendChild(frag);
+  els.inputRuang.appendChild(grupRuang);
 }
 isiPilihanRuang();
+
+async function isiPilihanKelasDariGitHub(){
+  try {
+    const res = await fetch(SISWA_CSV_URL_RUANG + '?t=' + Math.floor(Date.now()/60000), { cache: 'no-store' });
+    if (!res.ok) throw new Error('siswa.csv belum tersedia');
+    const objSiswa = csvKeObjek(parseCSVGenerik(await res.text()));
+    const semuaKelas = new Set();
+    objSiswa.forEach(o => {
+      const kelas = ambilKolomRekap(o, 'KLS', 'KELAS');
+      if (kelas) semuaKelas.add(kelas);
+    });
+    if (!semuaKelas.size) return;
+
+    const grupKelas = document.createElement('optgroup');
+    grupKelas.label = 'Kelas';
+    [...semuaKelas].sort().forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k;
+      grupKelas.appendChild(opt);
+    });
+    els.inputRuang.appendChild(grupKelas);
+
+    // Kalau ada sesi pengawasan tersimpan yang nilainya ada di grup Kelas
+    // (baru muncul setelah fetch ini selesai), pastikan terpilih dengan benar.
+    if (sesiPengawasan && sesiPengawasan.ruang) els.inputRuang.value = sesiPengawasan.ruang;
+  } catch (e) {
+    console.warn('⚠️ Gagal memuat daftar kelas untuk pilihan Ruang/Kelas:', e.message);
+  }
+}
+isiPilihanKelasDariGitHub();
 
 /* =========================================================
    MUAT DAFTAR NAMA GURU — dari GitHub CSV (cepat, lewat CDN)
    karena datanya jarang berubah. Kalau file belum ada/gagal,
    otomatis jatuh ke Apps Script (Sheet2!A:A) sebagai cadangan.
+   Dipakai untuk mengisi pulldown nama guru di Bar Nama Guru.
 ========================================================= */
 const GURU_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/guru.csv';
 
 function isiDropdownGuru(daftar){
-  els.inputPengawas.innerHTML = '';
+  els.selectGuruBar.innerHTML = '';
   const optKosong = document.createElement('option');
   optKosong.value = '';
   optKosong.textContent = 'Pilih nama guru…';
-  els.inputPengawas.appendChild(optKosong);
+  els.selectGuruBar.appendChild(optKosong);
 
   daftar.forEach(nama => {
     const opt = document.createElement('option');
     opt.value = nama;
     opt.textContent = nama;
-    els.inputPengawas.appendChild(opt);
+    els.selectGuruBar.appendChild(opt);
   });
-  els.inputPengawas.disabled = false;
+  els.selectGuruBar.disabled = false;
+
+  const tersimpan = ambilNamaGuruTersimpan();
+  if (tersimpan && daftar.includes(tersimpan)) els.selectGuruBar.value = tersimpan;
+  else if (!tersimpan) bukaEditNamaGuru(); // belum pernah diisi → langsung minta pilih
 }
 
 function parseCSVGuru(text){
@@ -1010,6 +1212,7 @@ async function muatDaftarGuruDariAppsScript(){
 }
 
 async function muatDaftarGuru(){
+  tampilkanNamaGuruDiBar();
   try {
     const daftar = await muatDaftarGuruDariCSV();
     isiDropdownGuru(daftar);
@@ -1019,57 +1222,112 @@ async function muatDaftarGuru(){
       const daftar = await muatDaftarGuruDariAppsScript();
       isiDropdownGuru(daftar);
     } catch (errAS) {
-      els.inputPengawas.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
-      els.entryStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
-      els.entryStatus.className = 'status-msg err';
+      els.selectGuruBar.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
     }
   }
 }
 muatDaftarGuru();
+
+/* =========================================================
+   SESI PENGAWASAN — dibuat saat guru mengisi Ruang/Kelas
+   pertama kali sebelum masuk ke Token Asesmen / Token Manual /
+   Izin Keluar (Kelompok "Pengawas Asesmen"). Tetap AKTIF dan
+   tersimpan (localStorage) selama guru belum menandai
+   pengawasannya selesai — jadi Ruang/Kelas tidak perlu diisi
+   ulang tiap buka menu di kelompok yang sama.
+========================================================= */
+const SESI_PENGAWASAN_KEY = 'aksesAsesmen_sesiPengawasan_v1';
+let sesiPengawasan = null; // { ruang, pengawas }
+let pendingHeaderKey = null;       // header yang dipakai setelah Ruang/Kelas diisi
+let pendingBukaLayarTarget = null; // fungsi pembuka+inisialisasi layar tujuan
+
+function muatSesiPengawasanTersimpan(){
+  try {
+    const raw = localStorage.getItem(SESI_PENGAWASAN_KEY);
+    sesiPengawasan = raw ? JSON.parse(raw) : null;
+  } catch(e){ sesiPengawasan = null; }
+}
+function simpanSesiPengawasanLokal(){
+  try { localStorage.setItem(SESI_PENGAWASAN_KEY, JSON.stringify(sesiPengawasan)); } catch(e){}
+}
+function hapusSesiPengawasanLokal(){
+  sesiPengawasan = null;
+  try { localStorage.removeItem(SESI_PENGAWASAN_KEY); } catch(e){}
+}
+function perbaruiIndikatorSesi(){
+  if (sesiPengawasan && sesiPengawasan.ruang){
+    els.sesiBarRuang.textContent = sesiPengawasan.ruang;
+    els.sesiBar.classList.remove('hidden');
+  } else {
+    els.sesiBar.classList.add('hidden');
+  }
+}
+muatSesiPengawasanTersimpan();
+perbaruiIndikatorSesi();
+
 function validateForm(){
-  const ok = els.inputRuang.value.trim().length > 0 && els.inputPengawas.value.trim().length > 0;
+  const ok = els.inputRuang.value.trim().length > 0;
   els.btnBukaToken.disabled = !ok;
 }
 els.inputRuang.addEventListener('change', validateForm);
-els.inputPengawas.addEventListener('change', validateForm);
 
 /* =========================================================
    SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
+   status: 'Aktif' saat mulai mengawasi, 'Selesai' saat guru
+   menandai pengawasan di ruang/kelas itu sudah berakhir.
+   (Apps Script perlu kolom "Status" tambahan di Sheet1 untuk
+   menampung nilai ini.)
 ========================================================= */
-async function simpanPengawas(ruang, pengawas){
+async function simpanPengawas(ruang, pengawas, status){
   const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'simpan', ruang, pengawas })
+    body: JSON.stringify({ action: 'simpan', ruang, pengawas, status: status || 'Aktif' })
   });
   const json = await res.json();
   if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan data');
   return json;
 }
 
+function lanjutKeTargetGrupPengawas(){
+  els.screenEntry.classList.add('hidden');
+  if (pendingHeaderKey) aturHeader(pendingHeaderKey);
+  if (pendingBukaLayarTarget) pendingBukaLayarTarget();
+  pendingHeaderKey = null;
+  pendingBukaLayarTarget = null;
+}
+
 els.btnBukaToken.addEventListener('click', async () => {
   const ruang = els.inputRuang.value.trim();
-  const pengawas = els.inputPengawas.value.trim();
-  if (!ruang || !pengawas) return;
+  const pengawas = ambilNamaGuruTersimpan();
+  if (!ruang) return;
+  if (!pengawas){
+    els.entryStatus.textContent = 'Isi dulu Nama Pengawas lewat tombol ✏️ di bar atas.';
+    els.entryStatus.className = 'status-msg err';
+    return;
+  }
 
   els.btnBukaToken.disabled = true;
-  els.btnBukaTokenLabel.innerHTML = '<span class="spinner"></span> Sedang membuat token...';
+  els.btnBukaTokenLabel.innerHTML = '<span class="spinner"></span> Menyimpan...';
   els.entryStatus.textContent = '';
   els.entryStatus.className = 'status-msg';
 
   try {
-    await simpanPengawas(ruang, pengawas);
+    await simpanPengawas(ruang, pengawas, 'Aktif');
+    sesiPengawasan = { ruang, pengawas };
+    simpanSesiPengawasanLokal();
+    perbaruiIndikatorSesi();
     els.metaRuang.textContent = ruang;
     els.metaRuang.title = ruang;
     els.metaPengawas.textContent = pengawas;
     els.metaPengawas.title = pengawas;
-    openTokenScreen();
+    lanjutKeTargetGrupPengawas();
   } catch (err) {
     els.entryStatus.textContent = 'Gagal menyimpan data. Periksa koneksi lalu coba lagi.';
     els.entryStatus.className = 'status-msg err';
   } finally {
     els.btnBukaToken.disabled = false;
-    els.btnBukaTokenLabel.textContent = 'Buka Token';
+    els.btnBukaTokenLabel.textContent = 'Mulai Pengawasan';
     validateForm();
   }
 });
@@ -1120,8 +1378,8 @@ async function kirimIzinKeluar(nisn){
     body: JSON.stringify({
       action: 'izinKeluarManual',
       nisn,
-      ruang: els.metaRuang.textContent,
-      pengawas: els.metaPengawas.textContent,
+      ruang: (sesiPengawasan && sesiPengawasan.ruang) || '',
+      pengawas: (sesiPengawasan && sesiPengawasan.pengawas) || ambilNamaGuruTersimpan(),
     })
   });
   const json = await res.json();
@@ -1692,6 +1950,7 @@ function downloadRekapXLS(){
 ========================================================= */
 const HEADER_LAYAR = {
   home:        { judul: 'Akses Asesmen', tampilkanIkon: true  },
+  entry:       { judul: 'Ruang / Kelas', tampilkanIkon: false },
   token:       { judul: 'Token Asesmen', tampilkanIkon: false },
   rekap:       { judul: 'REKAP NILAI',   tampilkanIkon: false },
   resetpw:     { judul: 'Reset Password',tampilkanIkon: false },
@@ -1875,42 +2134,101 @@ els.btnTutupKartuSiswa.addEventListener('click', () => {
   els.screenHome.classList.remove('hidden');
 });
 
-els.cardTokenManual.addEventListener('click', () => {
-  aturHeader('tokenmanual');
+/* =========================================================
+   NAVIGASI KELOMPOK "PENGAWAS ASESMEN" (Token Asesmen, Token
+   Manual, Izin Keluar) — dipakai bersama supaya Ruang/Kelas
+   cukup diisi sekali (lihat screenEntry) dan status pengawasan
+   ditanya cuma saat benar-benar keluar dari kelompok ini.
+========================================================= */
+function bukaGrupPengawas(headerKey, bukaLayarTarget){
+  if (sesiPengawasan && sesiPengawasan.ruang){
+    // Sudah ada sesi aktif → tidak perlu isi Ruang/Kelas lagi.
+    aturHeader(headerKey);
+    els.screenHome.classList.add('hidden');
+    els.metaRuang.textContent = sesiPengawasan.ruang;
+    els.metaRuang.title = sesiPengawasan.ruang;
+    els.metaPengawas.textContent = sesiPengawasan.pengawas;
+    els.metaPengawas.title = sesiPengawasan.pengawas;
+    bukaLayarTarget();
+    return;
+  }
+  if (!ambilNamaGuruTersimpan()){
+    bukaEditNamaGuru();
+    return;
+  }
+  pendingHeaderKey = headerKey;
+  pendingBukaLayarTarget = bukaLayarTarget;
+  aturHeader('entry');
   els.screenHome.classList.add('hidden');
-  els.screenTokenManual.classList.remove('hidden');
-  muatTokenManual();
+  els.screenEntry.classList.remove('hidden');
+  els.entryStatus.textContent = '';
+  els.entryStatus.className = 'status-msg';
+  validateForm();
+}
+
+async function kembaliDariGrupPengawas(screenEl){
+  if (!(sesiPengawasan && sesiPengawasan.ruang)){
+    screenEl.classList.add('hidden');
+    aturHeader('home');
+    els.screenHome.classList.remove('hidden');
+    return;
+  }
+  const sudahSelesai = confirm(
+    `Apakah pengawasan di ${sesiPengawasan.ruang} sudah selesai?\n\n` +
+    'Tap OK jika SUDAH SELESAI (sesi ditutup, Ruang/Kelas perlu diisi lagi lain kali).\n' +
+    'Tap Batal jika BELUM (sesi tetap aktif, langsung lanjut tanpa isi ulang Ruang/Kelas).'
+  );
+  if (sudahSelesai){
+    try { await simpanPengawas(sesiPengawasan.ruang, sesiPengawasan.pengawas, 'Selesai'); }
+    catch(e){ console.warn('Gagal mencatat status Selesai ke sheet:', e.message); }
+    hapusSesiPengawasanLokal();
+    perbaruiIndikatorSesi();
+  }
+  screenEl.classList.add('hidden');
+  aturHeader('home');
+  els.screenHome.classList.remove('hidden');
+}
+
+els.cardTokenManual.addEventListener('click', () => {
+  bukaGrupPengawas('tokenmanual', () => {
+    els.screenTokenManual.classList.remove('hidden');
+    muatTokenManual();
+  });
 });
 els.btnKembaliDariTokenManual.addEventListener('click', () => {
-  aturHeader('home');
-  els.screenTokenManual.classList.add('hidden');
-  els.screenHome.classList.remove('hidden');
+  kembaliDariGrupPengawas(els.screenTokenManual);
 });
 els.btnRefreshTokenManual.addEventListener('click', muatTokenManual);
 
 els.cardQrKeluar.addEventListener('click', () => {
-  aturHeader('qrkeluar');
-  els.screenHome.classList.add('hidden');
-  els.screenQrKeluar.classList.remove('hidden');
-  els.inputNisnQrKeluar.value = '';
-  els.previewSiswaQrKeluar.style.display = 'none';
-  els.previewNotFoundQrKeluar.style.display = 'none';
-  els.izinKeluarStatus.textContent = '';
-  els.izinKeluarStatus.className = 'status-msg';
-  els.inputNisnQrKeluar.focus();
+  bukaGrupPengawas('qrkeluar', () => {
+    els.screenQrKeluar.classList.remove('hidden');
+    els.inputNisnQrKeluar.value = '';
+    els.previewSiswaQrKeluar.style.display = 'none';
+    els.previewNotFoundQrKeluar.style.display = 'none';
+    els.izinKeluarStatus.textContent = '';
+    els.izinKeluarStatus.className = 'status-msg';
+    els.inputNisnQrKeluar.focus();
+  });
 });
 els.btnKembaliDariQrKeluar.addEventListener('click', () => {
   tutupQrScanKeluar();
-  aturHeader('home');
-  els.screenQrKeluar.classList.add('hidden');
-  els.screenHome.classList.remove('hidden');
+  kembaliDariGrupPengawas(els.screenQrKeluar);
 });
 
 els.btnKembaliDariToken.addEventListener('click', () => {
   stopTimers();
-  aturHeader('home');
-  els.screenToken.classList.add('hidden');
-  els.screenHome.classList.remove('hidden');
+  kembaliDariGrupPengawas(els.screenToken);
+});
+
+els.btnSelesaikanSesiBar.addEventListener('click', async () => {
+  if (!(sesiPengawasan && sesiPengawasan.ruang)) return;
+  const sudahSelesai = confirm(`Tandai pengawasan di ${sesiPengawasan.ruang} sebagai SELESAI?`);
+  if (!sudahSelesai) return;
+  try { await simpanPengawas(sesiPengawasan.ruang, sesiPengawasan.pengawas, 'Selesai'); }
+  catch(e){ console.warn('Gagal mencatat status Selesai ke sheet:', e.message); }
+  hapusSesiPengawasanLokal();
+  perbaruiIndikatorSesi();
 });
 
 async function tampilkanPreviewSiswaResetPw(){
@@ -2077,11 +2395,11 @@ function tutupQrResetPw(){
 els.btnScanQrResetPw.addEventListener('click', bukaQrResetPw);
 els.btnTutupQrResetPw.addEventListener('click', tutupQrResetPw);
 els.cardTokenAsesmen.addEventListener('click', () => {
-  aturHeader('token');
-  els.screenHome.classList.add('hidden');
-  els.screenEntry.classList.remove('hidden');
+  bukaGrupPengawas('token', openTokenScreen);
 });
 els.btnKembaliDariEntry.addEventListener('click', () => {
+  pendingHeaderKey = null;
+  pendingBukaLayarTarget = null;
   aturHeader('home');
   els.screenEntry.classList.add('hidden');
   els.screenHome.classList.remove('hidden');

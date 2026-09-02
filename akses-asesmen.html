@@ -463,6 +463,20 @@
     font-size:12px;padding:8px 11px;cursor:pointer;
   }
   .sesi-bar button:hover{background:rgba(255,255,255,.34);}
+
+  /* ---------- Toggle Mode Ruang/Kelas ---------- */
+  .mode-toggle{display:flex;gap:8px;}
+  .mode-btn{
+    flex:1;border:1.5px solid var(--ring-track);background:#FAFBFD;
+    border-radius:10px;padding:9px 8px;font-size:12.5px;font-weight:700;
+    color:var(--ink-soft);cursor:pointer;text-align:center;
+  }
+  .mode-btn.active{
+    border-color:var(--teal-500);background:rgba(20,184,166,.10);
+    color:var(--navy-950);
+  }
+  .hint-ruang{font-size:11.5px;color:var(--ink-soft);margin-top:5px;min-height:14px;}
+  .hint-ruang.warn{color:#B45309;}
 </style>
 </head>
 <body>
@@ -621,12 +635,20 @@
       </div>
     </div>
     <div class="field">
-      <label for="inputRuang">Ruang / Kelas Asesmen</label>
+      <label>Mode Pengisian</label>
+      <div class="mode-toggle" id="modeRuangToggle">
+        <button type="button" class="mode-btn active" data-mode="ruang">🔢 Ruang 01–30</button>
+        <button type="button" class="mode-btn" data-mode="kelas">🏫 Kelas (7A, 7B, …)</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="inputRuang" id="labelInputRuang">Ruang Asesmen</label>
       <div class="select-wrap">
-        <select id="inputRuang">
-          <option value="">Pilih ruang atau kelas…</option>
+        <select id="inputRuang" disabled>
+          <option value="">Memuat pilihan…</option>
         </select>
       </div>
+      <div class="hint-ruang" id="hintRuang"></div>
     </div>
     <button id="btnBukaToken" class="btn btn-primary" disabled>
       <span id="btnBukaTokenLabel">Mulai Pengawasan</span>
@@ -964,6 +986,9 @@ let qrObj = null;
 const els = {
   inputRuang: document.getElementById('inputRuang'),
   inputPengawasEntry: document.getElementById('inputPengawasEntry'),
+  labelInputRuang: document.getElementById('labelInputRuang'),
+  hintRuang: document.getElementById('hintRuang'),
+  modeRuangToggle: document.getElementById('modeRuangToggle'),
   btnBukaToken: document.getElementById('btnBukaToken'),
   btnBukaTokenLabel: document.getElementById('btnBukaTokenLabel'),
   entryStatus: document.getElementById('entryStatus'),
@@ -1123,30 +1148,32 @@ els.btnSimpanGuruBar.addEventListener('click', () => {
 });
 
 /* =========================================================
-   ISI PILIHAN RUANG / KELAS
-   Grup 1 "Ruang" = Ruang 01..30 (nomor ruang fisik).
-   Grup 2 "Kelas" = daftar kelas asli, diambil dari
-   data/siswa.csv di GitHub (sama seperti dipakai Rekap Nilai
-   & Kartu Siswa) supaya pengawas bisa pilih nama kelas kalau
-   itu yang dipakai sekolah, bukan nomor ruang.
+   PILIHAN RUANG / KELAS — dua mode terpisah (toggle), bukan
+   digabung dalam satu dropdown:
+     Mode "Ruang" → Ruang 01..30 (nomor ruang fisik)
+     Mode "Kelas" → daftar kelas asli dari data/siswa.csv di
+                    GitHub (7A, 7B, dst — sama seperti dipakai
+                    Rekap Nilai & Kartu Siswa)
+   Opsi yang SUDAH ada pengawas aktifnya (status "Aktif" di
+   Sheet1, lihat action=ruangAktif) ditandai "sudah dipakai"
+   dan tidak bisa dipilih, supaya 2 pengawas tidak dobel isi
+   Ruang/Kelas yang sama.
 ========================================================= */
 const SISWA_CSV_URL_RUANG = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/siswa.csv';
 
-function isiPilihanRuang(){
-  const grupRuang = document.createElement('optgroup');
-  grupRuang.label = 'Ruang';
-  for (let i = 1; i <= 30; i++){
-    const kode = 'Ruang ' + String(i).padStart(2, '0');
-    const opt = document.createElement('option');
-    opt.value = kode;
-    opt.textContent = kode;
-    grupRuang.appendChild(opt);
-  }
-  els.inputRuang.appendChild(grupRuang);
-}
-isiPilihanRuang();
+let modeRuangAktif = 'ruang'; // 'ruang' | 'kelas'
+let daftarSemuaRuang = [];
+let daftarSemuaKelas = [];
+let daftarRuangSedangDipakai = []; // dari server: Ruang/Kelas berstatus Aktif saat ini
 
-async function isiPilihanKelasDariGitHub(){
+function buatDaftarRuangPolos(){
+  const arr = [];
+  for (let i = 1; i <= 30; i++) arr.push('Ruang ' + String(i).padStart(2, '0'));
+  return arr;
+}
+daftarSemuaRuang = buatDaftarRuangPolos();
+
+async function muatDaftarKelasDariGitHub(){
   try {
     const res = await fetch(SISWA_CSV_URL_RUANG + '?t=' + Math.floor(Date.now()/60000), { cache: 'no-store' });
     if (!res.ok) throw new Error('siswa.csv belum tersedia');
@@ -1156,22 +1183,87 @@ async function isiPilihanKelasDariGitHub(){
       const kelas = ambilKolomRekap(o, 'KLS', 'KELAS');
       if (kelas) semuaKelas.add(kelas);
     });
-    if (!semuaKelas.size) return;
-
-    const grupKelas = document.createElement('optgroup');
-    grupKelas.label = 'Kelas';
-    [...semuaKelas].sort().forEach(k => {
-      const opt = document.createElement('option');
-      opt.value = k;
-      opt.textContent = k;
-      grupKelas.appendChild(opt);
-    });
-    els.inputRuang.appendChild(grupKelas);
+    daftarSemuaKelas = [...semuaKelas].sort();
   } catch (e) {
-    console.warn('⚠️ Gagal memuat daftar kelas untuk pilihan Ruang/Kelas:', e.message);
+    console.warn('⚠️ Gagal memuat daftar kelas dari GitHub:', e.message);
+    daftarSemuaKelas = [];
   }
+  if (modeRuangAktif === 'kelas') renderPilihanRuang();
 }
-isiPilihanKelasDariGitHub();
+muatDaftarKelasDariGitHub();
+
+/* Ambil daftar Ruang/Kelas yang SEDANG berstatus Aktif dari sheet,
+   supaya bisa ditandai/dikeluarkan dari pilihan. Kalau endpoint ini
+   belum ada di Apps Script (lihat catatan di bawah), gagal secara
+   diam-diam dan semua pilihan tetap bisa dipakai seperti biasa. */
+async function muatRuangSedangDipakai(){
+  els.inputRuang.disabled = true;
+  els.hintRuang.textContent = 'Memeriksa ruang yang sudah ada pengawasnya…';
+  els.hintRuang.className = 'hint-ruang';
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=ruangAktif', { method: 'GET' });
+    const json = await res.json();
+    daftarRuangSedangDipakai = (json.status === 'ok' && Array.isArray(json.daftar)) ? json.daftar : [];
+    els.hintRuang.textContent = '';
+  } catch (e) {
+    console.warn('⚠️ Gagal memuat daftar Ruang/Kelas yang sedang aktif:', e.message);
+    daftarRuangSedangDipakai = [];
+    els.hintRuang.textContent = '';
+  }
+  renderPilihanRuang();
+}
+
+function renderPilihanRuang(){
+  const sumber = modeRuangAktif === 'kelas' ? daftarSemuaKelas : daftarSemuaRuang;
+  els.labelInputRuang.textContent = modeRuangAktif === 'kelas' ? 'Kelas Asesmen' : 'Ruang Asesmen';
+
+  els.inputRuang.innerHTML = '';
+  const optKosong = document.createElement('option');
+  optKosong.value = '';
+  optKosong.textContent = modeRuangAktif === 'kelas' ? 'Pilih kelas…' : 'Pilih ruang…';
+  els.inputRuang.appendChild(optKosong);
+
+  if (!sumber.length){
+    els.inputRuang.disabled = true;
+    els.hintRuang.textContent = modeRuangAktif === 'kelas'
+      ? 'Daftar kelas belum bisa dimuat dari data sekolah.'
+      : '';
+    els.hintRuang.className = 'hint-ruang warn';
+    validateForm();
+    return;
+  }
+
+  let semuaTerpakai = true;
+  sumber.forEach(kode => {
+    const sudahDipakai = daftarRuangSedangDipakai.includes(kode);
+    if (!sudahDipakai) semuaTerpakai = false;
+    const opt = document.createElement('option');
+    opt.value = kode;
+    opt.textContent = kode + (sudahDipakai ? ' — sudah ada pengawas' : '');
+    opt.disabled = sudahDipakai;
+    els.inputRuang.appendChild(opt);
+  });
+
+  els.inputRuang.disabled = false;
+  if (semuaTerpakai && daftarRuangSedangDipakai.length){
+    els.hintRuang.textContent = 'Semua ' + (modeRuangAktif === 'kelas' ? 'kelas' : 'ruang') + ' di mode ini sudah ada pengawasnya.';
+    els.hintRuang.className = 'hint-ruang warn';
+  } else {
+    els.hintRuang.textContent = '';
+    els.hintRuang.className = 'hint-ruang';
+  }
+  validateForm();
+}
+
+els.modeRuangToggle.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    modeRuangAktif = btn.dataset.mode;
+    els.modeRuangToggle.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderPilihanRuang();
+  });
+});
+renderPilihanRuang();
+
 
 /* =========================================================
    MUAT DAFTAR NAMA GURU — dari GitHub CSV (cepat, lewat CDN)
@@ -2198,6 +2290,7 @@ function bukaGrupPengawas(headerKey, bukaLayarTarget){
   els.entryStatus.textContent = '';
   els.entryStatus.className = 'status-msg';
   validateForm();
+  muatRuangSedangDipakai();
 }
 
 async function kembaliDariGrupPengawas(screenEl){

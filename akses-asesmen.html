@@ -487,7 +487,7 @@
       <div class="guru-nama kosong" id="guruBarNama">Belum diisi — tap ✏️</div>
     </div>
     <button type="button" class="btn-edit-guru" id="btnEditGuru" title="Ubah nama pengawas">✏️</button>
-    <div class="guru-edit-row hidden" id="guruBarEdit" style="display:none">
+    <div class="guru-edit-row hidden" id="guruBarEdit">
       <div class="select-wrap" style="flex:1">
         <select id="selectGuruBar" disabled>
           <option value="">Memuat daftar guru…</option>
@@ -611,6 +611,14 @@
     </button>
     <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
       Isi sekali di awal — dipakai bersama untuk Token Asesmen, Token Manual, dan Izin Keluar sampai Anda menandai pengawasan selesai.
+    </div>
+    <div class="field">
+      <label for="inputPengawasEntry">Nama Pengawas</label>
+      <div class="select-wrap">
+        <select id="inputPengawasEntry" disabled>
+          <option value="">Memuat daftar guru…</option>
+        </select>
+      </div>
     </div>
     <div class="field">
       <label for="inputRuang">Ruang / Kelas Asesmen</label>
@@ -955,6 +963,7 @@ let qrObj = null;
 
 const els = {
   inputRuang: document.getElementById('inputRuang'),
+  inputPengawasEntry: document.getElementById('inputPengawasEntry'),
   btnBukaToken: document.getElementById('btnBukaToken'),
   btnBukaTokenLabel: document.getElementById('btnBukaTokenLabel'),
   entryStatus: document.getElementById('entryStatus'),
@@ -1064,9 +1073,12 @@ const els = {
 };
 
 /* =========================================================
-   NAMA GURU (PENGAWAS) — dipilih SEKALI dari pulldown saat
-   aplikasi dibuka, disimpan di localStorage, dan bisa diubah
-   lagi kapan saja lewat tombol pensil ✏️ di bar atas.
+   NAMA GURU (PENGAWAS) — diingat di localStorage supaya tidak
+   perlu dipilih ulang tiap kali. Pulldown aslinya ada di layar
+   "Isi Ruang/Kelas" (screenEntry, SELALU tampil normal seperti
+   layar lain — bukan bar kecil yang bisa gagal ditoggle). Bar
+   di Menu Utama cuma cerminan tampilan + jalan pintas ubah nama
+   lewat pensil ✏️, tidak dipakai untuk menahan navigasi.
 ========================================================= */
 const NAMA_GURU_KEY = 'aksesAsesmen_namaGuru_v1';
 
@@ -1082,21 +1094,21 @@ function tampilkanNamaGuruDiBar(){
     els.guruBarNama.textContent = nama;
     els.guruBarNama.classList.remove('kosong');
   } else {
-    els.guruBarNama.textContent = 'Belum diisi — tap ✏️';
+    els.guruBarNama.textContent = 'Belum diisi';
     els.guruBarNama.classList.add('kosong');
   }
 }
 function bukaEditNamaGuru(){
   els.guruBarTampil.style.display = 'none';
   els.btnEditGuru.style.display = 'none';
-  els.guruBarEdit.style.display = 'flex';
+  els.guruBarEdit.classList.remove('hidden');
   const namaSekarang = ambilNamaGuruTersimpan();
   if (namaSekarang) els.selectGuruBar.value = namaSekarang;
 }
 function tutupEditNamaGuru(){
   els.guruBarTampil.style.display = '';
   els.btnEditGuru.style.display = '';
-  els.guruBarEdit.style.display = 'none';
+  els.guruBarEdit.classList.add('hidden');
 }
 els.btnEditGuru.addEventListener('click', bukaEditNamaGuru);
 els.btnSimpanGuruBar.addEventListener('click', () => {
@@ -1105,6 +1117,9 @@ els.btnSimpanGuruBar.addEventListener('click', () => {
   simpanNamaGuruLokal(nama);
   tampilkanNamaGuruDiBar();
   tutupEditNamaGuru();
+  // Ikut sinkronkan pulldown di layar Isi Ruang/Kelas kalau kebetulan sedang terbuka.
+  if (els.inputPengawasEntry && !els.inputPengawasEntry.disabled) els.inputPengawasEntry.value = nama;
+  validateForm();
 });
 
 /* =========================================================
@@ -1152,10 +1167,6 @@ async function isiPilihanKelasDariGitHub(){
       grupKelas.appendChild(opt);
     });
     els.inputRuang.appendChild(grupKelas);
-
-    // Kalau ada sesi pengawasan tersimpan yang nilainya ada di grup Kelas
-    // (baru muncul setelah fetch ini selesai), pastikan terpilih dengan benar.
-    if (sesiPengawasan && sesiPengawasan.ruang) els.inputRuang.value = sesiPengawasan.ruang;
   } catch (e) {
     console.warn('⚠️ Gagal memuat daftar kelas untuk pilihan Ruang/Kelas:', e.message);
   }
@@ -1166,28 +1177,36 @@ isiPilihanKelasDariGitHub();
    MUAT DAFTAR NAMA GURU — dari GitHub CSV (cepat, lewat CDN)
    karena datanya jarang berubah. Kalau file belum ada/gagal,
    otomatis jatuh ke Apps Script (Sheet2!A:A) sebagai cadangan.
-   Dipakai untuk mengisi pulldown nama guru di Bar Nama Guru.
+   Kalau KEDUANYA gagal, dropdown tetap AKTIF (tidak disabled)
+   dan diisi opsi "Ketik manual" berbasis prompt() supaya guru
+   tidak pernah terjebak tak bisa lanjut.
 ========================================================= */
 const GURU_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/guru.csv';
 
-function isiDropdownGuru(daftar){
-  els.selectGuruBar.innerHTML = '';
+function isiDropdownGuruPada(selectEl, daftar){
+  selectEl.innerHTML = '';
   const optKosong = document.createElement('option');
   optKosong.value = '';
   optKosong.textContent = 'Pilih nama guru…';
-  els.selectGuruBar.appendChild(optKosong);
+  selectEl.appendChild(optKosong);
 
   daftar.forEach(nama => {
     const opt = document.createElement('option');
     opt.value = nama;
     opt.textContent = nama;
-    els.selectGuruBar.appendChild(opt);
+    selectEl.appendChild(opt);
   });
-  els.selectGuruBar.disabled = false;
+  selectEl.disabled = false;
 
   const tersimpan = ambilNamaGuruTersimpan();
-  if (tersimpan && daftar.includes(tersimpan)) els.selectGuruBar.value = tersimpan;
-  else if (!tersimpan) bukaEditNamaGuru(); // belum pernah diisi → langsung minta pilih
+  if (tersimpan && daftar.includes(tersimpan)) selectEl.value = tersimpan;
+}
+
+function isiDropdownGuruGagal(selectEl){
+  // Tetap AKTIF (bukan disabled) supaya guru tidak pernah macet total
+  // hanya karena guru.csv / Apps Script sedang bermasalah.
+  selectEl.innerHTML = '<option value="">— Ketik manual (tap di sini) —</option>';
+  selectEl.disabled = false;
 }
 
 function parseCSVGuru(text){
@@ -1213,20 +1232,40 @@ async function muatDaftarGuruDariAppsScript(){
 
 async function muatDaftarGuru(){
   tampilkanNamaGuruDiBar();
+  let daftar = null;
   try {
-    const daftar = await muatDaftarGuruDariCSV();
-    isiDropdownGuru(daftar);
+    daftar = await muatDaftarGuruDariCSV();
   } catch (errCSV) {
     console.warn('⚠️ Gagal ambil guru.csv, coba Apps Script sebagai cadangan:', errCSV.message);
-    try {
-      const daftar = await muatDaftarGuruDariAppsScript();
-      isiDropdownGuru(daftar);
-    } catch (errAS) {
-      els.selectGuruBar.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
-    }
+    try { daftar = await muatDaftarGuruDariAppsScript(); }
+    catch (errAS) { console.warn('⚠️ Apps Script action=guru juga gagal:', errAS.message); }
   }
+
+  [els.selectGuruBar, els.inputPengawasEntry].forEach(sel => {
+    if (!sel) return;
+    if (daftar && daftar.length) isiDropdownGuruPada(sel, daftar);
+    else isiDropdownGuruGagal(sel);
+  });
+  validateForm();
 }
 muatDaftarGuru();
+
+// Kalau opsi "Ketik manual" dipilih di salah satu pulldown nama guru,
+// minta ketik nama lewat prompt() lalu masukkan sebagai opsi baru.
+function pasangKetikManual(selectEl){
+  selectEl.addEventListener('change', () => {
+    if (selectEl.value !== '' || selectEl.options.length > 1) return;
+    const nama = (prompt('Ketik nama pengawas:') || '').trim();
+    if (!nama) return;
+    const opt = document.createElement('option');
+    opt.value = nama; opt.textContent = nama;
+    selectEl.insertBefore ? selectEl.insertBefore(opt, selectEl.firstChild) : selectEl.appendChild(opt);
+    selectEl.value = nama;
+    validateForm();
+  });
+}
+pasangKetikManual(els.selectGuruBar);
+pasangKetikManual(els.inputPengawasEntry);
 
 /* =========================================================
    SESI PENGAWASAN — dibuat saat guru mengisi Ruang/Kelas
@@ -1266,10 +1305,12 @@ muatSesiPengawasanTersimpan();
 perbaruiIndikatorSesi();
 
 function validateForm(){
-  const ok = els.inputRuang.value.trim().length > 0;
-  els.btnBukaToken.disabled = !ok;
+  const ruangOk = els.inputRuang.value.trim().length > 0;
+  const pengawasOk = els.inputPengawasEntry.value.trim().length > 0;
+  els.btnBukaToken.disabled = !(ruangOk && pengawasOk);
 }
 els.inputRuang.addEventListener('change', validateForm);
+els.inputPengawasEntry.addEventListener('change', validateForm);
 
 /* =========================================================
    SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
@@ -1299,13 +1340,8 @@ function lanjutKeTargetGrupPengawas(){
 
 els.btnBukaToken.addEventListener('click', async () => {
   const ruang = els.inputRuang.value.trim();
-  const pengawas = ambilNamaGuruTersimpan();
-  if (!ruang) return;
-  if (!pengawas){
-    els.entryStatus.textContent = 'Isi dulu Nama Pengawas lewat tombol ✏️ di bar atas.';
-    els.entryStatus.className = 'status-msg err';
-    return;
-  }
+  const pengawas = els.inputPengawasEntry.value.trim();
+  if (!ruang || !pengawas) return;
 
   els.btnBukaToken.disabled = true;
   els.btnBukaTokenLabel.innerHTML = '<span class="spinner"></span> Menyimpan...';
@@ -1316,6 +1352,8 @@ els.btnBukaToken.addEventListener('click', async () => {
     await simpanPengawas(ruang, pengawas, 'Aktif');
     sesiPengawasan = { ruang, pengawas };
     simpanSesiPengawasanLokal();
+    simpanNamaGuruLokal(pengawas);
+    tampilkanNamaGuruDiBar();
     perbaruiIndikatorSesi();
     els.metaRuang.textContent = ruang;
     els.metaRuang.title = ruang;
@@ -2150,10 +2188,6 @@ function bukaGrupPengawas(headerKey, bukaLayarTarget){
     els.metaPengawas.textContent = sesiPengawasan.pengawas;
     els.metaPengawas.title = sesiPengawasan.pengawas;
     bukaLayarTarget();
-    return;
-  }
-  if (!ambilNamaGuruTersimpan()){
-    bukaEditNamaGuru();
     return;
   }
   pendingHeaderKey = headerKey;

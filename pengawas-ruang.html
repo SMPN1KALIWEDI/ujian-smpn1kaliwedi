@@ -20,6 +20,9 @@
     --amber-500:#E2A63B;
     --red-500:#E15C5C;
     --violet-500:#8B6BD8;
+    --indigo-500:#4C6FE0;
+    --emerald-500:#22A06B;
+    --cyan-500:#0E9AA7;
     --bg:#EAF6EE;
     --card:#FFFFFF;
     --ink:#151A26;
@@ -341,40 +344,40 @@
 }
 #popupSuksesBox { animation: munculPop .35s ease-out; }
   /* ---------- Menu Utama (Home) ---------- */
-  .menu-list{display:flex;flex-direction:column;gap:12px;}
+  .menu-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .menu-card{
-    display:flex;align-items:center;gap:14px;
-    width:100%;padding:16px;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    width:100%;padding:18px 10px;
     background:#FAFBFD;
     border:1.5px solid var(--ring-track);
     border-radius:var(--radius-md);
     cursor:pointer;
     font-family:inherit;
-    text-align:left;
+    text-align:center;
     transition:border-color .15s ease, background .15s ease, transform .1s ease;
   }
   .menu-card:hover{border-color:var(--accent, var(--teal-500));background:#fff;}
-  .menu-card:active{transform:scale(0.98);}
+  .menu-card:active{transform:scale(0.96);}
   .menu-icon{
     flex:none;
-    width:48px;height:48px;border-radius:13px;
+    width:46px;height:46px;border-radius:13px;
     display:flex;align-items:center;justify-content:center;
     background:var(--accent, var(--teal-500));
     box-shadow:0 6px 16px -6px var(--accent, var(--teal-500));
   }
-  .menu-icon svg{width:24px;height:24px;}
-  .menu-text{flex:1;min-width:0;}
+  .menu-icon svg{width:22px;height:22px;}
+  .menu-text{width:100%;}
   .menu-title{
     font-family:'Poppins',sans-serif;
-    font-weight:700;font-size:15px;
+    font-weight:700;font-size:13.5px;
     color:var(--navy-950);
+    line-height:1.25;
     margin-bottom:2px;
   }
   .menu-desc{
-    font-size:12.5px;color:var(--ink-soft);
-    line-height:1.4;
+    font-size:10.5px;color:var(--ink-soft);
+    line-height:1.3;
   }
-  .menu-chevron{flex:none;width:18px;height:18px;color:#B7BECF;}
   .menu-back{
     display:flex;align-items:center;gap:6px;
     background:none;border:none;cursor:pointer;
@@ -384,18 +387,23 @@
   }
   .menu-back svg{width:16px;height:16px;}
   .menu-back:hover{color:var(--navy-800);}
+  .grup-label{
+    font-size:11px;font-weight:700;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.05em;
+    margin-bottom:10px;
+  }
+  .menu-card:disabled{opacity:.4;cursor:not-allowed;pointer-events:none;}
 </style>
 </head>
 <body>
 <div id="app">
 
   <div class="brand">
-    <div class="brand-badge" id="brandBadge">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 12C2 12 5.5 5.5 12 5.5C18.5 5.5 22 12 22 12C22 12 18.5 18.5 12 18.5C5.5 18.5 2 12 2 12Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
-        <circle cx="12" cy="12" r="3.4" stroke="white" stroke-width="1.8"/>
-        <circle cx="12" cy="12" r="1.1" fill="white"/>
-      </svg>
+    <div class="brand-badge" id="brandBadge" style="background:#fff;padding:6px">
+      <img src="https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/assets/logo_smp.png"
+           alt="Logo SMP Negeri 1 Kaliwedi"
+           style="width:100%;height:100%;object-fit:contain;border-radius:inherit"
+           onerror="this.parentElement.style.background='linear-gradient(155deg,var(--navy-800),var(--navy-950))';this.parentElement.style.padding='0';this.style.display='none'">
     </div>
     <h1 id="brandTitle">Akses Asesmen</h1>
     <p>SMP Negeri 1 Kaliwedi</p>
@@ -403,84 +411,7 @@
 
   <!-- ===================== SCREEN 0 : MENU UTAMA ===================== -->
   <div id="screenHome" class="card">
-    <div class="menu-list">
-      <button type="button" id="cardTokenAsesmen" class="menu-card" style="--accent:var(--teal-500)">
-        <div class="menu-icon">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
-            <rect x="14" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
-            <rect x="3" y="14" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
-            <path d="M14 14h3.2M14 18h7M20.5 14v7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="menu-text">
-          <div class="menu-title">Token Asesmen</div>
-          <div class="menu-desc">Tampilkan QR token untuk ruang ujian</div>
-        </div>
-        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-
-      <button type="button" id="cardRekapNilai" class="menu-card" style="--accent:var(--amber-500)">
-        <div class="menu-icon">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 20V10M12 20V4M20 20v-7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="menu-text">
-          <div class="menu-title">Rekap Nilai</div>
-          <div class="menu-desc">Lihat & unduh nilai siswa per kelas</div>
-        </div>
-        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-
-      <button type="button" id="cardResetPw" class="menu-card" style="--accent:var(--red-500)">
-        <div class="menu-icon">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
-            <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="menu-text">
-          <div class="menu-title">Reset Password</div>
-          <div class="menu-desc">Bantu siswa yang gagal login</div>
-        </div>
-        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-
-      <button type="button" id="cardKartuSiswa" class="menu-card" style="--accent:var(--violet-500)">
-        <div class="menu-icon">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.8"/>
-            <circle cx="8.5" cy="11" r="2" stroke="white" stroke-width="1.8"/>
-            <path d="M5.5 16c0-1.7 1.4-2.8 3-2.8s3 1.1 3 2.8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M14 10h4.2M14 13h4.2" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="menu-text">
-          <div class="menu-title">Kartu Siswa</div>
-          <div class="menu-desc">Lihat nilai satu siswa lengkap</div>
-        </div>
-        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- ===================== SCREEN 1 : JENDELA MASUK (TOKEN ASESMEN) ===================== -->
-  <div id="screenEntry" class="card hidden" style="margin-top:16px">
-    <button type="button" class="menu-back" id="btnKembaliDariEntry">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Menu Utama
-    </button>
+    <div class="grup-label">📍 Ruang &amp; Pengawas</div>
     <div class="field">
       <label for="inputRuang">Ruang Asesmen</label>
       <div class="select-wrap">
@@ -497,14 +428,123 @@
         </select>
       </div>
     </div>
-    <button id="btnBukaToken" class="btn btn-primary" disabled>
-      <span id="btnBukaTokenLabel">Buka Token</span>
-    </button>
     <div id="entryStatus" class="status-msg"></div>
+    <div id="petunjukRuangBelumDipilih" style="font-size:11.5px;color:var(--ink-soft);margin:2px 0 14px;display:none">
+      ⚠️ Pilih ruang &amp; pengawas dulu untuk mengaktifkan menu di bawah. Pilihan ini tetap dipakai untuk keempat menu ini sampai kamu tutup aplikasi.
+    </div>
+
+    <div class="menu-list">
+      <button type="button" id="cardTokenAsesmen" class="menu-card" style="--accent:var(--teal-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+            <path d="M14 14h3.2M14 18h7M20.5 14v7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Token Asesmen</div>
+          <div class="menu-desc">QR untuk ruang ujian</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardTokenManual" class="menu-card" style="--accent:var(--indigo-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.8"/>
+            <path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13.5h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Token Manual</div>
+          <div class="menu-desc">Kode token tanpa QR</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardQrKeluar" class="menu-card" style="--accent:var(--emerald-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11 12h9m0 0-3-3m3 3-3 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Izin Keluar</div>
+          <div class="menu-desc">Scan NISN, izin darurat</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardResetPw" class="menu-card" style="--accent:var(--red-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+            <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Reset Password</div>
+          <div class="menu-desc">Bantu siswa gagal login</div>
+        </div>
+      </button>
+    </div>
+
+    <div class="grup-label" style="margin-top:22px">📊 Data &amp; Nilai</div>
+    <div class="menu-list">
+      <button type="button" id="cardRekapNilai" class="menu-card" style="--accent:var(--amber-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 20V10M12 20V4M20 20v-7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Rekap Nilai</div>
+          <div class="menu-desc">Nilai per kelas</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardKartuSiswa" class="menu-card" style="--accent:var(--violet-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.8"/>
+            <circle cx="8.5" cy="11" r="2" stroke="white" stroke-width="1.8"/>
+            <path d="M5.5 16c0-1.7 1.4-2.8 3-2.8s3 1.1 3 2.8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M14 10h4.2M14 13h4.2" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Kartu Siswa</div>
+          <div class="menu-desc">Nilai satu siswa</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardInputSoal" class="menu-card" style="--accent:var(--cyan-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-6-5Z" stroke="white" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="M13 3v5h5" stroke="white" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="M9.5 14.5h5M12 12v5" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Input Link Soal</div>
+          <div class="menu-desc">Tambah soal baru</div>
+        </div>
+      </button>
+    </div>
+    <button type="button" id="btnBukaPetunjuk" class="btn btn-ghost" style="width:100%;margin-top:14px">
+      ❓ Petunjuk Penggunaan
+    </button>
   </div>
 
   <!-- ===================== SCREEN 2 : TOKEN QR ===================== -->
   <div id="screenToken" class="card hidden">
+    <button type="button" class="menu-back" id="btnKembaliDariToken">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
     <div class="token-meta">
       <div class="chip">
         <div class="label">Ruang</div>
@@ -660,6 +700,98 @@
     <div id="kartuSiswaStatus" class="status-msg"></div>
     <div id="kartuSiswaHasil" style="margin-top:8px"></div>
   </div>
+
+  <!-- ===================== SCREEN 9 : INPUT LINK SOAL ===================== -->
+  <div id="screenInputSoal" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariInputSoal">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Tambah soal baru tanpa perlu buka spreadsheet manual. Data disimpan ke <b>Sheet5</b> (Kode Asesmen, Nama Asesmen, Link Google Form).
+    </div>
+    <div class="field">
+      <label for="inputKodeAsesmen">Kode Asesmen</label>
+      <input type="text" id="inputKodeAsesmen" placeholder="mis. TO1, OSN-PABP" autocapitalize="characters" autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;text-transform:uppercase;">
+    </div>
+    <div class="field">
+      <label for="inputNamaAsesmen">Nama Asesmen</label>
+      <input type="text" id="inputNamaAsesmen" placeholder="mis. Try Out 1, Olimpiade PABP" autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <div class="field">
+      <label for="inputLinkAsesmen">Link Google Form</label>
+      <input type="url" id="inputLinkAsesmen" placeholder="https://docs.google.com/forms/..." autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnSimpanLinkSoal" class="btn btn-primary" style="width:100%">
+      <span id="btnSimpanLinkSoalLabel">💾 Simpan Link Soal</span>
+    </button>
+    <div id="inputSoalStatus" class="status-msg"></div>
+
+    <div id="daftarLinkSoalWrap" style="margin-top:20px"></div>
+  </div>
+
+  <!-- ===================== SCREEN 7 : TOKEN MANUAL ===================== -->
+  <div id="screenTokenManual" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariTokenManual">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Dipakai kalau siswa perlu tahu kode token tapi kameranya gagal scan QR. Dibatasi 10 kali dibuka per token supaya tidak disalahgunakan.
+    </div>
+    <button type="button" id="btnBukaTokenTeks" class="btn btn-primary" style="width:100%" onclick="toggleTokenTeks()">👁️ Tampilkan Kode Token</button>
+    <div id="tokenTeksBox" style="display:none;margin-top:14px;text-align:center;padding:20px;background:var(--bg);border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Kode Token Saat Ini</div>
+      <div id="tokenTeks" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:28px;letter-spacing:.14em;color:var(--navy-800)">-</div>
+    </div>
+    <div id="tokenManualStatus" class="status-msg" style="margin-top:10px"></div>
+    <button type="button" id="btnRefreshTokenManual" class="btn btn-ghost" style="width:100%;margin-top:10px">🔄 Muat Ulang Token</button>
+  </div>
+
+  <!-- ===================== SCREEN 8 : QR KELUAR (izin darurat) ===================== -->
+  <div id="screenQrKeluar" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariQrKeluar">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Untuk siswa yang <b>benar-benar darurat</b> perlu keluar ujian sebelum waktunya. Scan atau ketik NISN siswa, lalu konfirmasi — halaman ujian siswa itu akan otomatis lanjut keluar tanpa dihitung pelanggaran.
+    </div>
+    <div class="field">
+      <label for="inputNisnQrKeluar">NISN Siswa</label>
+      <input type="text" id="inputNisnQrKeluar" placeholder="Ketik atau scan QR NISN siswa"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnScanQrKeluar" class="btn btn-ghost" style="width:100%">📷 Scan QR Kartu Siswa</button>
+    <div id="qrReaderKeluarWrap" style="margin-top:10px;display:none">
+      <div id="qr-reader-keluar" style="border-radius:12px;overflow:hidden"></div>
+      <div id="qrStatusKeluarScan" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
+      <button id="btnTutupQrScanKeluar" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
+    </div>
+
+    <div id="previewSiswaQrKeluar" style="display:none;margin-top:12px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px">Siswa ditemukan</div>
+      <div id="previewNamaQrKeluar" style="font-size:15px;font-weight:700;color:var(--navy-800)">-</div>
+      <div id="previewKelasQrKeluar" style="font-size:12.5px;color:var(--ink-soft)">-</div>
+    </div>
+    <div id="previewNotFoundQrKeluar" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF6E5;border:1.5px solid #F3DFA8;border-radius:var(--radius-md);font-size:12.5px;color:#8A6A17">
+      ⚠️ NISN belum ditemukan di data siswa — cek lagi penulisannya. Izin tetap bisa dikirim.
+    </div>
+
+    <button id="btnKirimIzinKeluar" class="btn btn-primary" style="margin-top:12px">
+      <span id="btnKirimIzinKeluarLabel">🚪 Izinkan Keluar Sekarang</span>
+    </button>
+    <div id="izinKeluarStatus" class="status-msg"></div>
+  </div>
   <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
     <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
       <div id="popupBintangLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
@@ -667,6 +799,37 @@
       <div style="position:relative;margin-top:10px;font-size:19px;font-weight:800;color:var(--navy-800);letter-spacing:.02em">RESET BERHASIL</div>
       <div id="popupSuksesNama" style="position:relative;margin-top:4px;font-size:13.5px;color:var(--ink-soft)"></div>
       <button id="btnTutupPopupSukses" class="btn btn-primary" style="position:relative;margin-top:18px">Oke</button>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: PETUNJUK PENGGUNAAN ===================== -->
+  <div id="popupPetunjuk" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="position:relative;background:#fff;border-radius:20px;padding:26px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <button id="btnTutupPetunjuk" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;line-height:1;color:var(--ink-soft);cursor:pointer">×</button>
+
+      <div id="petunjukLangkah" style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;text-align:center">Langkah 1 dari 6</div>
+
+      <div style="display:flex;justify-content:center;margin:14px 0 10px">
+        <div id="petunjukIkon" class="menu-icon" style="width:56px;height:56px"></div>
+      </div>
+      <h3 id="petunjukJudul" style="text-align:center;margin:0 0 16px;font-family:'Poppins',sans-serif;font-weight:800;font-size:17px;color:var(--navy-950)"></h3>
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--teal-500);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">🎯 Fungsi</div>
+        <div id="petunjukFungsi" style="font-size:13px;color:var(--ink);line-height:1.55"></div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--teal-500);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">📋 Cara Pakai</div>
+        <ol id="petunjukCaraPakai" style="font-size:13px;color:var(--ink);line-height:1.65;padding-left:19px;margin:0"></ol>
+      </div>
+
+      <div id="petunjukDots" style="display:flex;justify-content:center;gap:6px;margin-top:18px"></div>
+
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button id="btnPetunjukSebelumnya" type="button" class="btn btn-ghost" style="flex:1">← Sebelumnya</button>
+        <button id="btnPetunjukLanjut" type="button" class="btn btn-primary" style="flex:1">Lanjut →</button>
+      </div>
     </div>
   </div>
 
@@ -686,38 +849,16 @@ const CONFIG = {
 /* =========================================================
    PWA MANIFEST (embedded, tanpa file terpisah)
 ========================================================= */
-(async function setupManifest(){
-  const iconSvgFallback = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512">
-    <rect width="24" height="24" rx="5" fill="#0F1B33"/>
-    <path d="M2 12C2 12 5.5 5.5 12 5.5C18.5 5.5 22 12 22 12C22 12 18.5 18.5 12 18.5C5.5 18.5 2 12 2 12Z" stroke="#3FC7C1" stroke-width="1.6" fill="none"/>
-    <circle cx="12" cy="12" r="3.2" stroke="#3FC7C1" stroke-width="1.6" fill="none"/>
-    <circle cx="12" cy="12" r="1" fill="#3FC7C1"/>
+(function setupManifest(){
+  // Ikon dibuat langsung (sinkron, tanpa nunggu fetch jaringan) supaya
+  // pasti kebaca browser saat "Add to Home Screen" — versi sebelumnya
+  // ambil logo lewat fetch async yang kadang belum selesai saat browser
+  // sudah keburu mengecek manifest, jadi ikon sering gagal muncul.
+  const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <rect width="200" height="200" rx="40" fill="#0F1B33"/>
+    <text x="100" y="135" font-size="105" text-anchor="middle" font-family="'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif">⛓️‍💥</text>
   </svg>`;
-  const iconUrlFallback = 'data:image/svg+xml;base64,' + btoa(iconSvgFallback);
-
-  function jadikanRawGithubUrlManifest(url){
-    const cocok = String(url || '').match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/(.+)$/);
-    return cocok ? `https://raw.githubusercontent.com/${cocok[1]}/${cocok[2]}/${cocok[3]}` : url;
-  }
-
-  async function ambilLogoSekolahManifest(){
-    try {
-      const t = Math.floor(Date.now() / 60000);
-      const res = await fetch('https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/sekolah.csv?t=' + t, { cache: 'no-store' });
-      if (!res.ok) return null;
-      const baris = (await res.text()).trim().split('\n').map(l => l.split(','));
-      for (let i = 1; i < baris.length; i++){
-        if ((baris[i][0] || '').trim() === 'logo' && baris[i][1]) {
-          return jadikanRawGithubUrlManifest(baris[i][1].trim());
-        }
-      }
-    } catch (e) { /* pakai fallback */ }
-    return null;
-  }
-
-  const logoUrl = await ambilLogoSekolahManifest();
-  const iconUrl = logoUrl || iconUrlFallback;
-  const tipeIcon = logoUrl ? 'image/png' : 'image/svg+xml';
+  const iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(iconSvg)));
 
   const manifest = {
     id: 'pengawas-ruang-smpn1kaliwedi',
@@ -728,8 +869,8 @@ const CONFIG = {
     background_color: '#F3F5F9',
     theme_color: '#0F1B33',
     icons: [
-      { src: iconUrl, sizes: '192x192', type: tipeIcon, purpose: 'any maskable' },
-      { src: iconUrl, sizes: '512x512', type: tipeIcon, purpose: 'any maskable' }
+      { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+      { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
     ]
   };
   const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
@@ -760,10 +901,8 @@ let qrObj = null;
 const els = {
   inputRuang: document.getElementById('inputRuang'),
   inputPengawas: document.getElementById('inputPengawas'),
-  btnBukaToken: document.getElementById('btnBukaToken'),
-  btnBukaTokenLabel: document.getElementById('btnBukaTokenLabel'),
   entryStatus: document.getElementById('entryStatus'),
-  screenEntry: document.getElementById('screenEntry'),
+  petunjukRuangBelumDipilih: document.getElementById('petunjukRuangBelumDipilih'),
   screenToken: document.getElementById('screenToken'),
   metaRuang: document.getElementById('metaRuang'),
   metaPengawas: document.getElementById('metaPengawas'),
@@ -786,7 +925,6 @@ const els = {
   cardTokenAsesmen: document.getElementById('cardTokenAsesmen'),
   cardRekapNilai: document.getElementById('cardRekapNilai'),
   cardResetPw: document.getElementById('cardResetPw'),
-  btnKembaliDariEntry: document.getElementById('btnKembaliDariEntry'),
   screenRekap: document.getElementById('screenRekap'),
   filterKelas: document.getElementById('filterKelas'),
   filterMapel: document.getElementById('filterMapel'),
@@ -815,6 +953,17 @@ const els = {
   popupBintangLayer: document.getElementById('popupBintangLayer'),
   popupSuksesNama: document.getElementById('popupSuksesNama'),
   btnTutupPopupSukses: document.getElementById('btnTutupPopupSukses'),
+  btnBukaPetunjuk: document.getElementById('btnBukaPetunjuk'),
+  popupPetunjuk: document.getElementById('popupPetunjuk'),
+  btnTutupPetunjuk: document.getElementById('btnTutupPetunjuk'),
+  petunjukLangkah: document.getElementById('petunjukLangkah'),
+  petunjukIkon: document.getElementById('petunjukIkon'),
+  petunjukJudul: document.getElementById('petunjukJudul'),
+  petunjukFungsi: document.getElementById('petunjukFungsi'),
+  petunjukCaraPakai: document.getElementById('petunjukCaraPakai'),
+  petunjukDots: document.getElementById('petunjukDots'),
+  btnPetunjukSebelumnya: document.getElementById('btnPetunjukSebelumnya'),
+  btnPetunjukLanjut: document.getElementById('btnPetunjukLanjut'),
   cardKartuSiswa: document.getElementById('cardKartuSiswa'),
   screenKartuSiswa: document.getElementById('screenKartuSiswa'),
   btnTutupKartuSiswa: document.getElementById('btnTutupKartuSiswa'),
@@ -822,6 +971,39 @@ const els = {
   kartuFilterNama: document.getElementById('kartuFilterNama'),
   kartuSiswaStatus: document.getElementById('kartuSiswaStatus'),
   kartuSiswaHasil: document.getElementById('kartuSiswaHasil'),
+  cardInputSoal: document.getElementById('cardInputSoal'),
+  screenInputSoal: document.getElementById('screenInputSoal'),
+  btnKembaliDariInputSoal: document.getElementById('btnKembaliDariInputSoal'),
+  inputKodeAsesmen: document.getElementById('inputKodeAsesmen'),
+  inputNamaAsesmen: document.getElementById('inputNamaAsesmen'),
+  inputLinkAsesmen: document.getElementById('inputLinkAsesmen'),
+  btnSimpanLinkSoal: document.getElementById('btnSimpanLinkSoal'),
+  btnSimpanLinkSoalLabel: document.getElementById('btnSimpanLinkSoalLabel'),
+  inputSoalStatus: document.getElementById('inputSoalStatus'),
+  daftarLinkSoalWrap: document.getElementById('daftarLinkSoalWrap'),
+  btnKembaliDariToken: document.getElementById('btnKembaliDariToken'),
+  cardTokenManual: document.getElementById('cardTokenManual'),
+  screenTokenManual: document.getElementById('screenTokenManual'),
+  btnKembaliDariTokenManual: document.getElementById('btnKembaliDariTokenManual'),
+  btnBukaTokenTeks: document.getElementById('btnBukaTokenTeks'),
+  tokenTeksBox: document.getElementById('tokenTeksBox'),
+  tokenManualStatus: document.getElementById('tokenManualStatus'),
+  btnRefreshTokenManual: document.getElementById('btnRefreshTokenManual'),
+  cardQrKeluar: document.getElementById('cardQrKeluar'),
+  screenQrKeluar: document.getElementById('screenQrKeluar'),
+  btnKembaliDariQrKeluar: document.getElementById('btnKembaliDariQrKeluar'),
+  inputNisnQrKeluar: document.getElementById('inputNisnQrKeluar'),
+  btnScanQrKeluar: document.getElementById('btnScanQrKeluar'),
+  qrReaderKeluarWrap: document.getElementById('qrReaderKeluarWrap'),
+  qrStatusKeluarScan: document.getElementById('qrStatusKeluarScan'),
+  btnTutupQrScanKeluar: document.getElementById('btnTutupQrScanKeluar'),
+  previewSiswaQrKeluar: document.getElementById('previewSiswaQrKeluar'),
+  previewNamaQrKeluar: document.getElementById('previewNamaQrKeluar'),
+  previewKelasQrKeluar: document.getElementById('previewKelasQrKeluar'),
+  previewNotFoundQrKeluar: document.getElementById('previewNotFoundQrKeluar'),
+  btnKirimIzinKeluar: document.getElementById('btnKirimIzinKeluar'),
+  btnKirimIzinKeluarLabel: document.getElementById('btnKirimIzinKeluarLabel'),
+  izinKeluarStatus: document.getElementById('izinKeluarStatus'),
 };
 
 /* =========================================================
@@ -901,12 +1083,22 @@ async function muatDaftarGuru(){
   }
 }
 muatDaftarGuru();
-function validateForm(){
+
+// Ruang & Pengawas sekarang tinggal di Menu Utama dan dipakai bareng
+// oleh 4 menu grup 1 (Token Asesmen, Token Manual, Izin Keluar, Reset
+// Password) — kartu-kartu itu dikunci sampai keduanya terisi, dan
+// TIDAK di-reset saat pindah antar-menu (cuma reset kalau reload/tutup
+// aplikasi, karena cuma state di memori, bukan disimpan).
+function aturStatusKartuGrup1(){
   const ok = els.inputRuang.value.trim().length > 0 && els.inputPengawas.value.trim().length > 0;
-  els.btnBukaToken.disabled = !ok;
+  [els.cardTokenAsesmen, els.cardTokenManual, els.cardQrKeluar, els.cardResetPw].forEach(btn => {
+    if (btn) btn.disabled = !ok;
+  });
+  els.petunjukRuangBelumDipilih.style.display = ok ? 'none' : 'block';
 }
-els.inputRuang.addEventListener('change', validateForm);
-els.inputPengawas.addEventListener('change', validateForm);
+els.inputRuang.addEventListener('change', aturStatusKartuGrup1);
+els.inputPengawas.addEventListener('change', aturStatusKartuGrup1);
+aturStatusKartuGrup1(); // kunci di awal, sebelum guru selesai dimuat
 
 /* =========================================================
    SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
@@ -922,15 +1114,15 @@ async function simpanPengawas(ruang, pengawas){
   return json;
 }
 
-els.btnBukaToken.addEventListener('click', async () => {
+els.cardTokenAsesmen.addEventListener('click', async () => {
+  if (els.cardTokenAsesmen.disabled) return;
   const ruang = els.inputRuang.value.trim();
   const pengawas = els.inputPengawas.value.trim();
   if (!ruang || !pengawas) return;
 
-  els.btnBukaToken.disabled = true;
-  els.btnBukaTokenLabel.innerHTML = '<span class="spinner"></span> Sedang membuat token...';
-  els.entryStatus.textContent = '';
+  els.entryStatus.textContent = '⏳ Sedang membuat token...';
   els.entryStatus.className = 'status-msg';
+  els.cardTokenAsesmen.disabled = true;
 
   try {
     await simpanPengawas(ruang, pengawas);
@@ -938,14 +1130,14 @@ els.btnBukaToken.addEventListener('click', async () => {
     els.metaRuang.title = ruang;
     els.metaPengawas.textContent = pengawas;
     els.metaPengawas.title = pengawas;
+    els.entryStatus.textContent = '';
+    aturHeader('token');
     openTokenScreen();
   } catch (err) {
     els.entryStatus.textContent = 'Gagal menyimpan data. Periksa koneksi lalu coba lagi.';
     els.entryStatus.className = 'status-msg err';
   } finally {
-    els.btnBukaToken.disabled = false;
-    els.btnBukaTokenLabel.textContent = 'Buka Token';
-    validateForm();
+    aturStatusKartuGrup1(); // sinkronkan lagi status kunci (disabled) yang benar
   }
 });
 
@@ -958,6 +1150,191 @@ async function ambilTokenValue(){
   const json = await res.json();
   if (json.status !== 'ok' || !json.value) throw new Error('Token tidak tersedia');
   return json.value;
+}
+
+/* =========================================================
+   IZIN KELUAR — pengawas scan/ketik NISN siswa yang benar-benar
+   darurat perlu keluar ujian sebelum jam selesai, lalu kirim izin.
+   Ditulis ke sheet "IzinKeluar" (lewat Apps Script action
+   izinKeluarManual) — asesmen.html polling sheet ini dan otomatis
+   lanjut begitu ketemu, TANPA pengawasan anti-contek sempat mati
+   sebelum izin ini benar-benar terkonfirmasi di server.
+========================================================= */
+let qrScannerKeluar = null;
+
+async function tampilkanPreviewSiswaQrKeluar(){
+  const nisn = els.inputNisnQrKeluar.value.trim();
+  els.previewSiswaQrKeluar.style.display = 'none';
+  els.previewNotFoundQrKeluar.style.display = 'none';
+  if (!nisn) return;
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+
+  if (siswa){
+    els.previewNamaQrKeluar.textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
+    els.previewKelasQrKeluar.textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
+    els.previewSiswaQrKeluar.style.display = 'block';
+  } else {
+    els.previewNotFoundQrKeluar.style.display = 'block';
+  }
+}
+
+async function kirimIzinKeluar(nisn){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      action: 'izinKeluarManual',
+      nisn,
+      ruang: els.inputRuang.value.trim(),
+      pengawas: els.inputPengawas.value.trim(),
+    })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal mengirim izin');
+  return json;
+}
+
+els.btnKirimIzinKeluar.addEventListener('click', async () => {
+  const nisn = els.inputNisnQrKeluar.value.trim();
+  els.izinKeluarStatus.textContent = '';
+  els.izinKeluarStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.izinKeluarStatus.textContent = 'Ketik atau scan NISN siswa terlebih dahulu.';
+    els.izinKeluarStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnKirimIzinKeluar.disabled = true;
+  els.btnKirimIzinKeluarLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    await kirimIzinKeluar(nisn);
+    els.izinKeluarStatus.textContent = `✅ Izin terkirim untuk NISN ${nisn}. Halaman ujian siswa akan otomatis lanjut dalam beberapa detik.`;
+    els.izinKeluarStatus.className = 'status-msg ok';
+    els.inputNisnQrKeluar.value = '';
+    els.previewSiswaQrKeluar.style.display = 'none';
+    els.previewNotFoundQrKeluar.style.display = 'none';
+  } catch (err) {
+    els.izinKeluarStatus.textContent = 'Gagal mengirim izin: ' + err.message;
+    els.izinKeluarStatus.className = 'status-msg err';
+  } finally {
+    els.btnKirimIzinKeluar.disabled = false;
+    els.btnKirimIzinKeluarLabel.textContent = '🚪 Izinkan Keluar Sekarang';
+  }
+});
+
+els.inputNisnQrKeluar.addEventListener('input', () => {
+  clearTimeout(window._debounceLookupQrKeluar);
+  window._debounceLookupQrKeluar = setTimeout(tampilkanPreviewSiswaQrKeluar, 350);
+});
+els.inputNisnQrKeluar.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnKirimIzinKeluar.click();
+});
+
+function bukaQrScanKeluar(){
+  els.qrReaderKeluarWrap.style.display = 'block';
+  els.qrStatusKeluarScan.textContent = 'Memulai kamera...';
+  setTimeout(() => {
+    try {
+      qrScannerKeluar = new Html5Qrcode('qr-reader-keluar');
+      qrScannerKeluar.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const teks = decodedText.trim();
+          els.inputNisnQrKeluar.value = teks;
+          els.qrStatusKeluarScan.textContent = '✅ Terbaca: ' + teks;
+          tampilkanPreviewSiswaQrKeluar();
+          if (qrScannerKeluar) { try { qrScannerKeluar.pause(true); } catch(e){} }
+          setTimeout(tutupQrScanKeluar, 700);
+        },
+        () => {}
+      ).then(() => { els.qrStatusKeluarScan.textContent = '🔍 Arahkan ke QR Code kartu siswa...'; })
+       .catch(err => { els.qrStatusKeluarScan.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
+    } catch (e) {
+      els.qrStatusKeluarScan.textContent = '❌ ' + e.message;
+    }
+  }, 300);
+}
+
+function tutupQrScanKeluar(){
+  if (qrScannerKeluar){
+    qrScannerKeluar.stop().catch(() => {}).finally(() => {
+      try { qrScannerKeluar.clear(); } catch(e){}
+      qrScannerKeluar = null;
+    });
+  }
+  els.qrReaderKeluarWrap.style.display = 'none';
+}
+
+els.btnScanQrKeluar.addEventListener('click', bukaQrScanKeluar);
+els.btnTutupQrScanKeluar.addEventListener('click', tutupQrScanKeluar);
+
+
+/* =========================================================
+   TOKEN MANUAL — layar terpisah dari QR. Tombol "Tampilkan
+   Kode Token" dibatasi 10 kali DIBUKA per token (bukan per
+   refresh). Counter cuma reset kalau nilai tokennya benar-benar
+   berubah, supaya tidak bisa di-reset dengan spam refresh.
+========================================================= */
+let tokenManualSebelumnya = null;
+let tokenTeksSisaBuka = 10;
+let tokenTeksSedangTampil = false;
+
+function resetTombolTokenTeks(){
+  if (!els.btnBukaTokenTeks || !els.tokenTeksBox) return;
+  tokenTeksSedangTampil = false;
+  els.tokenTeksBox.style.display = 'none';
+  els.btnBukaTokenTeks.disabled = false;
+  els.btnBukaTokenTeks.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
+}
+
+function toggleTokenTeks(){
+  if (tokenTeksSedangTampil){
+    // Sembunyikan lagi — tidak mengurangi jatah, cuma menutup pandangan
+    tokenTeksSedangTampil = false;
+    els.tokenTeksBox.style.display = 'none';
+    els.btnBukaTokenTeks.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
+    return;
+  }
+
+  if (tokenTeksSisaBuka <= 0){
+    els.btnBukaTokenTeks.disabled = true;
+    els.btnBukaTokenTeks.textContent = '🚫 Batas tampil token habis — pakai QR atau Otorisasi Manual';
+    return;
+  }
+
+  tokenTeksSisaBuka--;
+  tokenTeksSedangTampil = true;
+  els.tokenTeksBox.style.display = 'block';
+  els.btnBukaTokenTeks.textContent = tokenTeksSisaBuka > 0
+    ? `🙈 Sembunyikan (sisa ${tokenTeksSisaBuka}x)`
+    : `🙈 Sembunyikan (jatah habis, jangan dibuka lagi)`;
+}
+
+async function muatTokenManual(){
+  els.tokenManualStatus.textContent = '';
+  els.tokenManualStatus.className = 'status-msg';
+  els.btnRefreshTokenManual.disabled = true;
+  try {
+    const value = await ambilTokenValue();
+    const elTokenTeks = document.getElementById('tokenTeks');
+    if (elTokenTeks) elTokenTeks.textContent = value;
+
+    if (value !== tokenManualSebelumnya){
+      tokenManualSebelumnya = value;
+      tokenTeksSisaBuka = 10;
+    }
+    resetTombolTokenTeks();
+  } catch (err) {
+    els.tokenManualStatus.textContent = 'Gagal memuat token: ' + err.message;
+    els.tokenManualStatus.className = 'status-msg err';
+  } finally {
+    els.btnRefreshTokenManual.disabled = false;
+  }
 }
 
 function renderQR(value){
@@ -1038,7 +1415,7 @@ els.btnRefresh.addEventListener('click', () => loadToken(true));
    NAVIGASI ANTAR LAYAR
 ========================================================= */
 function openTokenScreen(){
-  els.screenEntry.classList.add('hidden');
+  els.screenHome.classList.add('hidden');
   els.screenToken.classList.remove('hidden');
   els.qrCanvasWrap.innerHTML = '';
   els.qrLoading.classList.remove('hidden');
@@ -1171,7 +1548,7 @@ function escapeHtmlRekap(s){
   return d.innerHTML;
 }
 
-let rekapTerakhir = null; // { "Kelas": [ {nama, kode, mapel, nilai, waktu}, ... ] }
+let matriksTerakhir = null; // { data: {kode: {nama, kelas, nilai:{mapel:val}}}, kolom: [mapel,...] }
 
 async function muatDataRekap(){
   els.btnMuatRekap.disabled = true;
@@ -1207,53 +1584,55 @@ async function muatDataRekap(){
 
     const kelasFilter = els.filterKelas.value.trim().toUpperCase();
     const mapelFilter = els.filterMapel.value.trim().toUpperCase();
-    const semuaMapel = new Set();
-    const rekap = {};
-    objNilai.forEach(o => {
-      const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
-      if (!kode) return;
-      const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
-      semuaMapel.add(mapel);
-      const nilai = ambilKolomRekap(o, 'NILAI');
-      const waktu = ambilKolomRekap(o, 'TIMESTAMP');
-      const info = lookup[kode] || { nama: '(tidak dikenal — cek Sheet2)', kelas: '(tanpa kelas)' };
-      if (kelasFilter && info.kelas.toUpperCase() !== kelasFilter) return;
-      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
-      if (!rekap[info.kelas]) rekap[info.kelas] = [];
-      rekap[info.kelas].push({ nama: info.nama, kode, mapel, nilai, waktu });
-    });
-    isiFilterMapel([...semuaMapel]);
 
-    // ---- Lengkapi dengan siswa yang BELUM punya nilai (sesuai filter aktif) ----
-    // Kalau filter Mapel aktif: cek siapa yang belum punya nilai utk mapel itu.
-    // Kalau filter Mapel kosong: cek siapa yang belum punya nilai SAMA SEKALI.
-    const sudahAdaNilai = new Set();
-    objNilai.forEach(o => {
-      const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
-      if (!kode) return;
-      const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
-      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
-      sudahAdaNilai.add(kode);
-    });
-    const labelMapelBelum = els.filterMapel.selectedOptions[0] && els.filterMapel.value
-      ? els.filterMapel.selectedOptions[0].textContent
-      : '-';
+    // ---- Bangun matriks: satu baris per siswa, satu kolom per mapel ----
+    const matriks = {};
     Object.entries(lookup).forEach(([kode, info]) => {
       if (kelasFilter && info.kelas.toUpperCase() !== kelasFilter) return;
-      if (sudahAdaNilai.has(kode)) return;
-      if (!rekap[info.kelas]) rekap[info.kelas] = [];
-      rekap[info.kelas].push({ nama: info.nama, kode, mapel: labelMapelBelum, nilai: null, waktu: '', belumAda: true });
+      matriks[kode] = { nama: info.nama, kelas: info.kelas, nilai: {} };
     });
 
-    // Urutkan tiap kelas berdasarkan nama
-    Object.values(rekap).forEach(list => list.sort((a, b) => a.nama.localeCompare(b.nama)));
+    const semuaMapelSet = new Set(); // dari SEMUA baris nilai siswa yg tampil, dipakai isi dropdown filter
+    objNilai.forEach(o => {
+      const kode = ambilKolomRekap(o, 'KODE').toUpperCase();
+      if (!kode || !matriks[kode]) return;
+      const mapel = ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN') || '-';
+      semuaMapelSet.add(mapel);
+      if (mapelFilter && mapel.toUpperCase() !== mapelFilter) return;
+      matriks[kode].nilai[mapel] = ambilKolomRekap(o, 'NILAI');
+    });
+    isiFilterMapel([...semuaMapelSet]);
 
-    renderRekap(rekap);
-    rekapTerakhir = rekap;
-    const totalBaris = Object.values(rekap).reduce((n, l) => n + l.length, 0);
-    els.btnDownloadXLS.disabled = totalBaris === 0;
-    if (totalBaris === 0){
-      els.rekapStatus.textContent = 'Belum ada data nilai untuk ditampilkan.';
+    // Kolom mapel yang ditampilkan: kalau ada filter Mapel aktif → cuma
+    // 1 kolom itu; kalau tidak → semua mapel yang ada di kelas yg tampil,
+    // urut abjad.
+    let kolomMapel;
+    if (mapelFilter) {
+      const labelAsli = (els.filterMapel.selectedOptions[0] && els.filterMapel.value)
+        ? els.filterMapel.selectedOptions[0].textContent
+        : mapelFilter;
+      kolomMapel = [labelAsli];
+    } else {
+      const mapelDiKelasTampil = new Set();
+      Object.values(matriks).forEach(s => Object.keys(s.nilai).forEach(m => mapelDiKelasTampil.add(m)));
+      kolomMapel = [...mapelDiKelasTampil].sort((a, b) => a.localeCompare(b));
+    }
+
+    // Urutkan berdasarkan Nilai cuma masuk akal kalau 1 kolom mapel aktif
+    els.btnSortNilai.disabled = !mapelFilter;
+    els.btnSortNilai.title = mapelFilter ? '' : 'Pilih 1 mata pelajaran dulu untuk urutkan berdasarkan nilai';
+    if (!mapelFilter && modeUrutanNilai !== 'nama') {
+      modeUrutanNilai = 'nama';
+      els.btnSortNilai.textContent = LABEL_URUTAN_NILAI.nama;
+    }
+
+    matriksTerakhir = { data: matriks, kolom: kolomMapel };
+    renderRekapMatriks(matriks, kolomMapel);
+
+    const totalSiswa = Object.keys(matriks).length;
+    els.btnDownloadXLS.disabled = totalSiswa === 0;
+    if (totalSiswa === 0){
+      els.rekapStatus.textContent = 'Tidak ada siswa untuk ditampilkan (cek filter kelas).';
       els.rekapStatus.className = 'status-msg';
     }
   } catch (err){
@@ -1278,7 +1657,7 @@ function isiFilterKelas(daftarKelas){
 }
 function isiFilterMapel(daftarMapel){
   const nilaiSekarang = els.filterMapel.value;
-  els.filterMapel.innerHTML = '<option value="">Semua Mapel</option>';
+  els.filterMapel.innerHTML = '<option value="">Semua Mapel (jadi kolom)</option>';
   daftarMapel.filter(Boolean).sort().forEach(m => {
     const opt = document.createElement('option');
     opt.value = m; opt.textContent = m;
@@ -1287,78 +1666,90 @@ function isiFilterMapel(daftarMapel){
   els.filterMapel.value = nilaiSekarang;
 }
 
-let modeUrutanNilai = 'nama'; // 'nama' | 'desc' (tertinggi dulu) | 'asc' (terendah dulu)
+let modeUrutanNilai = 'nama'; // 'nama' | 'desc' (tertinggi dulu) | 'asc' (terendah dulu) — desc/asc cuma aktif kalau 1 mapel difilter
 const LABEL_URUTAN_NILAI = {
   nama: '↕️ Urutkan: Nama (A–Z)',
   desc: '↕️ Urutkan: Nilai Tertinggi',
   asc:  '↕️ Urutkan: Nilai Terendah',
 };
 
-function urutkanBarisRekap(rows, mode){
-  const salinan = [...rows];
-  if (mode === 'nama') return salinan.sort((a, b) => a.nama.localeCompare(b.nama));
-
-  const angka = r => {
-    if (r.belumAda) return null;
-    const n = parseFloat(r.nilai);
+function urutkanSiswaMatriks(daftarSiswa, mode, kolomTunggal){
+  const salinan = [...daftarSiswa];
+  if (mode === 'nama' || !kolomTunggal) {
+    return salinan.sort((a, b) => a.kelas.localeCompare(b.kelas) || a.nama.localeCompare(b.nama));
+  }
+  const angka = s => {
+    const v = s.nilai[kolomTunggal];
+    if (v === undefined || v === '') return null;
+    const n = parseFloat(v);
     return isNaN(n) ? null : n;
   };
   return salinan.sort((a, b) => {
     const na = angka(a), nb = angka(b);
     if (na === null && nb === null) return a.nama.localeCompare(b.nama);
-    if (na === null) return 1;  // yang belum ada nilai/nilai non-angka ditaruh di bawah
+    if (na === null) return 1;  // yang belum ada nilai ditaruh di bawah
     if (nb === null) return -1;
     return mode === 'asc' ? na - nb : nb - na;
   });
 }
 
-function renderRekap(rekap){
-  const kelasList = Object.keys(rekap).sort();
-  if (kelasList.length === 0){ els.rekapContainer.innerHTML = ''; return; }
+function renderRekapMatriks(matriks, kolomMapel){
+  const daftarSiswa = Object.values(matriks);
+  if (daftarSiswa.length === 0){ els.rekapContainer.innerHTML = ''; return; }
 
-  els.rekapContainer.innerHTML = kelasList.map(kelas => {
-    const rows = urutkanBarisRekap(rekap[kelas], modeUrutanNilai);
-    const jumlahBelum = rows.filter(r => r.belumAda).length;
-    const jumlahAda = rows.length - jumlahBelum;
+  const kolomTunggal = (kolomMapel.length === 1 && els.filterMapel.value) ? kolomMapel[0] : null;
+  const terurut = urutkanSiswaMatriks(daftarSiswa, modeUrutanNilai, kolomTunggal);
+
+  const headerKolom = kolomMapel.map(m =>
+    `<th style="padding:7px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(m)}</th>`
+  ).join('');
+
+  const baris = terurut.map(s => {
+    const selMapel = kolomMapel.map(m => {
+      const v = s.nilai[m];
+      const kosong = (v === undefined || v === '');
+      return `<td style="padding:6px 8px;text-align:center;font-weight:700;${kosong ? 'color:#C98A1F' : ''}">${kosong ? '—' : escapeHtmlRekap(v)}</td>`;
+    }).join('');
     return `
-      <div style="margin-bottom:18px">
-        <div style="font-weight:700;font-size:13.5px;color:var(--navy-800);margin-bottom:6px">
-          Kelas ${escapeHtmlRekap(kelas)}
-          <span style="color:var(--ink-soft);font-weight:500">(${jumlahAda} ada${jumlahBelum ? `, <span style="color:#C98A1F">${jumlahBelum} belum</span>` : ''})</span>
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
-          <thead>
-            <tr style="background:var(--navy-800);color:#fff">
-              <th style="padding:7px 8px;text-align:left">Nama</th>
-              <th style="padding:7px 8px;text-align:left">Mapel</th>
-              <th style="padding:7px 8px;text-align:center">Nilai</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map(r => `
-              <tr style="border-bottom:1px solid var(--ring-track);${r.belumAda ? 'background:#FFF8EA' : ''}">
-                <td style="padding:6px 8px">${escapeHtmlRekap(r.nama)}</td>
-                <td style="padding:6px 8px">${escapeHtmlRekap(r.mapel)}</td>
-                <td style="padding:6px 8px;text-align:center;font-weight:700;${r.belumAda ? 'color:#C98A1F' : ''}">${r.belumAda ? '⚠️ Belum ada' : escapeHtmlRekap(r.nilai)}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
+      <tr style="border-bottom:1px solid var(--ring-track)">
+        <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.nama)}</td>
+        <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.kelas)}</td>
+        ${selMapel}
+      </tr>`;
   }).join('');
+
+  els.rekapContainer.innerHTML = `
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+        <thead>
+          <tr style="background:var(--navy-800);color:#fff">
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Nama</th>
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Kelas</th>
+            ${headerKolom}
+          </tr>
+        </thead>
+        <tbody>${baris}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--ink-soft)">${daftarSiswa.length} siswa &middot; ${kolomMapel.length} mata pelajaran &middot; <span style="color:#C98A1F">—</span> = belum ada nilai</div>
+  `;
 }
 
 function downloadRekapXLS(){
-  if (!rekapTerakhir || typeof XLSX === 'undefined') return;
-  const wb = XLSX.utils.book_new();
-  Object.keys(rekapTerakhir).sort().forEach(kelas => {
-    const rows = urutkanBarisRekap(rekapTerakhir[kelas], modeUrutanNilai).map(r => ({
-      'Nama': r.nama, 'Kode Siswa': r.kode, 'Mapel': r.mapel,
-      'Nilai': r.belumAda ? 'Belum ada nilai' : r.nilai, 'Waktu': r.waktu
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const namaSheet = String(kelas).substring(0, 31).replace(/[\\/?*[\]:]/g, '-') || 'Kelas';
-    XLSX.utils.book_append_sheet(wb, ws, namaSheet);
+  if (!matriksTerakhir || typeof XLSX === 'undefined') return;
+  const { data, kolom } = matriksTerakhir;
+  const kolomTunggal = (kolom.length === 1 && els.filterMapel.value) ? kolom[0] : null;
+  const daftarSiswa = urutkanSiswaMatriks(Object.values(data), modeUrutanNilai, kolomTunggal);
+
+  const rows = daftarSiswa.map(s => {
+    const row = { 'Nama': s.nama, 'Kelas': s.kelas };
+    kolom.forEach(m => { row[m] = (s.nilai[m] === undefined || s.nilai[m] === '') ? '' : s.nilai[m]; });
+    return row;
   });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Rekap Nilai');
   XLSX.writeFile(wb, `Rekap-Nilai-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
@@ -1367,11 +1758,14 @@ function downloadRekapXLS(){
    layar lain tampilkan judul sesuai fiturnya, tanpa ikon.
 ========================================================= */
 const HEADER_LAYAR = {
-  home:       { judul: 'Akses Asesmen', tampilkanIkon: true  },
-  token:      { judul: 'Token Asesmen', tampilkanIkon: false },
-  rekap:      { judul: 'REKAP NILAI',   tampilkanIkon: false },
-  resetpw:    { judul: 'Reset Password',tampilkanIkon: false },
-  kartusiswa: { judul: 'Kartu Siswa',   tampilkanIkon: false },
+  home:        { judul: 'Akses Asesmen', tampilkanIkon: true  },
+  token:       { judul: 'Token Asesmen', tampilkanIkon: false },
+  rekap:       { judul: 'REKAP NILAI',   tampilkanIkon: false },
+  resetpw:     { judul: 'Reset Password',tampilkanIkon: false },
+  kartusiswa:  { judul: 'Kartu Siswa',   tampilkanIkon: false },
+  inputsoal:   { judul: 'Input Link Soal', tampilkanIkon: false },
+  tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
+  qrkeluar:    { judul: 'Izin Keluar',    tampilkanIkon: false },
 };
 function aturHeader(kunci){
   const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
@@ -1383,16 +1777,17 @@ els.cardRekapNilai.addEventListener('click', () => {
   aturHeader('rekap');
   els.screenHome.classList.add('hidden');
   els.screenRekap.classList.remove('hidden');
-  if (!rekapTerakhir) muatDataRekap();
+  if (!matriksTerakhir) muatDataRekap();
 });
 els.btnMuatRekap.addEventListener('click', muatDataRekap);
 els.filterKelas.addEventListener('change', muatDataRekap);
 els.filterMapel.addEventListener('change', muatDataRekap);
 els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
 els.btnSortNilai.addEventListener('click', () => {
+  if (els.btnSortNilai.disabled) return;
   modeUrutanNilai = modeUrutanNilai === 'nama' ? 'desc' : (modeUrutanNilai === 'desc' ? 'asc' : 'nama');
   els.btnSortNilai.textContent = LABEL_URUTAN_NILAI[modeUrutanNilai];
-  if (rekapTerakhir) renderRekap(rekapTerakhir);
+  if (matriksTerakhir) renderRekapMatriks(matriksTerakhir.data, matriksTerakhir.kolom);
 });
 els.btnTutupRekap.addEventListener('click', () => {
   aturHeader('home');
@@ -1548,6 +1943,44 @@ els.btnTutupKartuSiswa.addEventListener('click', () => {
   els.screenHome.classList.remove('hidden');
 });
 
+els.cardTokenManual.addEventListener('click', () => {
+  aturHeader('tokenmanual');
+  els.screenHome.classList.add('hidden');
+  els.screenTokenManual.classList.remove('hidden');
+  muatTokenManual();
+});
+els.btnKembaliDariTokenManual.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenTokenManual.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+els.btnRefreshTokenManual.addEventListener('click', muatTokenManual);
+
+els.cardQrKeluar.addEventListener('click', () => {
+  aturHeader('qrkeluar');
+  els.screenHome.classList.add('hidden');
+  els.screenQrKeluar.classList.remove('hidden');
+  els.inputNisnQrKeluar.value = '';
+  els.previewSiswaQrKeluar.style.display = 'none';
+  els.previewNotFoundQrKeluar.style.display = 'none';
+  els.izinKeluarStatus.textContent = '';
+  els.izinKeluarStatus.className = 'status-msg';
+  els.inputNisnQrKeluar.focus();
+});
+els.btnKembaliDariQrKeluar.addEventListener('click', () => {
+  tutupQrScanKeluar();
+  aturHeader('home');
+  els.screenQrKeluar.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+els.btnKembaliDariToken.addEventListener('click', () => {
+  stopTimers();
+  aturHeader('home');
+  els.screenToken.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
 async function tampilkanPreviewSiswaResetPw(){
   const nisn = els.inputNisnResetPw.value.trim();
   els.previewSiswaResetPw.style.display = 'none';
@@ -1595,7 +2028,12 @@ async function resetPasswordSiswa(){
   try {
     const ctrl = new AbortController();
     const tid = setTimeout(() => ctrl.abort(), 12000);
-    const res = await fetch(APPS_SCRIPT_URL_PW + '?' + new URLSearchParams({ action: 'resetPassword', nisn }), { signal: ctrl.signal });
+    const res = await fetch(APPS_SCRIPT_URL_PW + '?' + new URLSearchParams({
+      action: 'resetPassword',
+      nisn,
+      ruang: els.inputRuang.value.trim(),
+      pengawas: els.inputPengawas.value.trim(),
+    }), { signal: ctrl.signal });
     clearTimeout(tid);
     const data = await res.json();
 
@@ -1711,51 +2149,258 @@ function tutupQrResetPw(){
 
 els.btnScanQrResetPw.addEventListener('click', bukaQrResetPw);
 els.btnTutupQrResetPw.addEventListener('click', tutupQrResetPw);
-els.cardTokenAsesmen.addEventListener('click', () => {
-  aturHeader('token');
-  els.screenHome.classList.add('hidden');
-  els.screenEntry.classList.remove('hidden');
+
+/* ---- Logo sekolah dari data/sekolah.csv (GitHub), tampil di Menu Utama ---- */
+
+/* =========================================================
+   PETUNJUK PENGGUNAAN — modal bertahap menjelaskan tiap menu:
+   fungsinya apa & cara pakainya, satu per satu.
+========================================================= */
+const DATA_PETUNJUK = [
+  {
+    judul: 'Token Asesmen', accent: 'var(--teal-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <path d="M14 14h3.2M14 18h7M20.5 14v7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Menampilkan QR Code token ujian yang berlaku untuk ruang & sesi saat ini. Siswa scan QR ini dari halaman ujian mereka supaya bisa mulai mengerjakan soal.',
+    caraPakai: [
+      'Pilih <b>Ruang Asesmen</b> dan <b>Nama Pengawas</b>.',
+      'Tap tombol <b>Buka Token</b>.',
+      'QR Code tampil dan otomatis refresh tiap beberapa menit.',
+      'Tunjukkan layar HP ke siswa satu per satu untuk di-scan.',
+    ],
+  },
+  {
+    judul: 'Token Manual', accent: 'var(--indigo-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.8"/>
+      <path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13.5h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Menampilkan kode token dalam bentuk TEKS (bukan QR) — dipakai kalau ada siswa yang kameranya bermasalah dan tidak bisa scan QR sama sekali.',
+    caraPakai: [
+      'Tap tombol <b>Tampilkan Kode Token</b>.',
+      'Bacakan atau tunjukkan kode yang muncul ke siswa.',
+      'Siswa mengetik kode itu manual lewat tombol pensil ✏️ di halaman ujiannya.',
+      'Tombol ini dibatasi <b>10 kali dibuka</b> per token, supaya tidak disalahgunakan.',
+    ],
+  },
+  {
+    judul: 'Izin Keluar', accent: 'var(--emerald-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M11 12h9m0 0-3-3m3 3-3 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Memberi izin RESMI ke siswa yang benar-benar darurat perlu keluar ujian sebelum jadwal selesai — tanpa dihitung pelanggaran oleh sistem anti-contek.',
+    caraPakai: [
+      'Scan QR kartu siswa, atau ketik NISN-nya manual.',
+      'Cek dulu nama & kelas yang muncul sudah benar.',
+      'Tap tombol <b>Izinkan Keluar Sekarang</b>.',
+      'Dalam beberapa detik, halaman ujian siswa itu otomatis lanjut keluar sendiri.',
+    ],
+  },
+  {
+    judul: 'Rekap Nilai', accent: 'var(--amber-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 20V10M12 20V4M20 20v-7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Melihat rekap nilai semua siswa, disusun rapi dalam tabel: satu baris per siswa, satu kolom per mata pelajaran.',
+    caraPakai: [
+      '(Opsional) pilih filter <b>Kelas</b> dan/atau <b>Mapel</b>.',
+      'Tap tombol <b>Muat / Refresh Rekap</b>.',
+      'Tabel nilai akan tampil — kolom "—" berarti siswa itu belum ada nilai di mapel tersebut.',
+      'Bisa diurutkan (Nama/Nilai) dan diunduh sebagai file Excel.',
+    ],
+  },
+  {
+    judul: 'Reset Password', accent: 'var(--red-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+      <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Membantu siswa yang gagal login karena password bermasalah, dengan mereset akunnya balik ke password default.',
+    caraPakai: [
+      'Scan QR kartu siswa, atau ketik NISN-nya manual.',
+      'Cek dulu nama & kelas yang muncul sudah benar.',
+      'Tap tombol <b>Reset ke Password Default</b>.',
+      'Siswa login lagi pakai password default <b>user123</b>, lalu diminta ganti password baru sendiri.',
+    ],
+  },
+  {
+    judul: 'Kartu Siswa', accent: 'var(--violet-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.8"/>
+      <circle cx="8.5" cy="11" r="2" stroke="white" stroke-width="1.8"/>
+      <path d="M5.5 16c0-1.7 1.4-2.8 3-2.8s3 1.1 3 2.8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M14 10h4.2M14 13h4.2" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Melihat detail nilai satu siswa tertentu secara lengkap — semua mata pelajaran sekaligus rata-ratanya.',
+    caraPakai: [
+      'Pilih <b>Kelas</b> siswa yang dicari.',
+      'Pilih <b>Nama</b> siswa dari daftar yang muncul.',
+      'Nilai per mapel dan rata-ratanya langsung tampil.',
+    ],
+  },
+];
+
+let petunjukIndeks = 0;
+
+function renderPetunjuk(){
+  const d = DATA_PETUNJUK[petunjukIndeks];
+  els.petunjukLangkah.textContent = `Langkah ${petunjukIndeks + 1} dari ${DATA_PETUNJUK.length}`;
+  els.petunjukIkon.style.setProperty('--accent', d.accent);
+  els.petunjukIkon.innerHTML = d.ikonSvg;
+  els.petunjukJudul.textContent = d.judul;
+  els.petunjukFungsi.textContent = d.fungsi;
+  els.petunjukCaraPakai.innerHTML = d.caraPakai.map(langkah => `<li style="margin-bottom:4px">${langkah}</li>`).join('');
+
+  els.petunjukDots.innerHTML = DATA_PETUNJUK.map((_, i) => `
+    <span style="width:7px;height:7px;border-radius:50%;background:${i === petunjukIndeks ? 'var(--navy-800)' : '#D8DEE8'};transition:.15s"></span>
+  `).join('');
+
+  els.btnPetunjukSebelumnya.style.visibility = petunjukIndeks === 0 ? 'hidden' : 'visible';
+  els.btnPetunjukLanjut.textContent = petunjukIndeks === DATA_PETUNJUK.length - 1 ? 'Selesai ✓' : 'Lanjut →';
+}
+
+function bukaPetunjuk(){
+  petunjukIndeks = 0;
+  renderPetunjuk();
+  els.popupPetunjuk.classList.remove('hidden');
+}
+function tutupPetunjuk(){
+  els.popupPetunjuk.classList.add('hidden');
+}
+
+els.btnBukaPetunjuk.addEventListener('click', bukaPetunjuk);
+els.btnTutupPetunjuk.addEventListener('click', tutupPetunjuk);
+els.btnPetunjukSebelumnya.addEventListener('click', () => {
+  if (petunjukIndeks > 0){ petunjukIndeks--; renderPetunjuk(); }
 });
-els.btnKembaliDariEntry.addEventListener('click', () => {
+els.btnPetunjukLanjut.addEventListener('click', () => {
+  if (petunjukIndeks < DATA_PETUNJUK.length - 1){ petunjukIndeks++; renderPetunjuk(); }
+  else tutupPetunjuk();
+});
+
+/* =========================================================
+   INPUT LINK SOAL — tambah soal baru ke Sheet5 (KODE SOAL |
+   Mapel | Link Soal) di spreadsheet asesmen, tanpa perlu buka
+   spreadsheet manual. Daftar yang sudah ada dibaca langsung lewat
+   gviz (bukan lewat CSV GitHub, karena Sheet5 belum masuk pipeline
+   export CSV) supaya selalu terbaru.
+========================================================= */
+const SPREADSHEET_ASESMEN_ID = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
+
+async function muatDaftarLinkSoal(){
+  els.daftarLinkSoalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
+  try {
+    const tq = encodeURIComponent('select A,B,C');
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:json&sheet=Sheet5&tq=${tq}&t=${Date.now()}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    const txt = await res.text();
+    const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+    if (s < 0) throw new Error('Format respons tidak dikenal');
+    const json = JSON.parse(txt.substring(s, e + 1));
+    const rows = (json.table && json.table.rows) || [];
+
+    if (rows.length === 0){
+      els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--ink-soft);font-size:12.5px">Belum ada soal tersimpan.</div>`;
+      return;
+    }
+
+    els.daftarLinkSoalWrap.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Soal Tersimpan (${rows.length})</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--navy-800);color:#fff">
+              <th style="padding:6px 8px;text-align:left;white-space:nowrap">Kode</th>
+              <th style="padding:6px 8px;text-align:left">Nama Asesmen</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => {
+              const kode = (r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined) ? escapeHtmlRekap(r.c[0].v) : '-';
+              const nama = (r.c && r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? escapeHtmlRekap(r.c[1].v) : '-';
+              return `<tr style="border-bottom:1px solid var(--ring-track)"><td style="padding:6px 8px;white-space:nowrap">${kode}</td><td style="padding:6px 8px">${nama}</td></tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (err) {
+    els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--red-500);font-size:12.5px">Gagal memuat daftar: ${err.message}</div>`;
+  }
+}
+
+async function kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'simpanLinkSoal', kodeAsesmen, namaAsesmen, linkForm })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan link soal');
+  return json;
+}
+
+els.cardInputSoal.addEventListener('click', () => {
+  aturHeader('inputsoal');
+  els.screenHome.classList.add('hidden');
+  els.screenInputSoal.classList.remove('hidden');
+  els.inputKodeAsesmen.value = '';
+  els.inputNamaAsesmen.value = '';
+  els.inputLinkAsesmen.value = '';
+  els.inputSoalStatus.textContent = '';
+  els.inputSoalStatus.className = 'status-msg';
+  muatDaftarLinkSoal();
+});
+els.btnKembaliDariInputSoal.addEventListener('click', () => {
   aturHeader('home');
-  els.screenEntry.classList.add('hidden');
+  els.screenInputSoal.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
 });
 
-/* ---- Logo sekolah dari data/sekolah.csv (GitHub), tampil di Menu Utama ---- */
-// Konversi otomatis link GitHub "blob" (halaman viewer) jadi link
-// gambar mentah (raw.githubusercontent.com) — biar tetap jalan
-// walau yang ditempel di Sheet1!B3 itu link blob dari browser.
-function jadikanRawGithubUrl(url){
-  const cocok = String(url || '').match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/(.+)$/);
-  return cocok ? `https://raw.githubusercontent.com/${cocok[1]}/${cocok[2]}/${cocok[3]}` : url;
-}
+els.btnSimpanLinkSoal.addEventListener('click', async () => {
+  const kodeAsesmen = els.inputKodeAsesmen.value.trim().toUpperCase();
+  const namaAsesmen = els.inputNamaAsesmen.value.trim();
+  const linkForm = els.inputLinkAsesmen.value.trim();
 
-async function muatLogoSekolah(){
-  try {
-    const t = Math.floor(Date.now() / 60000);
-    const res = await fetch(SEKOLAH_CSV_URL + '?t=' + t, { cache: 'no-store' });
-    if (!res.ok) return;
-    const baris = parseCSVGenerik(await res.text());
-    let logoUrl = '';
-    for (let i = 1; i < baris.length; i++) {
-      const [k, v] = baris[i];
-      if ((k || '').trim() === 'logo' && v) { logoUrl = jadikanRawGithubUrl(v.trim()); break; }
-    }
-    if (logoUrl) {
-      els.brandBadge.style.background = '#fff';
-      els.brandBadge.style.borderRadius = '50%';
-      els.brandBadge.style.padding = '6px';
-      els.brandBadge.innerHTML = `<img src="${logoUrl}" alt="Logo SMP Negeri 1 Kaliwedi" style="width:100%;height:100%;object-fit:contain;border-radius:50%">`;
-    }
-  } catch (e) {
-    // biarkan pakai ikon bawaan kalau logo belum bisa dimuat
+  els.inputSoalStatus.textContent = '';
+  els.inputSoalStatus.className = 'status-msg';
+
+  if (!kodeAsesmen || !namaAsesmen || !linkForm){
+    els.inputSoalStatus.textContent = 'Kode Asesmen, Nama Asesmen, dan Link Google Form wajib diisi semua.';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
   }
-}
-muatLogoSekolah();
+  try { new URL(linkForm); } catch(e){
+    els.inputSoalStatus.textContent = 'Link Google Form sepertinya belum valid — pastikan diawali https://';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
 
+  els.btnSimpanLinkSoal.disabled = true;
+  els.btnSimpanLinkSoalLabel.innerHTML = '<span class="spinner"></span>';
 
-validateForm();
+  try {
+    await kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm);
+    els.inputSoalStatus.textContent = `✅ "${namaAsesmen}" (${kodeAsesmen}) berhasil disimpan.`;
+    els.inputSoalStatus.className = 'status-msg ok';
+    els.inputKodeAsesmen.value = '';
+    els.inputNamaAsesmen.value = '';
+    els.inputLinkAsesmen.value = '';
+    muatDaftarLinkSoal();
+  } catch (err) {
+    els.inputSoalStatus.textContent = '❌ ' + err.message;
+    els.inputSoalStatus.className = 'status-msg err';
+  } finally {
+    els.btnSimpanLinkSoal.disabled = false;
+    els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Link Soal';
+  }
+});
+
+aturStatusKartuGrup1();
 </script>
 </body>
 </html>

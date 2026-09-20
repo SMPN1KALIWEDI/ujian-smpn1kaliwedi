@@ -710,21 +710,26 @@
       Menu Utama
     </button>
     <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
-      Tambah soal baru tanpa perlu buka spreadsheet manual. Data disimpan ke <b>Sheet5</b> (Kode Asesmen, Nama Asesmen, Link Google Form).
+      Tambah soal baru tanpa perlu buka spreadsheet manual. Kode Soal, Nama Pelajaran &amp; Link Soal disimpan ke <b>Sheet5</b>, Link Form Respon disimpan ke <b>LinkJwb</b>.
     </div>
     <div class="field">
-      <label for="inputKodeAsesmen">Kode Asesmen</label>
+      <label for="inputNamaAsesmen">Nama Pelajaran</label>
+      <input type="text" id="inputNamaAsesmen" placeholder="mis. Matematika, PABP" autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <div class="field">
+      <label for="inputKodeAsesmen">Kode Soal</label>
       <input type="text" id="inputKodeAsesmen" placeholder="mis. TO1, OSN-PABP" autocapitalize="characters" autocomplete="off"
         style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;text-transform:uppercase;">
     </div>
     <div class="field">
-      <label for="inputNamaAsesmen">Nama Asesmen</label>
-      <input type="text" id="inputNamaAsesmen" placeholder="mis. Try Out 1, Olimpiade PABP" autocomplete="off"
+      <label for="inputLinkAsesmen">LINK Soal</label>
+      <input type="url" id="inputLinkAsesmen" placeholder="https://docs.google.com/forms/..." autocomplete="off"
         style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
     </div>
     <div class="field">
-      <label for="inputLinkAsesmen">Link Google Form</label>
-      <input type="url" id="inputLinkAsesmen" placeholder="https://docs.google.com/forms/..." autocomplete="off"
+      <label for="inputLinkFormRespon">Link Form Respon</label>
+      <input type="url" id="inputLinkFormRespon" placeholder="https://docs.google.com/forms/..." autocomplete="off"
         style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
     </div>
     <button id="btnSimpanLinkSoal" class="btn btn-primary" style="width:100%">
@@ -977,6 +982,7 @@ const els = {
   inputKodeAsesmen: document.getElementById('inputKodeAsesmen'),
   inputNamaAsesmen: document.getElementById('inputNamaAsesmen'),
   inputLinkAsesmen: document.getElementById('inputLinkAsesmen'),
+  inputLinkFormRespon: document.getElementById('inputLinkFormRespon'),
   btnSimpanLinkSoal: document.getElementById('btnSimpanLinkSoal'),
   btnSimpanLinkSoalLabel: document.getElementById('btnSimpanLinkSoalLabel'),
   inputSoalStatus: document.getElementById('inputSoalStatus'),
@@ -2292,115 +2298,43 @@ els.btnPetunjukLanjut.addEventListener('click', () => {
 ========================================================= */
 const SPREADSHEET_ASESMEN_ID = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
 
+async function ambilSheetGviz(namaSheet, kolom){
+  const tq = encodeURIComponent(`select ${kolom}`);
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&tq=${tq}&t=${Date.now()}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  const txt = await res.text();
+  const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+  if (s < 0) throw new Error('Format respons tidak dikenal');
+  const json = JSON.parse(txt.substring(s, e + 1));
+  return (json.table && json.table.rows) || [];
+}
+
 async function muatDaftarLinkSoal(){
   els.daftarLinkSoalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
   try {
-    const tq = encodeURIComponent('select A,B,C');
-    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:json&sheet=Sheet5&tq=${tq}&t=${Date.now()}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    const txt = await res.text();
-    const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
-    if (s < 0) throw new Error('Format respons tidak dikenal');
-    const json = JSON.parse(txt.substring(s, e + 1));
-    const rows = (json.table && json.table.rows) || [];
+    const [rowsSoal, rowsJwb] = await Promise.all([
+      ambilSheetGviz('Sheet5', 'A,B,C'),
+      ambilSheetGviz('LinkJwb', 'A,B')
+    ]);
 
-    if (rows.length === 0){
+    if (rowsSoal.length === 0){
       els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--ink-soft);font-size:12.5px">Belum ada soal tersimpan.</div>`;
       return;
     }
 
+    // peta Kode Soal -> Link Form Respon, dari sheet LinkJwb
+    const petaJwb = {};
+    rowsJwb.forEach(r => {
+      const kode = (r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined) ? String(r.c[0].v).trim().toUpperCase() : '';
+      const linkJwb = (r.c && r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? String(r.c[1].v).trim() : '';
+      if (kode) petaJwb[kode] = linkJwb;
+    });
+
     els.daftarLinkSoalWrap.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Soal Tersimpan (${rows.length})</div>
+      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Soal Tersimpan (${rowsSoal.length})</div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
             <tr style="background:var(--navy-800);color:#fff">
               <th style="padding:6px 8px;text-align:left;white-space:nowrap">Kode</th>
-              <th style="padding:6px 8px;text-align:left">Nama Asesmen</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map(r => {
-              const kode = (r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined) ? escapeHtmlRekap(r.c[0].v) : '-';
-              const nama = (r.c && r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? escapeHtmlRekap(r.c[1].v) : '-';
-              return `<tr style="border-bottom:1px solid var(--ring-track)"><td style="padding:6px 8px;white-space:nowrap">${kode}</td><td style="padding:6px 8px">${nama}</td></tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  } catch (err) {
-    els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--red-500);font-size:12.5px">Gagal memuat daftar: ${err.message}</div>`;
-  }
-}
-
-async function kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm){
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'simpanLinkSoal', kodeAsesmen, namaAsesmen, linkForm })
-  });
-  const json = await res.json();
-  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan link soal');
-  return json;
-}
-
-els.cardInputSoal.addEventListener('click', () => {
-  aturHeader('inputsoal');
-  els.screenHome.classList.add('hidden');
-  els.screenInputSoal.classList.remove('hidden');
-  els.inputKodeAsesmen.value = '';
-  els.inputNamaAsesmen.value = '';
-  els.inputLinkAsesmen.value = '';
-  els.inputSoalStatus.textContent = '';
-  els.inputSoalStatus.className = 'status-msg';
-  muatDaftarLinkSoal();
-});
-els.btnKembaliDariInputSoal.addEventListener('click', () => {
-  aturHeader('home');
-  els.screenInputSoal.classList.add('hidden');
-  els.screenHome.classList.remove('hidden');
-});
-
-els.btnSimpanLinkSoal.addEventListener('click', async () => {
-  const kodeAsesmen = els.inputKodeAsesmen.value.trim().toUpperCase();
-  const namaAsesmen = els.inputNamaAsesmen.value.trim();
-  const linkForm = els.inputLinkAsesmen.value.trim();
-
-  els.inputSoalStatus.textContent = '';
-  els.inputSoalStatus.className = 'status-msg';
-
-  if (!kodeAsesmen || !namaAsesmen || !linkForm){
-    els.inputSoalStatus.textContent = 'Kode Asesmen, Nama Asesmen, dan Link Google Form wajib diisi semua.';
-    els.inputSoalStatus.className = 'status-msg err';
-    return;
-  }
-  try { new URL(linkForm); } catch(e){
-    els.inputSoalStatus.textContent = 'Link Google Form sepertinya belum valid — pastikan diawali https://';
-    els.inputSoalStatus.className = 'status-msg err';
-    return;
-  }
-
-  els.btnSimpanLinkSoal.disabled = true;
-  els.btnSimpanLinkSoalLabel.innerHTML = '<span class="spinner"></span>';
-
-  try {
-    await kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm);
-    els.inputSoalStatus.textContent = `✅ "${namaAsesmen}" (${kodeAsesmen}) berhasil disimpan.`;
-    els.inputSoalStatus.className = 'status-msg ok';
-    els.inputKodeAsesmen.value = '';
-    els.inputNamaAsesmen.value = '';
-    els.inputLinkAsesmen.value = '';
-    muatDaftarLinkSoal();
-  } catch (err) {
-    els.inputSoalStatus.textContent = '❌ ' + err.message;
-    els.inputSoalStatus.className = 'status-msg err';
-  } finally {
-    els.btnSimpanLinkSoal.disabled = false;
-    els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Link Soal';
-  }
-});
-
-aturStatusKartuGrup1();
-</script>
-</body>
-</html>
+              <th style="padding:6px 8p

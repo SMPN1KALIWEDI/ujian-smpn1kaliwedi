@@ -22,6 +22,7 @@
     --violet-500:#8B6BD8;
     --indigo-500:#4C6FE0;
     --emerald-500:#22A06B;
+    --cyan-500:#0E9AA7;
     --bg:#EAF6EE;
     --card:#FFFFFF;
     --ink:#151A26;
@@ -386,97 +387,12 @@
   }
   .menu-back svg{width:16px;height:16px;}
   .menu-back:hover{color:var(--navy-800);}
-
-  /* ---------- Grup Menu ---------- */
-  .menu-group{margin-bottom:18px;}
-  .menu-group:last-child{margin-bottom:0;}
-  .menu-group-title{
-    display:flex;align-items:center;gap:7px;
-    font-family:'Poppins',sans-serif;
-    font-weight:700;font-size:12px;
-    color:var(--ink-soft);
-    text-transform:uppercase;letter-spacing:.06em;
+  .grup-label{
+    font-size:11px;font-weight:700;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.05em;
     margin-bottom:10px;
   }
-  .menu-group-title .dot{
-    width:7px;height:7px;border-radius:50%;
-    background:var(--accent, var(--teal-500));
-    flex:none;
-  }
-
-  /* ---------- Bar Nama Guru ---------- */
-  .guru-bar{
-    width:100%;max-width:420px;
-    background:var(--card);
-    border-radius:var(--radius-md);
-    box-shadow:var(--shadow);
-    padding:12px 14px;
-    margin-bottom:14px;
-    display:flex;align-items:center;gap:10px;
-  }
-  .guru-bar .guru-ic{
-    flex:none;width:38px;height:38px;border-radius:11px;
-    background:linear-gradient(135deg,var(--teal-500),var(--navy-800));
-    display:flex;align-items:center;justify-content:center;
-    font-size:17px;
-  }
-  .guru-bar .guru-info{flex:1;min-width:0;}
-  .guru-bar .guru-label{
-    font-size:10px;font-weight:700;color:var(--ink-soft);
-    text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px;
-  }
-  .guru-bar .guru-nama{
-    font-size:14.5px;font-weight:700;color:var(--navy-950);
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  }
-  .guru-bar .guru-nama.kosong{color:var(--ink-soft);font-weight:600;font-style:italic;}
-  .guru-bar .btn-edit-guru{
-    flex:none;width:34px;height:34px;border-radius:10px;
-    border:1.5px solid var(--ring-track);background:#FAFBFD;
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;font-size:15px;
-  }
-  .guru-bar .btn-edit-guru:hover{border-color:var(--teal-500);}
-  .guru-bar .guru-edit-row{display:flex;gap:8px;width:100%;}
-  .guru-bar .guru-edit-row select{flex:1;}
-  .guru-bar .btn-simpan-guru{
-    flex:none;border:none;border-radius:10px;
-    background:var(--teal-500);color:#fff;font-weight:700;
-    padding:0 14px;cursor:pointer;font-size:13px;
-  }
-
-  /* ---------- Indikator Sesi Pengawasan Aktif ---------- */
-  .sesi-bar{
-    width:100%;max-width:420px;
-    background:linear-gradient(135deg,var(--emerald-500),var(--teal-500));
-    border-radius:var(--radius-md);
-    padding:11px 14px;
-    margin-bottom:14px;
-    display:flex;align-items:center;gap:10px;
-    color:#fff;
-  }
-  .sesi-bar .sesi-teks{flex:1;font-size:13px;font-weight:600;line-height:1.4;}
-  .sesi-bar .sesi-teks b{font-weight:800;}
-  .sesi-bar button{
-    flex:none;border:none;border-radius:9px;
-    background:rgba(255,255,255,.22);color:#fff;font-weight:700;
-    font-size:12px;padding:8px 11px;cursor:pointer;
-  }
-  .sesi-bar button:hover{background:rgba(255,255,255,.34);}
-
-  /* ---------- Toggle Mode Ruang/Kelas ---------- */
-  .mode-toggle{display:flex;gap:8px;}
-  .mode-btn{
-    flex:1;border:1.5px solid var(--ring-track);background:#FAFBFD;
-    border-radius:10px;padding:9px 8px;font-size:12.5px;font-weight:700;
-    color:var(--ink-soft);cursor:pointer;text-align:center;
-  }
-  .mode-btn.active{
-    border-color:var(--teal-500);background:rgba(20,184,166,.10);
-    color:var(--navy-950);
-  }
-  .hint-ruang{font-size:11.5px;color:var(--ink-soft);margin-top:5px;min-height:14px;}
-  .hint-ruang.warn{color:#B45309;}
+  .menu-card:disabled{opacity:.4;cursor:not-allowed;pointer-events:none;}
 </style>
 </head>
 <body>
@@ -493,35 +409,31 @@
     <p>SMP Negeri 1 Kaliwedi</p>
   </div>
 
-  <!-- ===================== BAR NAMA GURU (persisten, semua screen) ===================== -->
-  <div class="guru-bar" id="guruBar">
-    <div class="guru-ic">🧑‍🏫</div>
-    <div class="guru-info" id="guruBarTampil">
-      <div class="guru-label">Pengawas</div>
-      <div class="guru-nama kosong" id="guruBarNama">Belum diisi — tap ✏️</div>
+  <!-- ===================== SCREEN 0 : MENU UTAMA ===================== -->
+  <div id="screenHome" class="card">
+    <div class="grup-label">📍 Ruang &amp; Pengawas</div>
+    <div class="field">
+      <label for="inputRuang">Ruang Asesmen</label>
+      <div class="select-wrap">
+        <select id="inputRuang">
+          <option value="">Pilih ruang…</option>
+        </select>
+      </div>
     </div>
-    <button type="button" class="btn-edit-guru" id="btnEditGuru" title="Ubah nama pengawas">✏️</button>
-    <div class="guru-edit-row hidden" id="guruBarEdit">
-      <div class="select-wrap" style="flex:1">
-        <select id="selectGuruBar" disabled>
+    <div class="field">
+      <label for="inputPengawas">Nama Pengawas</label>
+      <div class="select-wrap">
+        <select id="inputPengawas" disabled>
           <option value="">Memuat daftar guru…</option>
         </select>
       </div>
-      <button type="button" class="btn-simpan-guru" id="btnSimpanGuruBar">Simpan</button>
     </div>
-  </div>
+    <div id="entryStatus" class="status-msg"></div>
+    <div id="petunjukRuangBelumDipilih" style="font-size:11.5px;color:var(--ink-soft);margin:2px 0 14px;display:none">
+      ⚠️ Pilih ruang &amp; pengawas dulu untuk mengaktifkan menu di bawah. Pilihan ini tetap dipakai untuk keempat menu ini sampai kamu tutup aplikasi.
+    </div>
 
-  <!-- ===================== INDIKATOR SESI PENGAWASAN AKTIF ===================== -->
-  <div class="sesi-bar hidden" id="sesiBar">
-    <div class="sesi-teks">📍 Sedang mengawasi <b id="sesiBarRuang">-</b></div>
-    <button type="button" id="btnSelesaikanSesiBar">Selesai</button>
-  </div>
-
-  <!-- ===================== SCREEN 0 : MENU UTAMA ===================== -->
-  <div id="screenHome" class="card">
-    <div class="menu-group">
-      <div class="menu-group-title"><span class="dot" style="--accent:var(--teal-500)"></span>Pengawas Asesmen</div>
-      <div class="menu-list">
+    <div class="menu-list">
       <button type="button" id="cardTokenAsesmen" class="menu-card" style="--accent:var(--teal-500)">
         <div class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -563,23 +475,22 @@
         </div>
       </button>
 
-      <button type="button" id="cardPengawasAktif" class="menu-card" style="--accent:var(--indigo-500)">
+      <button type="button" id="cardResetPw" class="menu-card" style="--accent:var(--red-500)">
         <div class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 19h16M6 19v-5.5M12 19V8M18 19v-9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+            <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
         <div class="menu-text">
-          <div class="menu-title">Pengawas Aktif</div>
-          <div class="menu-desc">Ruang/Kelas & nama pengawas saat ini</div>
+          <div class="menu-title">Reset Password</div>
+          <div class="menu-desc">Bantu siswa gagal login</div>
         </div>
       </button>
-      </div>
     </div>
 
-    <div class="menu-group">
-      <div class="menu-group-title"><span class="dot" style="--accent:var(--amber-500)"></span>Hasil Asesmen</div>
-      <div class="menu-list">
+    <div class="grup-label" style="margin-top:22px">📊 Data &amp; Nilai</div>
+    <div class="menu-list">
       <button type="button" id="cardRekapNilai" class="menu-card" style="--accent:var(--amber-500)">
         <div class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -607,65 +518,23 @@
         </div>
       </button>
 
-      <button type="button" id="cardResetPw" class="menu-card" style="--accent:var(--red-500)">
+      <button type="button" id="cardInputSoal" class="menu-card" style="--accent:var(--cyan-500)">
         <div class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
-            <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-6-5Z" stroke="white" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="M13 3v5h5" stroke="white" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="M9.5 14.5h5M12 12v5" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
           </svg>
         </div>
         <div class="menu-text">
-          <div class="menu-title">Reset Password</div>
-          <div class="menu-desc">Bantu siswa gagal login</div>
+          <div class="menu-title">Input Link Soal</div>
+          <div class="menu-desc">Tambah soal baru</div>
         </div>
       </button>
-      </div>
     </div>
-
     <button type="button" id="btnBukaPetunjuk" class="btn btn-ghost" style="width:100%;margin-top:14px">
       ❓ Petunjuk Penggunaan
     </button>
-  </div>
-
-  <!-- ===================== SCREEN 1 : JENDELA MASUK (ISI RUANG/KELAS PENGAWASAN) ===================== -->
-  <div id="screenEntry" class="card hidden" style="margin-top:16px">
-    <button type="button" class="menu-back" id="btnKembaliDariEntry">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Menu Utama
-    </button>
-    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
-      Isi sekali di awal — dipakai bersama untuk Token Asesmen, Token Manual, dan Izin Keluar sampai Anda menandai pengawasan selesai.
-    </div>
-    <div class="field">
-      <label for="inputPengawasEntry">Nama Pengawas</label>
-      <div class="select-wrap">
-        <select id="inputPengawasEntry" disabled>
-          <option value="">Memuat daftar guru…</option>
-        </select>
-      </div>
-    </div>
-    <div class="field">
-      <label>Mode Pengisian</label>
-      <div class="mode-toggle" id="modeRuangToggle">
-        <button type="button" class="mode-btn active" data-mode="ruang">🔢 Ruang 01–30</button>
-        <button type="button" class="mode-btn" data-mode="kelas">🏫 Kelas (7A, 7B, …)</button>
-      </div>
-    </div>
-    <div class="field">
-      <label for="inputRuang" id="labelInputRuang">Ruang Asesmen</label>
-      <div class="select-wrap">
-        <select id="inputRuang" disabled>
-          <option value="">Memuat pilihan…</option>
-        </select>
-      </div>
-      <div class="hint-ruang" id="hintRuang"></div>
-    </div>
-    <button id="btnBukaToken" class="btn btn-primary" disabled>
-      <span id="btnBukaTokenLabel">Mulai Pengawasan</span>
-    </button>
-    <div id="entryStatus" class="status-msg"></div>
   </div>
 
   <!-- ===================== SCREEN 2 : TOKEN QR ===================== -->
@@ -832,6 +701,50 @@
     <div id="kartuSiswaHasil" style="margin-top:8px"></div>
   </div>
 
+  <!-- ===================== SCREEN 9 : INPUT LINK SOAL ===================== -->
+  <div id="screenInputSoal" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariInputSoal">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Tambah soal baru tanpa perlu buka spreadsheet manual. Semua data disimpan ke <b>Sheet5</b> (Kode, Mapel, Link Soal, Link Form Respon, Skor Maksimal).
+    </div>
+    <div class="field">
+      <label for="inputNamaAsesmen">Nama Pelajaran</label>
+      <input type="text" id="inputNamaAsesmen" placeholder="mis. Matematika, PABP" autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <div class="field">
+      <label for="inputKodeAsesmen">Kode Soal</label>
+      <input type="text" id="inputKodeAsesmen" placeholder="mis. TO1, OSN-PABP" autocapitalize="characters" autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;text-transform:uppercase;">
+    </div>
+    <div class="field">
+      <label for="inputLinkAsesmen">LINK Soal</label>
+      <input type="url" id="inputLinkAsesmen" placeholder="https://docs.google.com/forms/..." autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <div class="field">
+      <label for="inputLinkFormRespon">Link Form Respon</label>
+      <input type="url" id="inputLinkFormRespon" placeholder="https://docs.google.com/forms/..." autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <div class="field">
+      <label for="inputSkorMaksimal">Skor Maksimal</label>
+      <input type="number" id="inputSkorMaksimal" placeholder="mis. 100" min="0" step="any" inputmode="decimal" autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnSimpanLinkSoal" class="btn btn-primary" style="width:100%">
+      <span id="btnSimpanLinkSoalLabel">💾 Simpan Link Soal</span>
+    </button>
+    <div id="inputSoalStatus" class="status-msg"></div>
+
+    <div id="daftarLinkSoalWrap" style="margin-top:20px"></div>
+  </div>
+
   <!-- ===================== SCREEN 7 : TOKEN MANUAL ===================== -->
   <div id="screenTokenManual" class="card hidden" style="margin-top:16px">
     <button type="button" class="menu-back" id="btnKembaliDariTokenManual">
@@ -889,25 +802,6 @@
     </button>
     <div id="izinKeluarStatus" class="status-msg"></div>
   </div>
-
-  <!-- ===================== SCREEN : DAFTAR PENGAWAS AKTIF ===================== -->
-  <div id="screenPengawasAktif" class="card hidden" style="margin-top:16px">
-    <button type="button" class="menu-back" id="btnKembaliDariPengawasAktif">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Menu Utama
-    </button>
-    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
-      Daftar Ruang/Kelas yang sedang ada pengawasnya saat ini (status Aktif), diurutkan dari Ruang/Kelas terkecil.
-    </div>
-    <button id="btnRefreshPengawasAktif" class="btn btn-primary">
-      <span id="btnRefreshPengawasAktifLabel">🔄 Muat / Refresh</span>
-    </button>
-    <div id="pengawasAktifStatus" class="status-msg"></div>
-    <div id="pengawasAktifContainer" style="margin-top:14px;max-height:460px;overflow-y:auto"></div>
-  </div>
-
   <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
     <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
       <div id="popupBintangLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
@@ -1016,27 +910,12 @@ let qrObj = null;
 
 const els = {
   inputRuang: document.getElementById('inputRuang'),
-  inputPengawasEntry: document.getElementById('inputPengawasEntry'),
-  labelInputRuang: document.getElementById('labelInputRuang'),
-  hintRuang: document.getElementById('hintRuang'),
-  modeRuangToggle: document.getElementById('modeRuangToggle'),
-  btnBukaToken: document.getElementById('btnBukaToken'),
-  btnBukaTokenLabel: document.getElementById('btnBukaTokenLabel'),
+  inputPengawas: document.getElementById('inputPengawas'),
   entryStatus: document.getElementById('entryStatus'),
-  screenEntry: document.getElementById('screenEntry'),
+  petunjukRuangBelumDipilih: document.getElementById('petunjukRuangBelumDipilih'),
   screenToken: document.getElementById('screenToken'),
   metaRuang: document.getElementById('metaRuang'),
   metaPengawas: document.getElementById('metaPengawas'),
-  guruBar: document.getElementById('guruBar'),
-  guruBarTampil: document.getElementById('guruBarTampil'),
-  guruBarNama: document.getElementById('guruBarNama'),
-  btnEditGuru: document.getElementById('btnEditGuru'),
-  guruBarEdit: document.getElementById('guruBarEdit'),
-  selectGuruBar: document.getElementById('selectGuruBar'),
-  btnSimpanGuruBar: document.getElementById('btnSimpanGuruBar'),
-  sesiBar: document.getElementById('sesiBar'),
-  sesiBarRuang: document.getElementById('sesiBarRuang'),
-  btnSelesaikanSesiBar: document.getElementById('btnSelesaikanSesiBar'),
   qrStage: document.getElementById('qrStage'),
   qrLoading: document.getElementById('qrLoading'),
   qrCanvasWrap: document.getElementById('qrCanvasWrap'),
@@ -1056,7 +935,6 @@ const els = {
   cardTokenAsesmen: document.getElementById('cardTokenAsesmen'),
   cardRekapNilai: document.getElementById('cardRekapNilai'),
   cardResetPw: document.getElementById('cardResetPw'),
-  btnKembaliDariEntry: document.getElementById('btnKembaliDariEntry'),
   screenRekap: document.getElementById('screenRekap'),
   filterKelas: document.getElementById('filterKelas'),
   filterMapel: document.getElementById('filterMapel'),
@@ -1103,6 +981,18 @@ const els = {
   kartuFilterNama: document.getElementById('kartuFilterNama'),
   kartuSiswaStatus: document.getElementById('kartuSiswaStatus'),
   kartuSiswaHasil: document.getElementById('kartuSiswaHasil'),
+  cardInputSoal: document.getElementById('cardInputSoal'),
+  screenInputSoal: document.getElementById('screenInputSoal'),
+  btnKembaliDariInputSoal: document.getElementById('btnKembaliDariInputSoal'),
+  inputKodeAsesmen: document.getElementById('inputKodeAsesmen'),
+  inputNamaAsesmen: document.getElementById('inputNamaAsesmen'),
+  inputLinkAsesmen: document.getElementById('inputLinkAsesmen'),
+  inputLinkFormRespon: document.getElementById('inputLinkFormRespon'),
+  inputSkorMaksimal: document.getElementById('inputSkorMaksimal'),
+  btnSimpanLinkSoal: document.getElementById('btnSimpanLinkSoal'),
+  btnSimpanLinkSoalLabel: document.getElementById('btnSimpanLinkSoalLabel'),
+  inputSoalStatus: document.getElementById('inputSoalStatus'),
+  daftarLinkSoalWrap: document.getElementById('daftarLinkSoalWrap'),
   btnKembaliDariToken: document.getElementById('btnKembaliDariToken'),
   cardTokenManual: document.getElementById('cardTokenManual'),
   screenTokenManual: document.getElementById('screenTokenManual'),
@@ -1126,217 +1016,45 @@ const els = {
   btnKirimIzinKeluar: document.getElementById('btnKirimIzinKeluar'),
   btnKirimIzinKeluarLabel: document.getElementById('btnKirimIzinKeluarLabel'),
   izinKeluarStatus: document.getElementById('izinKeluarStatus'),
-  cardPengawasAktif: document.getElementById('cardPengawasAktif'),
-  screenPengawasAktif: document.getElementById('screenPengawasAktif'),
-  btnKembaliDariPengawasAktif: document.getElementById('btnKembaliDariPengawasAktif'),
-  btnRefreshPengawasAktif: document.getElementById('btnRefreshPengawasAktif'),
-  btnRefreshPengawasAktifLabel: document.getElementById('btnRefreshPengawasAktifLabel'),
-  pengawasAktifStatus: document.getElementById('pengawasAktifStatus'),
-  pengawasAktifContainer: document.getElementById('pengawasAktifContainer'),
 };
 
 /* =========================================================
-   NAMA GURU (PENGAWAS) — diingat di localStorage supaya tidak
-   perlu dipilih ulang tiap kali. Pulldown aslinya ada di layar
-   "Isi Ruang/Kelas" (screenEntry, SELALU tampil normal seperti
-   layar lain — bukan bar kecil yang bisa gagal ditoggle). Bar
-   di Menu Utama cuma cerminan tampilan + jalan pintas ubah nama
-   lewat pensil ✏️, tidak dipakai untuk menahan navigasi.
+   ISI PILIHAN RUANG (Ruang 01 - Ruang 30)
 ========================================================= */
-const NAMA_GURU_KEY = 'aksesAsesmen_namaGuru_v1';
-
-function ambilNamaGuruTersimpan(){
-  try { return localStorage.getItem(NAMA_GURU_KEY) || ''; } catch(e){ return ''; }
-}
-function simpanNamaGuruLokal(nama){
-  try { localStorage.setItem(NAMA_GURU_KEY, nama); } catch(e){}
-}
-function tampilkanNamaGuruDiBar(){
-  const nama = ambilNamaGuruTersimpan();
-  if (nama){
-    els.guruBarNama.textContent = nama;
-    els.guruBarNama.classList.remove('kosong');
-  } else {
-    els.guruBarNama.textContent = 'Belum diisi';
-    els.guruBarNama.classList.add('kosong');
-  }
-}
-function bukaEditNamaGuru(){
-  els.guruBarTampil.style.display = 'none';
-  els.btnEditGuru.style.display = 'none';
-  els.guruBarEdit.classList.remove('hidden');
-  const namaSekarang = ambilNamaGuruTersimpan();
-  if (namaSekarang) els.selectGuruBar.value = namaSekarang;
-}
-function tutupEditNamaGuru(){
-  els.guruBarTampil.style.display = '';
-  els.btnEditGuru.style.display = '';
-  els.guruBarEdit.classList.add('hidden');
-}
-els.btnEditGuru.addEventListener('click', bukaEditNamaGuru);
-els.btnSimpanGuruBar.addEventListener('click', () => {
-  const nama = els.selectGuruBar.value.trim();
-  if (!nama){ els.selectGuruBar.focus(); return; }
-  simpanNamaGuruLokal(nama);
-  tampilkanNamaGuruDiBar();
-  tutupEditNamaGuru();
-  // Ikut sinkronkan pulldown di layar Isi Ruang/Kelas kalau kebetulan sedang terbuka.
-  if (els.inputPengawasEntry && !els.inputPengawasEntry.disabled) els.inputPengawasEntry.value = nama;
-  validateForm();
-});
-
-/* =========================================================
-   PILIHAN RUANG / KELAS — dua mode terpisah (toggle), bukan
-   digabung dalam satu dropdown:
-     Mode "Ruang" → Ruang 01..30 (nomor ruang fisik)
-     Mode "Kelas" → daftar kelas asli dari data/siswa.csv di
-                    GitHub (7A, 7B, dst — sama seperti dipakai
-                    Rekap Nilai & Kartu Siswa)
-   Opsi yang SUDAH ada pengawas aktifnya (status "Aktif" di
-   Sheet1, lihat action=ruangAktif) ditandai "sudah dipakai"
-   dan tidak bisa dipilih, supaya 2 pengawas tidak dobel isi
-   Ruang/Kelas yang sama.
-========================================================= */
-const SISWA_CSV_URL_RUANG = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/siswa.csv';
-
-let modeRuangAktif = 'ruang'; // 'ruang' | 'kelas'
-let daftarSemuaRuang = [];
-let daftarSemuaKelas = [];
-let daftarRuangSedangDipakai = []; // dari server: Ruang/Kelas berstatus Aktif saat ini
-
-function buatDaftarRuangPolos(){
-  const arr = [];
-  for (let i = 1; i <= 30; i++) arr.push('Ruang ' + String(i).padStart(2, '0'));
-  return arr;
-}
-daftarSemuaRuang = buatDaftarRuangPolos();
-
-async function muatDaftarKelasDariGitHub(){
-  try {
-    const res = await fetch(SISWA_CSV_URL_RUANG + '?t=' + Math.floor(Date.now()/60000), { cache: 'no-store' });
-    if (!res.ok) throw new Error('siswa.csv belum tersedia');
-    const objSiswa = csvKeObjek(parseCSVGenerik(await res.text()));
-    const semuaKelas = new Set();
-    objSiswa.forEach(o => {
-      const kelas = ambilKolomRekap(o, 'KLS', 'KELAS');
-      if (kelas) semuaKelas.add(kelas);
-    });
-    daftarSemuaKelas = [...semuaKelas].sort();
-  } catch (e) {
-    console.warn('⚠️ Gagal memuat daftar kelas dari GitHub:', e.message);
-    daftarSemuaKelas = [];
-  }
-  if (modeRuangAktif === 'kelas') renderPilihanRuang();
-}
-muatDaftarKelasDariGitHub();
-
-/* Ambil daftar Ruang/Kelas yang SEDANG berstatus Aktif dari sheet,
-   supaya bisa ditandai/dikeluarkan dari pilihan. Kalau endpoint ini
-   belum ada di Apps Script (lihat catatan di bawah), gagal secara
-   diam-diam dan semua pilihan tetap bisa dipakai seperti biasa. */
-async function muatRuangSedangDipakai(){
-  els.inputRuang.disabled = true;
-  els.hintRuang.textContent = 'Memeriksa ruang yang sudah ada pengawasnya…';
-  els.hintRuang.className = 'hint-ruang';
-  try {
-    const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=ruangAktif', { method: 'GET' });
-    const json = await res.json();
-    daftarRuangSedangDipakai = (json.status === 'ok' && Array.isArray(json.daftar)) ? json.daftar : [];
-    els.hintRuang.textContent = '';
-  } catch (e) {
-    console.warn('⚠️ Gagal memuat daftar Ruang/Kelas yang sedang aktif:', e.message);
-    daftarRuangSedangDipakai = [];
-    els.hintRuang.textContent = '';
-  }
-  renderPilihanRuang();
-}
-
-function renderPilihanRuang(){
-  const sumber = modeRuangAktif === 'kelas' ? daftarSemuaKelas : daftarSemuaRuang;
-  els.labelInputRuang.textContent = modeRuangAktif === 'kelas' ? 'Kelas Asesmen' : 'Ruang Asesmen';
-
-  els.inputRuang.innerHTML = '';
-  const optKosong = document.createElement('option');
-  optKosong.value = '';
-  optKosong.textContent = modeRuangAktif === 'kelas' ? 'Pilih kelas…' : 'Pilih ruang…';
-  els.inputRuang.appendChild(optKosong);
-
-  if (!sumber.length){
-    els.inputRuang.disabled = true;
-    els.hintRuang.textContent = modeRuangAktif === 'kelas'
-      ? 'Daftar kelas belum bisa dimuat dari data sekolah.'
-      : '';
-    els.hintRuang.className = 'hint-ruang warn';
-    validateForm();
-    return;
-  }
-
-  let semuaTerpakai = true;
-  sumber.forEach(kode => {
-    const sudahDipakai = daftarRuangSedangDipakai.includes(kode);
-    if (!sudahDipakai) semuaTerpakai = false;
+function isiPilihanRuang(){
+  const frag = document.createDocumentFragment();
+  for (let i = 1; i <= 30; i++){
+    const kode = 'Ruang ' + String(i).padStart(2, '0');
     const opt = document.createElement('option');
     opt.value = kode;
-    opt.textContent = kode + (sudahDipakai ? ' — sudah ada pengawas' : '');
-    opt.disabled = sudahDipakai;
-    els.inputRuang.appendChild(opt);
-  });
-
-  els.inputRuang.disabled = false;
-  if (semuaTerpakai && daftarRuangSedangDipakai.length){
-    els.hintRuang.textContent = 'Semua ' + (modeRuangAktif === 'kelas' ? 'kelas' : 'ruang') + ' di mode ini sudah ada pengawasnya.';
-    els.hintRuang.className = 'hint-ruang warn';
-  } else {
-    els.hintRuang.textContent = '';
-    els.hintRuang.className = 'hint-ruang';
+    opt.textContent = kode;
+    frag.appendChild(opt);
   }
-  validateForm();
+  els.inputRuang.appendChild(frag);
 }
-
-els.modeRuangToggle.querySelectorAll('.mode-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    modeRuangAktif = btn.dataset.mode;
-    els.modeRuangToggle.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b === btn));
-    renderPilihanRuang();
-  });
-});
-renderPilihanRuang();
-
+isiPilihanRuang();
 
 /* =========================================================
    MUAT DAFTAR NAMA GURU — dari GitHub CSV (cepat, lewat CDN)
    karena datanya jarang berubah. Kalau file belum ada/gagal,
    otomatis jatuh ke Apps Script (Sheet2!A:A) sebagai cadangan.
-   Kalau KEDUANYA gagal, dropdown tetap AKTIF (tidak disabled)
-   dan diisi opsi "Ketik manual" berbasis prompt() supaya guru
-   tidak pernah terjebak tak bisa lanjut.
 ========================================================= */
 const GURU_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/guru.csv';
 
-function isiDropdownGuruPada(selectEl, daftar){
-  selectEl.innerHTML = '';
+function isiDropdownGuru(daftar){
+  els.inputPengawas.innerHTML = '';
   const optKosong = document.createElement('option');
   optKosong.value = '';
   optKosong.textContent = 'Pilih nama guru…';
-  selectEl.appendChild(optKosong);
+  els.inputPengawas.appendChild(optKosong);
 
   daftar.forEach(nama => {
     const opt = document.createElement('option');
     opt.value = nama;
     opt.textContent = nama;
-    selectEl.appendChild(opt);
+    els.inputPengawas.appendChild(opt);
   });
-  selectEl.disabled = false;
-
-  const tersimpan = ambilNamaGuruTersimpan();
-  if (tersimpan && daftar.includes(tersimpan)) selectEl.value = tersimpan;
-}
-
-function isiDropdownGuruGagal(selectEl){
-  // Tetap AKTIF (bukan disabled) supaya guru tidak pernah macet total
-  // hanya karena guru.csv / Apps Script sedang bermasalah.
-  selectEl.innerHTML = '<option value="">— Ketik manual (tap di sini) —</option>';
-  selectEl.disabled = false;
+  els.inputPengawas.disabled = false;
 }
 
 function parseCSVGuru(text){
@@ -1361,142 +1079,77 @@ async function muatDaftarGuruDariAppsScript(){
 }
 
 async function muatDaftarGuru(){
-  tampilkanNamaGuruDiBar();
-  let daftar = null;
   try {
-    daftar = await muatDaftarGuruDariCSV();
+    const daftar = await muatDaftarGuruDariCSV();
+    isiDropdownGuru(daftar);
   } catch (errCSV) {
     console.warn('⚠️ Gagal ambil guru.csv, coba Apps Script sebagai cadangan:', errCSV.message);
-    try { daftar = await muatDaftarGuruDariAppsScript(); }
-    catch (errAS) { console.warn('⚠️ Apps Script action=guru juga gagal:', errAS.message); }
+    try {
+      const daftar = await muatDaftarGuruDariAppsScript();
+      isiDropdownGuru(daftar);
+    } catch (errAS) {
+      els.inputPengawas.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
+      els.entryStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
+      els.entryStatus.className = 'status-msg err';
+    }
   }
-
-  [els.selectGuruBar, els.inputPengawasEntry].forEach(sel => {
-    if (!sel) return;
-    if (daftar && daftar.length) isiDropdownGuruPada(sel, daftar);
-    else isiDropdownGuruGagal(sel);
-  });
-  validateForm();
 }
 muatDaftarGuru();
 
-// Kalau opsi "Ketik manual" dipilih di salah satu pulldown nama guru,
-// minta ketik nama lewat prompt() lalu masukkan sebagai opsi baru.
-function pasangKetikManual(selectEl){
-  selectEl.addEventListener('change', () => {
-    if (selectEl.value !== '' || selectEl.options.length > 1) return;
-    const nama = (prompt('Ketik nama pengawas:') || '').trim();
-    if (!nama) return;
-    const opt = document.createElement('option');
-    opt.value = nama; opt.textContent = nama;
-    selectEl.insertBefore ? selectEl.insertBefore(opt, selectEl.firstChild) : selectEl.appendChild(opt);
-    selectEl.value = nama;
-    validateForm();
+// Ruang & Pengawas sekarang tinggal di Menu Utama dan dipakai bareng
+// oleh 4 menu grup 1 (Token Asesmen, Token Manual, Izin Keluar, Reset
+// Password) — kartu-kartu itu dikunci sampai keduanya terisi, dan
+// TIDAK di-reset saat pindah antar-menu (cuma reset kalau reload/tutup
+// aplikasi, karena cuma state di memori, bukan disimpan).
+function aturStatusKartuGrup1(){
+  const ok = els.inputRuang.value.trim().length > 0 && els.inputPengawas.value.trim().length > 0;
+  [els.cardTokenAsesmen, els.cardTokenManual, els.cardQrKeluar, els.cardResetPw].forEach(btn => {
+    if (btn) btn.disabled = !ok;
   });
+  els.petunjukRuangBelumDipilih.style.display = ok ? 'none' : 'block';
 }
-pasangKetikManual(els.selectGuruBar);
-pasangKetikManual(els.inputPengawasEntry);
-
-/* =========================================================
-   SESI PENGAWASAN — dibuat saat guru mengisi Ruang/Kelas
-   pertama kali sebelum masuk ke Token Asesmen / Token Manual /
-   Izin Keluar (Kelompok "Pengawas Asesmen"). Tetap AKTIF dan
-   tersimpan (localStorage) selama guru belum menandai
-   pengawasannya selesai — jadi Ruang/Kelas tidak perlu diisi
-   ulang tiap buka menu di kelompok yang sama.
-========================================================= */
-const SESI_PENGAWASAN_KEY = 'aksesAsesmen_sesiPengawasan_v1';
-let sesiPengawasan = null; // { ruang, pengawas }
-let pendingHeaderKey = null;       // header yang dipakai setelah Ruang/Kelas diisi
-let pendingBukaLayarTarget = null; // fungsi pembuka+inisialisasi layar tujuan
-
-function muatSesiPengawasanTersimpan(){
-  try {
-    const raw = localStorage.getItem(SESI_PENGAWASAN_KEY);
-    sesiPengawasan = raw ? JSON.parse(raw) : null;
-  } catch(e){ sesiPengawasan = null; }
-}
-function simpanSesiPengawasanLokal(){
-  try { localStorage.setItem(SESI_PENGAWASAN_KEY, JSON.stringify(sesiPengawasan)); } catch(e){}
-}
-function hapusSesiPengawasanLokal(){
-  sesiPengawasan = null;
-  try { localStorage.removeItem(SESI_PENGAWASAN_KEY); } catch(e){}
-}
-function perbaruiIndikatorSesi(){
-  if (sesiPengawasan && sesiPengawasan.ruang){
-    els.sesiBarRuang.textContent = sesiPengawasan.ruang;
-    els.sesiBar.classList.remove('hidden');
-  } else {
-    els.sesiBar.classList.add('hidden');
-  }
-}
-muatSesiPengawasanTersimpan();
-perbaruiIndikatorSesi();
-
-function validateForm(){
-  const ruangOk = els.inputRuang.value.trim().length > 0;
-  const pengawasOk = els.inputPengawasEntry.value.trim().length > 0;
-  els.btnBukaToken.disabled = !(ruangOk && pengawasOk);
-}
-els.inputRuang.addEventListener('change', validateForm);
-els.inputPengawasEntry.addEventListener('change', validateForm);
+els.inputRuang.addEventListener('change', aturStatusKartuGrup1);
+els.inputPengawas.addEventListener('change', aturStatusKartuGrup1);
+aturStatusKartuGrup1(); // kunci di awal, sebelum guru selesai dimuat
 
 /* =========================================================
    SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
-   status: 'Aktif' saat mulai mengawasi, 'Selesai' saat guru
-   menandai pengawasan di ruang/kelas itu sudah berakhir.
-   (Apps Script perlu kolom "Status" tambahan di Sheet1 untuk
-   menampung nilai ini.)
 ========================================================= */
-async function simpanPengawas(ruang, pengawas, status){
+async function simpanPengawas(ruang, pengawas){
   const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'simpan', ruang, pengawas, status: status || 'Aktif' })
+    body: JSON.stringify({ action: 'simpan', ruang, pengawas })
   });
   const json = await res.json();
   if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan data');
   return json;
 }
 
-function lanjutKeTargetGrupPengawas(){
-  els.screenEntry.classList.add('hidden');
-  if (pendingHeaderKey) aturHeader(pendingHeaderKey);
-  if (pendingBukaLayarTarget) pendingBukaLayarTarget();
-  pendingHeaderKey = null;
-  pendingBukaLayarTarget = null;
-}
-
-els.btnBukaToken.addEventListener('click', async () => {
+els.cardTokenAsesmen.addEventListener('click', async () => {
+  if (els.cardTokenAsesmen.disabled) return;
   const ruang = els.inputRuang.value.trim();
-  const pengawas = els.inputPengawasEntry.value.trim();
+  const pengawas = els.inputPengawas.value.trim();
   if (!ruang || !pengawas) return;
 
-  els.btnBukaToken.disabled = true;
-  els.btnBukaTokenLabel.innerHTML = '<span class="spinner"></span> Menyimpan...';
-  els.entryStatus.textContent = '';
+  els.entryStatus.textContent = '⏳ Sedang membuat token...';
   els.entryStatus.className = 'status-msg';
+  els.cardTokenAsesmen.disabled = true;
 
   try {
-    await simpanPengawas(ruang, pengawas, 'Aktif');
-    sesiPengawasan = { ruang, pengawas };
-    simpanSesiPengawasanLokal();
-    simpanNamaGuruLokal(pengawas);
-    tampilkanNamaGuruDiBar();
-    perbaruiIndikatorSesi();
+    await simpanPengawas(ruang, pengawas);
     els.metaRuang.textContent = ruang;
     els.metaRuang.title = ruang;
     els.metaPengawas.textContent = pengawas;
     els.metaPengawas.title = pengawas;
-    lanjutKeTargetGrupPengawas();
+    els.entryStatus.textContent = '';
+    aturHeader('token');
+    openTokenScreen();
   } catch (err) {
     els.entryStatus.textContent = 'Gagal menyimpan data. Periksa koneksi lalu coba lagi.';
     els.entryStatus.className = 'status-msg err';
   } finally {
-    els.btnBukaToken.disabled = false;
-    els.btnBukaTokenLabel.textContent = 'Mulai Pengawasan';
-    validateForm();
+    aturStatusKartuGrup1(); // sinkronkan lagi status kunci (disabled) yang benar
   }
 });
 
@@ -1546,8 +1199,8 @@ async function kirimIzinKeluar(nisn){
     body: JSON.stringify({
       action: 'izinKeluarManual',
       nisn,
-      ruang: (sesiPengawasan && sesiPengawasan.ruang) || '',
-      pengawas: (sesiPengawasan && sesiPengawasan.pengawas) || ambilNamaGuruTersimpan(),
+      ruang: els.inputRuang.value.trim(),
+      pengawas: els.inputPengawas.value.trim(),
     })
   });
   const json = await res.json();
@@ -1774,7 +1427,7 @@ els.btnRefresh.addEventListener('click', () => loadToken(true));
    NAVIGASI ANTAR LAYAR
 ========================================================= */
 function openTokenScreen(){
-  els.screenEntry.classList.add('hidden');
+  els.screenHome.classList.add('hidden');
   els.screenToken.classList.remove('hidden');
   els.qrCanvasWrap.innerHTML = '';
   els.qrLoading.classList.remove('hidden');
@@ -2059,12 +1712,6 @@ function renderRekapMatriks(matriks, kolomMapel){
   const kolomTunggal = (kolomMapel.length === 1 && els.filterMapel.value) ? kolomMapel[0] : null;
   const terurut = urutkanSiswaMatriks(daftarSiswa, modeUrutanNilai, kolomTunggal);
 
-  // Kolom Nama: lebar dibatasi (~10% lebih kecil dari lebar alami
-  // sebelumnya) + boleh membungkus ke 2 baris kalau nama panjang tidak
-  // muat, supaya tidak "memakan" lebar tabel di layar kecil.
-  const styleThNama = 'padding:7px 8px;text-align:left;max-width:117px;white-space:normal;word-break:break-word;line-height:1.25';
-  const styleTdNama = 'padding:6px 8px;max-width:117px;white-space:normal;word-break:break-word;line-height:1.25';
-
   const headerKolom = kolomMapel.map(m =>
     `<th style="padding:7px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(m)}</th>`
   ).join('');
@@ -2077,7 +1724,7 @@ function renderRekapMatriks(matriks, kolomMapel){
     }).join('');
     return `
       <tr style="border-bottom:1px solid var(--ring-track)">
-        <td style="${styleTdNama}">${escapeHtmlRekap(s.nama)}</td>
+        <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.nama)}</td>
         <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(s.kelas)}</td>
         ${selMapel}
       </tr>`;
@@ -2088,9 +1735,9 @@ function renderRekapMatriks(matriks, kolomMapel){
       <table style="width:100%;border-collapse:collapse;font-size:12.5px">
         <thead>
           <tr style="background:var(--navy-800);color:#fff">
-            <th style="${styleThNama};position:sticky;top:0;background:var(--navy-800);z-index:2">Nama</th>
-            <th style="padding:7px 8px;text-align:left;white-space:nowrap;position:sticky;top:0;background:var(--navy-800);z-index:2">Kelas</th>
-            ${headerKolom.replace(/<th style="/g, '<th style="position:sticky;top:0;background:var(--navy-800);z-index:2;')}
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Nama</th>
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap">Kelas</th>
+            ${headerKolom}
           </tr>
         </thead>
         <tbody>${baris}</tbody>
@@ -2124,14 +1771,13 @@ function downloadRekapXLS(){
 ========================================================= */
 const HEADER_LAYAR = {
   home:        { judul: 'Akses Asesmen', tampilkanIkon: true  },
-  entry:       { judul: 'Ruang / Kelas', tampilkanIkon: false },
   token:       { judul: 'Token Asesmen', tampilkanIkon: false },
   rekap:       { judul: 'REKAP NILAI',   tampilkanIkon: false },
   resetpw:     { judul: 'Reset Password',tampilkanIkon: false },
   kartusiswa:  { judul: 'Kartu Siswa',   tampilkanIkon: false },
+  inputsoal:   { judul: 'Input Link Soal', tampilkanIkon: false },
   tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
   qrkeluar:    { judul: 'Izin Keluar',    tampilkanIkon: false },
-  pengawasaktif: { judul: 'Pengawas Aktif', tampilkanIkon: false },
 };
 function aturHeader(kunci){
   const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
@@ -2149,77 +1795,6 @@ els.btnMuatRekap.addEventListener('click', muatDataRekap);
 els.filterKelas.addEventListener('change', muatDataRekap);
 els.filterMapel.addEventListener('change', muatDataRekap);
 els.btnDownloadXLS.addEventListener('click', downloadRekapXLS);
-
-/* =========================================================
-   DAFTAR PENGAWAS AKTIF — daftar Ruang/Kelas yang sedang ada
-   pengawasnya saat ini (status Aktif di Sheet1), diurutkan dari
-   Ruang/Kelas terkecil (ascending). Murni layar lihat-data, jadi
-   TIDAK lewat bukaGrupPengawas (tidak perlu isi Ruang/Nama dulu).
-========================================================= */
-function escapeHtmlPengawasAktif(s){
-  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-async function muatPengawasAktif(){
-  els.btnRefreshPengawasAktif.disabled = true;
-  els.btnRefreshPengawasAktifLabel.innerHTML = '<span class="spinner"></span> Memuat...';
-  els.pengawasAktifStatus.textContent = '';
-  els.pengawasAktifStatus.className = 'status-msg';
-
-  try {
-    const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=pengawasAktif', { method: 'GET' });
-    const json = await res.json();
-    if (json.status !== 'ok' || !Array.isArray(json.daftar)) throw new Error(json.message || 'Data tidak tersedia');
-
-    if (!json.daftar.length){
-      els.pengawasAktifContainer.innerHTML = `
-        <div style="padding:18px;text-align:center;color:var(--ink-soft);font-size:13px">
-          Belum ada Ruang/Kelas yang sedang diawasi.
-        </div>`;
-    } else {
-      const baris = json.daftar.map(p => `
-        <tr style="border-bottom:1px solid var(--ring-track)">
-          <td style="padding:8px 10px;font-weight:700;white-space:nowrap">${escapeHtmlPengawasAktif(p.ruang)}</td>
-          <td style="padding:8px 10px">${escapeHtmlPengawasAktif(p.pengawas)}</td>
-        </tr>`).join('');
-
-      els.pengawasAktifContainer.innerHTML = `
-        <div class="tabel-scroll" style="overflow-x:auto;max-height:400px;overflow-y:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <thead>
-              <tr style="background:var(--navy-800);color:#fff">
-                <th style="padding:8px 10px;text-align:left;white-space:nowrap;position:sticky;top:0;background:var(--navy-800);z-index:2">Ruang / Kelas</th>
-                <th style="padding:8px 10px;text-align:left;position:sticky;top:0;background:var(--navy-800);z-index:2">Nama Pengawas</th>
-              </tr>
-            </thead>
-            <tbody>${baris}</tbody>
-          </table>
-        </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--ink-soft)">${json.daftar.length} Ruang/Kelas sedang diawasi</div>`;
-    }
-    els.pengawasAktifStatus.textContent = '';
-  } catch (e) {
-    els.pengawasAktifContainer.innerHTML = '';
-    els.pengawasAktifStatus.textContent = 'Gagal memuat data: ' + e.message;
-    els.pengawasAktifStatus.className = 'status-msg err';
-  } finally {
-    els.btnRefreshPengawasAktif.disabled = false;
-    els.btnRefreshPengawasAktifLabel.textContent = '🔄 Muat / Refresh';
-  }
-}
-
-els.cardPengawasAktif.addEventListener('click', () => {
-  aturHeader('pengawasaktif');
-  els.screenHome.classList.add('hidden');
-  els.screenPengawasAktif.classList.remove('hidden');
-  muatPengawasAktif();
-});
-els.btnKembaliDariPengawasAktif.addEventListener('click', () => {
-  aturHeader('home');
-  els.screenPengawasAktif.classList.add('hidden');
-  els.screenHome.classList.remove('hidden');
-});
-els.btnRefreshPengawasAktif.addEventListener('click', muatPengawasAktif);
 els.btnSortNilai.addEventListener('click', () => {
   if (els.btnSortNilai.disabled) return;
   modeUrutanNilai = modeUrutanNilai === 'nama' ? 'desc' : (modeUrutanNilai === 'desc' ? 'asc' : 'nama');
@@ -2380,98 +1955,42 @@ els.btnTutupKartuSiswa.addEventListener('click', () => {
   els.screenHome.classList.remove('hidden');
 });
 
-/* =========================================================
-   NAVIGASI KELOMPOK "PENGAWAS ASESMEN" (Token Asesmen, Token
-   Manual, Izin Keluar) — dipakai bersama supaya Ruang/Kelas
-   cukup diisi sekali (lihat screenEntry) dan status pengawasan
-   ditanya cuma saat benar-benar keluar dari kelompok ini.
-========================================================= */
-function bukaGrupPengawas(headerKey, bukaLayarTarget){
-  if (sesiPengawasan && sesiPengawasan.ruang){
-    // Sudah ada sesi aktif → tidak perlu isi Ruang/Kelas lagi.
-    aturHeader(headerKey);
-    els.screenHome.classList.add('hidden');
-    els.metaRuang.textContent = sesiPengawasan.ruang;
-    els.metaRuang.title = sesiPengawasan.ruang;
-    els.metaPengawas.textContent = sesiPengawasan.pengawas;
-    els.metaPengawas.title = sesiPengawasan.pengawas;
-    bukaLayarTarget();
-    return;
-  }
-  pendingHeaderKey = headerKey;
-  pendingBukaLayarTarget = bukaLayarTarget;
-  aturHeader('entry');
-  els.screenHome.classList.add('hidden');
-  els.screenEntry.classList.remove('hidden');
-  els.entryStatus.textContent = '';
-  els.entryStatus.className = 'status-msg';
-  validateForm();
-  muatRuangSedangDipakai();
-}
-
-async function kembaliDariGrupPengawas(screenEl){
-  if (!(sesiPengawasan && sesiPengawasan.ruang)){
-    screenEl.classList.add('hidden');
-    aturHeader('home');
-    els.screenHome.classList.remove('hidden');
-    return;
-  }
-  const sudahSelesai = confirm(
-    `Apakah pengawasan di ${sesiPengawasan.ruang} sudah selesai?\n\n` +
-    'Tap OK jika SUDAH SELESAI (sesi ditutup, Ruang/Kelas perlu diisi lagi lain kali).\n' +
-    'Tap Batal jika BELUM (sesi tetap aktif, langsung lanjut tanpa isi ulang Ruang/Kelas).'
-  );
-  if (sudahSelesai){
-    try { await simpanPengawas(sesiPengawasan.ruang, sesiPengawasan.pengawas, 'Selesai'); }
-    catch(e){ console.warn('Gagal mencatat status Selesai ke sheet:', e.message); }
-    hapusSesiPengawasanLokal();
-    perbaruiIndikatorSesi();
-  }
-  screenEl.classList.add('hidden');
-  aturHeader('home');
-  els.screenHome.classList.remove('hidden');
-}
-
 els.cardTokenManual.addEventListener('click', () => {
-  bukaGrupPengawas('tokenmanual', () => {
-    els.screenTokenManual.classList.remove('hidden');
-    muatTokenManual();
-  });
+  aturHeader('tokenmanual');
+  els.screenHome.classList.add('hidden');
+  els.screenTokenManual.classList.remove('hidden');
+  muatTokenManual();
 });
 els.btnKembaliDariTokenManual.addEventListener('click', () => {
-  kembaliDariGrupPengawas(els.screenTokenManual);
+  aturHeader('home');
+  els.screenTokenManual.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
 });
 els.btnRefreshTokenManual.addEventListener('click', muatTokenManual);
 
 els.cardQrKeluar.addEventListener('click', () => {
-  bukaGrupPengawas('qrkeluar', () => {
-    els.screenQrKeluar.classList.remove('hidden');
-    els.inputNisnQrKeluar.value = '';
-    els.previewSiswaQrKeluar.style.display = 'none';
-    els.previewNotFoundQrKeluar.style.display = 'none';
-    els.izinKeluarStatus.textContent = '';
-    els.izinKeluarStatus.className = 'status-msg';
-    els.inputNisnQrKeluar.focus();
-  });
+  aturHeader('qrkeluar');
+  els.screenHome.classList.add('hidden');
+  els.screenQrKeluar.classList.remove('hidden');
+  els.inputNisnQrKeluar.value = '';
+  els.previewSiswaQrKeluar.style.display = 'none';
+  els.previewNotFoundQrKeluar.style.display = 'none';
+  els.izinKeluarStatus.textContent = '';
+  els.izinKeluarStatus.className = 'status-msg';
+  els.inputNisnQrKeluar.focus();
 });
 els.btnKembaliDariQrKeluar.addEventListener('click', () => {
   tutupQrScanKeluar();
-  kembaliDariGrupPengawas(els.screenQrKeluar);
+  aturHeader('home');
+  els.screenQrKeluar.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
 });
 
 els.btnKembaliDariToken.addEventListener('click', () => {
   stopTimers();
-  kembaliDariGrupPengawas(els.screenToken);
-});
-
-els.btnSelesaikanSesiBar.addEventListener('click', async () => {
-  if (!(sesiPengawasan && sesiPengawasan.ruang)) return;
-  const sudahSelesai = confirm(`Tandai pengawasan di ${sesiPengawasan.ruang} sebagai SELESAI?`);
-  if (!sudahSelesai) return;
-  try { await simpanPengawas(sesiPengawasan.ruang, sesiPengawasan.pengawas, 'Selesai'); }
-  catch(e){ console.warn('Gagal mencatat status Selesai ke sheet:', e.message); }
-  hapusSesiPengawasanLokal();
-  perbaruiIndikatorSesi();
+  aturHeader('home');
+  els.screenToken.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
 });
 
 async function tampilkanPreviewSiswaResetPw(){
@@ -2521,7 +2040,12 @@ async function resetPasswordSiswa(){
   try {
     const ctrl = new AbortController();
     const tid = setTimeout(() => ctrl.abort(), 12000);
-    const res = await fetch(APPS_SCRIPT_URL_PW + '?' + new URLSearchParams({ action: 'resetPassword', nisn }), { signal: ctrl.signal });
+    const res = await fetch(APPS_SCRIPT_URL_PW + '?' + new URLSearchParams({
+      action: 'resetPassword',
+      nisn,
+      ruang: els.inputRuang.value.trim(),
+      pengawas: els.inputPengawas.value.trim(),
+    }), { signal: ctrl.signal });
     clearTimeout(tid);
     const data = await res.json();
 
@@ -2637,16 +2161,6 @@ function tutupQrResetPw(){
 
 els.btnScanQrResetPw.addEventListener('click', bukaQrResetPw);
 els.btnTutupQrResetPw.addEventListener('click', tutupQrResetPw);
-els.cardTokenAsesmen.addEventListener('click', () => {
-  bukaGrupPengawas('token', openTokenScreen);
-});
-els.btnKembaliDariEntry.addEventListener('click', () => {
-  pendingHeaderKey = null;
-  pendingBukaLayarTarget = null;
-  aturHeader('home');
-  els.screenEntry.classList.add('hidden');
-  els.screenHome.classList.remove('hidden');
-});
 
 /* ---- Logo sekolah dari data/sekolah.csv (GitHub), tampil di Menu Utama ---- */
 
@@ -2781,7 +2295,158 @@ els.btnPetunjukLanjut.addEventListener('click', () => {
   else tutupPetunjuk();
 });
 
-validateForm();
+/* =========================================================
+   INPUT LINK SOAL — tambah soal baru ke Sheet5 (KODE SOAL |
+   Mapel | Link Soal) di spreadsheet asesmen, tanpa perlu buka
+   spreadsheet manual. Daftar yang sudah ada dibaca langsung lewat
+   gviz (bukan lewat CSV GitHub, karena Sheet5 belum masuk pipeline
+   export CSV) supaya selalu terbaru.
+========================================================= */
+const SPREADSHEET_ASESMEN_ID = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
+
+async function ambilSheetGviz(namaSheet, kolom, range){
+  const tq = encodeURIComponent(`select ${kolom}`);
+  let url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&tq=${tq}&t=${Date.now()}`;
+  if (range) url += `&range=${encodeURIComponent(range)}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  const txt = await res.text();
+  const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+  if (s < 0) throw new Error('Format respons tidak dikenal');
+  const json = JSON.parse(txt.substring(s, e + 1));
+  return (json.table && json.table.rows) || [];
+}
+
+async function muatDaftarLinkSoal(){
+  els.daftarLinkSoalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
+  try {
+    // range A2:E melewati baris header (baris 1) di Sheet5
+    const rowsSoal = await ambilSheetGviz('Sheet5', 'A,B,C,D,E', 'A2:E');
+
+    // baris kosong (kalau ada baris kosong nyempil) diabaikan
+    const daftar = rowsSoal.filter(r => r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined && String(r.c[0].v).trim() !== '');
+
+    if (daftar.length === 0){
+      els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--ink-soft);font-size:12.5px">Belum ada soal tersimpan.</div>`;
+      return;
+    }
+
+    els.daftarLinkSoalWrap.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Soal Tersimpan (${daftar.length})</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--navy-800);color:#fff">
+              <th style="padding:6px 8px;text-align:left;white-space:nowrap">Kode</th>
+              <th style="padding:6px 8px;text-align:left">Mapel</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Soal</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Respon</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Skor Maks</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${daftar.map(r => {
+              const kode = String(r.c[0].v);
+              const nama = (r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? escapeHtmlRekap(r.c[1].v) : '-';
+              const linkSoal = (r.c[2] && r.c[2].v !== null && r.c[2].v !== undefined) ? String(r.c[2].v) : '';
+              const linkJwb = (r.c[3] && r.c[3].v !== null && r.c[3].v !== undefined) ? String(r.c[3].v) : '';
+              const skorMaks = (r.c[4] && r.c[4].v !== null && r.c[4].v !== undefined) ? escapeHtmlRekap(r.c[4].v) : '-';
+              const tautanSoal = linkSoal ? `<a href="${linkSoal}" target="_blank" rel="noopener" style="color:var(--teal-500);font-weight:700;text-decoration:none">🔗</a>` : '—';
+              const tautanJwb = linkJwb ? `<a href="${linkJwb}" target="_blank" rel="noopener" style="color:var(--indigo-500);font-weight:700;text-decoration:none">🔗</a>` : '—';
+              return `<tr style="border-bottom:1px solid var(--ring-track)"><td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kode)}</td><td style="padding:6px 8px">${nama}</td><td style="padding:6px 8px;text-align:center">${tautanSoal}</td><td style="padding:6px 8px;text-align:center">${tautanJwb}</td><td style="padding:6px 8px;text-align:center">${skorMaks}</td></tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (err) {
+    els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--red-500);font-size:12.5px">Gagal memuat daftar: ${err.message}</div>`;
+  }
+}
+
+async function kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'simpanLinkSoal', kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan link soal');
+  return json;
+}
+
+els.cardInputSoal.addEventListener('click', () => {
+  aturHeader('inputsoal');
+  els.screenHome.classList.add('hidden');
+  els.screenInputSoal.classList.remove('hidden');
+  els.inputKodeAsesmen.value = '';
+  els.inputNamaAsesmen.value = '';
+  els.inputLinkAsesmen.value = '';
+  els.inputLinkFormRespon.value = '';
+  els.inputSkorMaksimal.value = '';
+  els.inputSoalStatus.textContent = '';
+  els.inputSoalStatus.className = 'status-msg';
+  muatDaftarLinkSoal();
+});
+els.btnKembaliDariInputSoal.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenInputSoal.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+els.btnSimpanLinkSoal.addEventListener('click', async () => {
+  const kodeAsesmen = els.inputKodeAsesmen.value.trim().toUpperCase();
+  const namaAsesmen = els.inputNamaAsesmen.value.trim();
+  const linkForm = els.inputLinkAsesmen.value.trim();
+  const linkFormRespon = els.inputLinkFormRespon.value.trim();
+  const skorMaksimalStr = els.inputSkorMaksimal.value.trim();
+  const skorMaksimal = Number(skorMaksimalStr);
+
+  els.inputSoalStatus.textContent = '';
+  els.inputSoalStatus.className = 'status-msg';
+
+  if (!kodeAsesmen || !namaAsesmen || !linkForm || !linkFormRespon || !skorMaksimalStr){
+    els.inputSoalStatus.textContent = 'Semua kolom (termasuk Skor Maksimal) wajib diisi.';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+  if (!isFinite(skorMaksimal) || skorMaksimal <= 0){
+    els.inputSoalStatus.textContent = 'Skor Maksimal harus berupa angka lebih dari 0.';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+  try { new URL(linkForm); } catch(e){
+    els.inputSoalStatus.textContent = 'LINK Soal sepertinya belum valid — pastikan diawali https://';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+  try { new URL(linkFormRespon); } catch(e){
+    els.inputSoalStatus.textContent = 'Link Form Respon sepertinya belum valid — pastikan diawali https://';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnSimpanLinkSoal.disabled = true;
+  els.btnSimpanLinkSoalLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    await kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal);
+    els.inputSoalStatus.textContent = `✅ "${namaAsesmen}" (${kodeAsesmen}) berhasil disimpan.`;
+    els.inputSoalStatus.className = 'status-msg ok';
+    els.inputKodeAsesmen.value = '';
+    els.inputNamaAsesmen.value = '';
+    els.inputLinkAsesmen.value = '';
+    els.inputLinkFormRespon.value = '';
+    els.inputSkorMaksimal.value = '';
+    muatDaftarLinkSoal();
+  } catch (err) {
+    els.inputSoalStatus.textContent = '❌ ' + err.message;
+    els.inputSoalStatus.className = 'status-msg err';
+  } finally {
+    els.btnSimpanLinkSoal.disabled = false;
+    els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Link Soal';
+  }
+});
+
+aturStatusKartuGrup1();
 </script>
 </body>
 </html>

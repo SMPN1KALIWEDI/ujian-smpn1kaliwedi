@@ -421,6 +421,18 @@
       </div>
     </div>
     <div class="field">
+      <label for="inputKelas">Pilihan Kelas</label>
+      <div class="select-wrap">
+        <select id="inputKelas" disabled>
+          <option value="">Memuat daftar kelas…</option>
+        </select>
+      </div>
+    </div>
+    <div id="infoSesiRuangKelas" class="hidden" style="font-size:11.5px;color:var(--ink-soft);margin:-8px 0 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <span>🔒 Ruang &amp; Kelas terkunci selama sesi berjalan (maks. 100 menit).</span>
+    </div>
+    <button type="button" id="btnSelesaiSesiRuang" class="btn btn-ghost hidden" style="margin:-6px 0 14px">✅ Selesai — Pilih Ruang/Kelas Baru</button>
+    <div class="field">
       <label for="inputPengawas">Nama Pengawas</label>
       <div class="select-wrap">
         <select id="inputPengawas" disabled>
@@ -910,6 +922,9 @@ let qrObj = null;
 
 const els = {
   inputRuang: document.getElementById('inputRuang'),
+  inputKelas: document.getElementById('inputKelas'),
+  infoSesiRuangKelas: document.getElementById('infoSesiRuangKelas'),
+  btnSelesaiSesiRuang: document.getElementById('btnSelesaiSesiRuang'),
   inputPengawas: document.getElementById('inputPengawas'),
   entryStatus: document.getElementById('entryStatus'),
   petunjukRuangBelumDipilih: document.getElementById('petunjukRuangBelumDipilih'),
@@ -1055,6 +1070,13 @@ function isiDropdownGuru(daftar){
     els.inputPengawas.appendChild(opt);
   });
   els.inputPengawas.disabled = false;
+
+  // pulihkan nama pengawas yang sudah tersimpan di HP ini (kalau masih ada di daftar)
+  const tersimpan = localStorage.getItem(KUNCI_PENGAWAS_TERSIMPAN);
+  if (tersimpan && daftar.includes(tersimpan)){
+    els.inputPengawas.value = tersimpan;
+    aturStatusKartuGrup1();
+  }
 }
 
 function parseCSVGuru(text){
@@ -1102,15 +1124,84 @@ muatDaftarGuru();
 // TIDAK di-reset saat pindah antar-menu (cuma reset kalau reload/tutup
 // aplikasi, karena cuma state di memori, bukan disimpan).
 function aturStatusKartuGrup1(){
-  const ok = els.inputRuang.value.trim().length > 0 && els.inputPengawas.value.trim().length > 0;
+  const ok = els.inputRuang.value.trim().length > 0 && els.inputKelas.value.trim().length > 0 && els.inputPengawas.value.trim().length > 0;
   [els.cardTokenAsesmen, els.cardTokenManual, els.cardQrKeluar, els.cardResetPw].forEach(btn => {
     if (btn) btn.disabled = !ok;
   });
   els.petunjukRuangBelumDipilih.style.display = ok ? 'none' : 'block';
 }
 els.inputRuang.addEventListener('change', aturStatusKartuGrup1);
+els.inputKelas.addEventListener('change', aturStatusKartuGrup1);
 els.inputPengawas.addEventListener('change', aturStatusKartuGrup1);
 aturStatusKartuGrup1(); // kunci di awal, sebelum guru selesai dimuat
+
+/* =========================================================
+   NAMA PENGAWAS MELEKAT DI HP — tersimpan di localStorage,
+   otomatis terpilih lagi tiap buka aplikasi sampai memang
+   diganti manual oleh penggunanya.
+========================================================= */
+const KUNCI_PENGAWAS_TERSIMPAN = 'namaPengawasTersimpan';
+els.inputPengawas.addEventListener('change', () => {
+  const v = els.inputPengawas.value.trim();
+  if (v) localStorage.setItem(KUNCI_PENGAWAS_TERSIMPAN, v);
+  else localStorage.removeItem(KUNCI_PENGAWAS_TERSIMPAN);
+});
+
+/* =========================================================
+   SESI RUANG & KELAS — begitu Ruang+Kelas dipilih, dikunci
+   (tidak bisa diganti-ganti) sampai maksimal 100 menit, atau
+   sampai pengawas menekan tombol "Selesai" lebih awal. Dipakai
+   supaya ruang/kelas tidak sengaja berubah-ubah di tengah sesi
+   pengawasan yang sama.
+========================================================= */
+const KUNCI_SESI_RUANG_KELAS = 'sesiRuangKelasAktif';
+const DURASI_SESI_RUANG_KELAS_MS = 100 * 60 * 1000; // 100 menit
+let timerSesiRuangKelas = null;
+
+function bacaSesiRuangKelasTersimpan(){
+  try {
+    const raw = localStorage.getItem(KUNCI_SESI_RUANG_KELAS);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !data.ruang || !data.kelas || !data.mulai) return null;
+    return data;
+  } catch(e){ return null; }
+}
+
+function kunciFieldRuangKelas(kunci){
+  els.inputRuang.disabled = kunci;
+  els.inputKelas.disabled = kunci;
+  els.infoSesiRuangKelas.classList.toggle('hidden', !kunci);
+  els.btnSelesaiSesiRuang.classList.toggle('hidden', !kunci);
+}
+
+function mulaiSesiRuangKelas(ruang, kelas, sisaMs){
+  localStorage.setItem(KUNCI_SESI_RUANG_KELAS, JSON.stringify({ ruang, kelas, mulai: Date.now() - (DURASI_SESI_RUANG_KELAS_MS - sisaMs) }));
+  kunciFieldRuangKelas(true);
+  if (timerSesiRuangKelas) clearTimeout(timerSesiRuangKelas);
+  timerSesiRuangKelas = setTimeout(() => selesaikanSesiRuangKelas(), sisaMs);
+}
+
+function selesaikanSesiRuangKelas(){
+  localStorage.removeItem(KUNCI_SESI_RUANG_KELAS);
+  if (timerSesiRuangKelas){ clearTimeout(timerSesiRuangKelas); timerSesiRuangKelas = null; }
+  kunciFieldRuangKelas(false);
+  els.inputRuang.value = '';
+  els.inputKelas.value = '';
+  aturStatusKartuGrup1();
+}
+els.btnSelesaiSesiRuang.addEventListener('click', selesaikanSesiRuangKelas);
+
+// Begitu Ruang & Kelas dua-duanya sudah diisi (dan belum ada sesi aktif), mulai sesi baru
+function cekMulaiSesiRuangKelas(){
+  const ruang = els.inputRuang.value.trim();
+  const kelas = els.inputKelas.value.trim();
+  if (ruang && kelas && !bacaSesiRuangKelasTersimpan()){
+    mulaiSesiRuangKelas(ruang, kelas, DURASI_SESI_RUANG_KELAS_MS);
+  }
+}
+els.inputRuang.addEventListener('change', cekMulaiSesiRuangKelas);
+els.inputKelas.addEventListener('change', cekMulaiSesiRuangKelas);
 
 /* =========================================================
    SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
@@ -1559,6 +1650,43 @@ function escapeHtmlRekap(s){
   d.textContent = (s === undefined || s === null) ? '' : String(s);
   return d.innerHTML;
 }
+
+/* =========================================================
+   PILIHAN KELAS di Menu Utama — daftar kelas diambil dari
+   data/siswa.csv (sumber yang sama dipakai Rekap Nilai &
+   Kartu Siswa), supaya tidak perlu didaftar manual.
+========================================================= */
+async function muatPilihanKelasHome(){
+  try {
+    const res = await fetch(SISWA_CSV_URL + '?t=' + Math.floor(Date.now()/60000), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const objSiswa = csvKeObjek(parseCSVGenerik(await res.text()));
+    const semuaKelas = [...new Set(objSiswa.map(o => ambilKolomRekap(o, 'KLS', 'KELAS')).filter(Boolean))].sort();
+    if (!semuaKelas.length) throw new Error('Daftar kelas kosong');
+
+    els.inputKelas.innerHTML = '<option value="">Pilih kelas…</option>' +
+      semuaKelas.map(k => `<option value="${escapeHtmlRekap(k)}">${escapeHtmlRekap(k)}</option>`).join('');
+    els.inputKelas.disabled = false;
+
+    // pulihkan sesi Ruang+Kelas yang masih aktif (kalau ada & belum lewat 100 menit)
+    const sesi = bacaSesiRuangKelasTersimpan();
+    if (sesi && semuaKelas.includes(sesi.kelas)){
+      const sisaMs = DURASI_SESI_RUANG_KELAS_MS - (Date.now() - sesi.mulai);
+      if (sisaMs > 0){
+        els.inputRuang.value = sesi.ruang;
+        els.inputKelas.value = sesi.kelas;
+        mulaiSesiRuangKelas(sesi.ruang, sesi.kelas, sisaMs);
+        aturStatusKartuGrup1();
+      } else {
+        localStorage.removeItem(KUNCI_SESI_RUANG_KELAS);
+      }
+    }
+  } catch (e) {
+    els.inputKelas.innerHTML = '<option value="">Gagal memuat daftar kelas</option>';
+    console.warn('⚠️ Gagal memuat daftar kelas untuk Menu Utama:', e.message);
+  }
+}
+muatPilihanKelasHome();
 
 let matriksTerakhir = null; // { data: {kode: {nama, kelas, nilai:{mapel:val}}}, kolom: [mapel,...] }
 
@@ -2319,8 +2447,11 @@ async function ambilSheetGviz(namaSheet, kolom, range){
 async function muatDaftarLinkSoal(){
   els.daftarLinkSoalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
   try {
-    // range A2:E melewati baris header (baris 1) di Sheet5
-    const rowsSoal = await ambilSheetGviz('Sheet5', 'A,B,C,D,E', 'A2:E');
+    // Ambil semua baris Sheet5 (termasuk header), lalu header (baris pertama)
+    // dibuang di sini — lebih aman daripada mengandalkan parameter range URL,
+    // yang ternyata tidak konsisten didukung untuk kombinasi sheet+select ini.
+    const semuaBarisSoal = await ambilSheetGviz('Sheet5', 'A,B,C,D,E');
+    const rowsSoal = semuaBarisSoal.slice(1);
 
     // baris kosong (kalau ada baris kosong nyempil) diabaikan
     const daftar = rowsSoal.filter(r => r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined && String(r.c[0].v).trim() !== '');

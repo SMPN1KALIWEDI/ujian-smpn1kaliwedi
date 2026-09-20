@@ -409,40 +409,55 @@
     <p>SMP Negeri 1 Kaliwedi</p>
   </div>
 
-  <!-- ===================== SCREEN 0 : MENU UTAMA ===================== -->
-  <div id="screenHome" class="card">
-    <div class="grup-label">📍 Ruang &amp; Pengawas</div>
+  <!-- ============== SCREEN LOGIN : NAMA PENGAWAS (tanpa password) ============== -->
+  <div id="screenLoginPengawas" class="card">
+    <div class="grup-label">👤 Masuk sebagai Pengawas</div>
     <div class="field">
-      <label for="inputRuang">Ruang Asesmen</label>
+      <label for="inputNamaLogin">Pilih Nama Anda</label>
       <div class="select-wrap">
-        <select id="inputRuang">
-          <option value="">Pilih ruang…</option>
-        </select>
-      </div>
-    </div>
-    <div class="field">
-      <label for="inputKelas">Pilihan Kelas</label>
-      <div class="select-wrap">
-        <select id="inputKelas" disabled>
-          <option value="">Memuat daftar kelas…</option>
-        </select>
-      </div>
-    </div>
-    <div id="infoSesiRuangKelas" class="hidden" style="font-size:11.5px;color:var(--ink-soft);margin:-8px 0 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <span>🔒 Ruang &amp; Kelas terkunci selama sesi berjalan (maks. 100 menit).</span>
-    </div>
-    <button type="button" id="btnSelesaiSesiRuang" class="btn btn-ghost hidden" style="margin:-6px 0 14px">✅ Selesai — Pilih Ruang/Kelas Baru</button>
-    <div class="field">
-      <label for="inputPengawas">Nama Pengawas</label>
-      <div class="select-wrap">
-        <select id="inputPengawas" disabled>
+        <select id="inputNamaLogin" disabled>
           <option value="">Memuat daftar guru…</option>
         </select>
       </div>
     </div>
+    <div id="loginPengawasStatus" class="status-msg"></div>
+    <button type="button" id="btnMasukPengawas" class="btn btn-primary" style="width:100%">Masuk</button>
+  </div>
+
+  <!-- ===================== SCREEN 0 : MENU UTAMA ===================== -->
+  <div id="screenHome" class="card hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#F5F7FA;border-radius:var(--radius-md);padding:12px 14px;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em">Pengawas</div>
+        <div id="tampilNamaPengawasAktif" style="font-weight:700;font-size:15px;color:var(--ink)">-</div>
+      </div>
+      <button type="button" id="btnUbahPengawas" style="border:none;background:none;color:var(--teal-500);font-weight:700;font-size:12.5px;cursor:pointer;padding:6px 8px">✏️ Ubah</button>
+    </div>
+
+    <div class="grup-label">📍 Lokasi Pengawasan</div>
+    <div style="display:flex;gap:18px;margin-bottom:10px;font-size:13px;font-weight:600;color:var(--ink)">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="radio" name="tipeLokasi" id="tipeLokasiRuang" value="ruang" checked> Ruang
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="radio" name="tipeLokasi" id="tipeLokasiKelas" value="kelas"> Kelas
+      </label>
+    </div>
+    <div class="field">
+      <label for="inputLokasi" id="labelInputLokasi">Pilih Ruang</label>
+      <div class="select-wrap">
+        <select id="inputLokasi">
+          <option value="">Pilih ruang…</option>
+        </select>
+      </div>
+    </div>
+    <div id="infoSesiRuangKelas" class="hidden" style="font-size:11.5px;color:var(--ink-soft);margin:-8px 0 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <span>🔒 Lokasi terkunci selama sesi berjalan (maks. 100 menit).</span>
+    </div>
+    <button type="button" id="btnSelesaiSesiRuang" class="btn btn-ghost hidden" style="margin:-6px 0 14px">✅ Selesai — Pilih Lokasi Baru</button>
     <div id="entryStatus" class="status-msg"></div>
     <div id="petunjukRuangBelumDipilih" style="font-size:11.5px;color:var(--ink-soft);margin:2px 0 14px;display:none">
-      ⚠️ Pilih ruang &amp; pengawas dulu untuk mengaktifkan menu di bawah. Pilihan ini tetap dipakai untuk keempat menu ini sampai kamu tutup aplikasi.
+      ⚠️ Pilih ruang/kelas dulu untuk mengaktifkan menu di bawah. Pilihan ini tetap dipakai untuk keempat menu ini sampai sesi berakhir.
     </div>
 
     <div class="menu-list">
@@ -921,11 +936,18 @@ let secondsLeft = CONFIG.REFRESH_INTERVAL_MS / 1000;
 let qrObj = null;
 
 const els = {
-  inputRuang: document.getElementById('inputRuang'),
-  inputKelas: document.getElementById('inputKelas'),
+  screenLoginPengawas: document.getElementById('screenLoginPengawas'),
+  inputNamaLogin: document.getElementById('inputNamaLogin'),
+  loginPengawasStatus: document.getElementById('loginPengawasStatus'),
+  btnMasukPengawas: document.getElementById('btnMasukPengawas'),
+  tampilNamaPengawasAktif: document.getElementById('tampilNamaPengawasAktif'),
+  btnUbahPengawas: document.getElementById('btnUbahPengawas'),
+  tipeLokasiRuang: document.getElementById('tipeLokasiRuang'),
+  tipeLokasiKelas: document.getElementById('tipeLokasiKelas'),
+  labelInputLokasi: document.getElementById('labelInputLokasi'),
+  inputLokasi: document.getElementById('inputLokasi'),
   infoSesiRuangKelas: document.getElementById('infoSesiRuangKelas'),
   btnSelesaiSesiRuang: document.getElementById('btnSelesaiSesiRuang'),
-  inputPengawas: document.getElementById('inputPengawas'),
   entryStatus: document.getElementById('entryStatus'),
   petunjukRuangBelumDipilih: document.getElementById('petunjukRuangBelumDipilih'),
   screenToken: document.getElementById('screenToken'),
@@ -1034,48 +1056,42 @@ const els = {
 };
 
 /* =========================================================
-   ISI PILIHAN RUANG (Ruang 01 - Ruang 30)
+   DAFTAR RUANG (Ruang 01 - Ruang 30) — disiapkan sebagai array
+   dulu, dipakai untuk isi <select id="inputLokasi"> saat mode
+   "Ruang" dipilih.
 ========================================================= */
-function isiPilihanRuang(){
-  const frag = document.createDocumentFragment();
-  for (let i = 1; i <= 30; i++){
-    const kode = 'Ruang ' + String(i).padStart(2, '0');
-    const opt = document.createElement('option');
-    opt.value = kode;
-    opt.textContent = kode;
-    frag.appendChild(opt);
-  }
-  els.inputRuang.appendChild(frag);
-}
-isiPilihanRuang();
+const DAFTAR_RUANG = Array.from({ length: 30 }, (_, i) => 'Ruang ' + String(i + 1).padStart(2, '0'));
+let daftarKelasTersedia = []; // diisi oleh muatPilihanKelasHome() di bawah
 
 /* =========================================================
    MUAT DAFTAR NAMA GURU — dari GitHub CSV (cepat, lewat CDN)
    karena datanya jarang berubah. Kalau file belum ada/gagal,
    otomatis jatuh ke Apps Script (Sheet2!A:A) sebagai cadangan.
+   Dipakai di layar LOGIN (bukan lagi di Menu Utama).
 ========================================================= */
 const GURU_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/guru.csv';
 
 function isiDropdownGuru(daftar){
-  els.inputPengawas.innerHTML = '';
+  els.inputNamaLogin.innerHTML = '';
   const optKosong = document.createElement('option');
   optKosong.value = '';
   optKosong.textContent = 'Pilih nama guru…';
-  els.inputPengawas.appendChild(optKosong);
+  els.inputNamaLogin.appendChild(optKosong);
 
   daftar.forEach(nama => {
     const opt = document.createElement('option');
     opt.value = nama;
     opt.textContent = nama;
-    els.inputPengawas.appendChild(opt);
+    els.inputNamaLogin.appendChild(opt);
   });
-  els.inputPengawas.disabled = false;
+  els.inputNamaLogin.disabled = false;
 
-  // pulihkan nama pengawas yang sudah tersimpan di HP ini (kalau masih ada di daftar)
+  // kalau nama pengawas sudah tersimpan di HP ini & masih ada di daftar,
+  // langsung masuk ke Menu Utama tanpa perlu pilih ulang.
   const tersimpan = localStorage.getItem(KUNCI_PENGAWAS_TERSIMPAN);
   if (tersimpan && daftar.includes(tersimpan)){
-    els.inputPengawas.value = tersimpan;
-    aturStatusKartuGrup1();
+    els.inputNamaLogin.value = tersimpan;
+    masukSebagaiPengawas(tersimpan, /*otomatis*/ true);
   }
 }
 
@@ -1110,51 +1126,127 @@ async function muatDaftarGuru(){
       const daftar = await muatDaftarGuruDariAppsScript();
       isiDropdownGuru(daftar);
     } catch (errAS) {
-      els.inputPengawas.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
-      els.entryStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
-      els.entryStatus.className = 'status-msg err';
+      els.inputNamaLogin.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
+      els.loginPengawasStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
+      els.loginPengawasStatus.className = 'status-msg err';
     }
   }
 }
 muatDaftarGuru();
 
-// Ruang & Pengawas sekarang tinggal di Menu Utama dan dipakai bareng
-// oleh 4 menu grup 1 (Token Asesmen, Token Manual, Izin Keluar, Reset
-// Password) — kartu-kartu itu dikunci sampai keduanya terisi, dan
-// TIDAK di-reset saat pindah antar-menu (cuma reset kalau reload/tutup
-// aplikasi, karena cuma state di memori, bukan disimpan).
+/* =========================================================
+   LOGIN PENGAWAS — "seperti login tapi tanpa password". Nama
+   dipilih sekali, melekat di HP ini (localStorage) sampai
+   memang diganti manual lewat tombol "✏️ Ubah" di Menu Utama.
+========================================================= */
+const KUNCI_PENGAWAS_TERSIMPAN = 'namaPengawasTersimpan';
+let namaPengawasAktif = '';
+
+function masukSebagaiPengawas(nama, otomatis){
+  namaPengawasAktif = nama;
+  localStorage.setItem(KUNCI_PENGAWAS_TERSIMPAN, nama);
+  els.tampilNamaPengawasAktif.textContent = nama;
+  els.screenLoginPengawas.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+  if (!otomatis) aturStatusKartuGrup1();
+}
+
+els.btnMasukPengawas.addEventListener('click', () => {
+  const nama = els.inputNamaLogin.value.trim();
+  els.loginPengawasStatus.textContent = '';
+  els.loginPengawasStatus.className = 'status-msg';
+  if (!nama){
+    els.loginPengawasStatus.textContent = 'Pilih nama Anda dulu untuk masuk.';
+    els.loginPengawasStatus.className = 'status-msg err';
+    return;
+  }
+  masukSebagaiPengawas(nama, false);
+});
+
+// Tombol "✏️ Ubah" di Menu Utama — buka lagi layar login untuk ganti nama
+els.btnUbahPengawas.addEventListener('click', () => {
+  els.screenHome.classList.add('hidden');
+  els.screenLoginPengawas.classList.remove('hidden');
+  if (namaPengawasAktif) els.inputNamaLogin.value = namaPengawasAktif;
+  els.loginPengawasStatus.textContent = '';
+  els.loginPengawasStatus.className = 'status-msg';
+});
+
+/* =========================================================
+   LOKASI PENGAWASAN — Ruang ATAU Kelas (pilih salah satu, lewat
+   dua radio), dituangkan ke SATU <select id="inputLokasi">.
+========================================================= */
+function tipeLokasiTerpilih(){
+  return els.tipeLokasiKelas.checked ? 'kelas' : 'ruang';
+}
+
+function perbaruiPilihanLokasi(){
+  const tipe = tipeLokasiTerpilih();
+  els.inputLokasi.innerHTML = '';
+  const optKosong = document.createElement('option');
+  optKosong.value = '';
+
+  if (tipe === 'ruang'){
+    els.labelInputLokasi.textContent = 'Pilih Ruang';
+    optKosong.textContent = 'Pilih ruang…';
+    els.inputLokasi.appendChild(optKosong);
+    DAFTAR_RUANG.forEach(kode => {
+      const opt = document.createElement('option');
+      opt.value = kode; opt.textContent = kode;
+      els.inputLokasi.appendChild(opt);
+    });
+    els.inputLokasi.disabled = false;
+  } else {
+    els.labelInputLokasi.textContent = 'Pilih Kelas';
+    if (daftarKelasTersedia.length){
+      optKosong.textContent = 'Pilih kelas…';
+      els.inputLokasi.appendChild(optKosong);
+      daftarKelasTersedia.forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k; opt.textContent = k;
+        els.inputLokasi.appendChild(opt);
+      });
+      els.inputLokasi.disabled = false;
+    } else {
+      optKosong.textContent = 'Memuat daftar kelas…';
+      els.inputLokasi.appendChild(optKosong);
+      els.inputLokasi.disabled = true;
+    }
+  }
+  aturStatusKartuGrup1();
+}
+els.tipeLokasiRuang.addEventListener('change', perbaruiPilihanLokasi);
+els.tipeLokasiKelas.addEventListener('change', perbaruiPilihanLokasi);
+perbaruiPilihanLokasi(); // isi awal (mode Ruang, sebelum guru/kelas selesai dimuat)
+
+// "Ruang 05" apa adanya, atau "Kelas 7A" (diberi label supaya jelas di rekap/sheet)
+function lokasiUntukDisimpan(){
+  const nilai = els.inputLokasi.value.trim();
+  if (!nilai) return '';
+  return tipeLokasiTerpilih() === 'kelas' ? ('Kelas ' + nilai) : nilai;
+}
+
+// Ruang/Kelas sekarang tinggal di Menu Utama dan dipakai bareng oleh 4
+// menu grup 1 (Token Asesmen, Token Manual, Izin Keluar, Reset Password)
+// — kartu-kartu itu dikunci sampai lokasi dipilih (nama pengawas sudah
+// pasti terisi karena wajib login dulu).
 function aturStatusKartuGrup1(){
-  const ok = els.inputRuang.value.trim().length > 0 && els.inputKelas.value.trim().length > 0 && els.inputPengawas.value.trim().length > 0;
+  const ok = els.inputLokasi.value.trim().length > 0;
   [els.cardTokenAsesmen, els.cardTokenManual, els.cardQrKeluar, els.cardResetPw].forEach(btn => {
     if (btn) btn.disabled = !ok;
   });
   els.petunjukRuangBelumDipilih.style.display = ok ? 'none' : 'block';
 }
-els.inputRuang.addEventListener('change', aturStatusKartuGrup1);
-els.inputKelas.addEventListener('change', aturStatusKartuGrup1);
-els.inputPengawas.addEventListener('change', aturStatusKartuGrup1);
-aturStatusKartuGrup1(); // kunci di awal, sebelum guru selesai dimuat
+els.inputLokasi.addEventListener('change', aturStatusKartuGrup1);
+aturStatusKartuGrup1(); // kunci di awal
 
 /* =========================================================
-   NAMA PENGAWAS MELEKAT DI HP — tersimpan di localStorage,
-   otomatis terpilih lagi tiap buka aplikasi sampai memang
-   diganti manual oleh penggunanya.
+   SESI LOKASI — begitu Ruang/Kelas dipilih, dikunci (tidak
+   bisa diganti-ganti, termasuk tombol toggle Ruang/Kelas-nya)
+   sampai maksimal 100 menit, atau sampai pengawas menekan
+   tombol "Selesai" lebih awal.
 ========================================================= */
-const KUNCI_PENGAWAS_TERSIMPAN = 'namaPengawasTersimpan';
-els.inputPengawas.addEventListener('change', () => {
-  const v = els.inputPengawas.value.trim();
-  if (v) localStorage.setItem(KUNCI_PENGAWAS_TERSIMPAN, v);
-  else localStorage.removeItem(KUNCI_PENGAWAS_TERSIMPAN);
-});
-
-/* =========================================================
-   SESI RUANG & KELAS — begitu Ruang+Kelas dipilih, dikunci
-   (tidak bisa diganti-ganti) sampai maksimal 100 menit, atau
-   sampai pengawas menekan tombol "Selesai" lebih awal. Dipakai
-   supaya ruang/kelas tidak sengaja berubah-ubah di tengah sesi
-   pengawasan yang sama.
-========================================================= */
-const KUNCI_SESI_RUANG_KELAS = 'sesiRuangKelasAktif';
+const KUNCI_SESI_RUANG_KELAS = 'sesiLokasiAktif';
 const DURASI_SESI_RUANG_KELAS_MS = 100 * 60 * 1000; // 100 menit
 let timerSesiRuangKelas = null;
 
@@ -1163,20 +1255,21 @@ function bacaSesiRuangKelasTersimpan(){
     const raw = localStorage.getItem(KUNCI_SESI_RUANG_KELAS);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    if (!data || !data.ruang || !data.kelas || !data.mulai) return null;
+    if (!data || !data.tipe || !data.nilai || !data.mulai) return null;
     return data;
   } catch(e){ return null; }
 }
 
 function kunciFieldRuangKelas(kunci){
-  els.inputRuang.disabled = kunci;
-  els.inputKelas.disabled = kunci;
+  els.inputLokasi.disabled = kunci;
+  els.tipeLokasiRuang.disabled = kunci;
+  els.tipeLokasiKelas.disabled = kunci;
   els.infoSesiRuangKelas.classList.toggle('hidden', !kunci);
   els.btnSelesaiSesiRuang.classList.toggle('hidden', !kunci);
 }
 
-function mulaiSesiRuangKelas(ruang, kelas, sisaMs){
-  localStorage.setItem(KUNCI_SESI_RUANG_KELAS, JSON.stringify({ ruang, kelas, mulai: Date.now() - (DURASI_SESI_RUANG_KELAS_MS - sisaMs) }));
+function mulaiSesiRuangKelas(tipe, nilai, sisaMs){
+  localStorage.setItem(KUNCI_SESI_RUANG_KELAS, JSON.stringify({ tipe, nilai, mulai: Date.now() - (DURASI_SESI_RUANG_KELAS_MS - sisaMs) }));
   kunciFieldRuangKelas(true);
   if (timerSesiRuangKelas) clearTimeout(timerSesiRuangKelas);
   timerSesiRuangKelas = setTimeout(() => selesaikanSesiRuangKelas(), sisaMs);
@@ -1186,22 +1279,19 @@ function selesaikanSesiRuangKelas(){
   localStorage.removeItem(KUNCI_SESI_RUANG_KELAS);
   if (timerSesiRuangKelas){ clearTimeout(timerSesiRuangKelas); timerSesiRuangKelas = null; }
   kunciFieldRuangKelas(false);
-  els.inputRuang.value = '';
-  els.inputKelas.value = '';
+  perbaruiPilihanLokasi(); // reset select sesuai mode aktif, kosongkan pilihan
   aturStatusKartuGrup1();
 }
 els.btnSelesaiSesiRuang.addEventListener('click', selesaikanSesiRuangKelas);
 
-// Begitu Ruang & Kelas dua-duanya sudah diisi (dan belum ada sesi aktif), mulai sesi baru
+// Begitu Lokasi terisi (dan belum ada sesi aktif), mulai sesi baru
 function cekMulaiSesiRuangKelas(){
-  const ruang = els.inputRuang.value.trim();
-  const kelas = els.inputKelas.value.trim();
-  if (ruang && kelas && !bacaSesiRuangKelasTersimpan()){
-    mulaiSesiRuangKelas(ruang, kelas, DURASI_SESI_RUANG_KELAS_MS);
+  const nilai = els.inputLokasi.value.trim();
+  if (nilai && !bacaSesiRuangKelasTersimpan()){
+    mulaiSesiRuangKelas(tipeLokasiTerpilih(), nilai, DURASI_SESI_RUANG_KELAS_MS);
   }
 }
-els.inputRuang.addEventListener('change', cekMulaiSesiRuangKelas);
-els.inputKelas.addEventListener('change', cekMulaiSesiRuangKelas);
+els.inputLokasi.addEventListener('change', cekMulaiSesiRuangKelas);
 
 /* =========================================================
    SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
@@ -1219,8 +1309,8 @@ async function simpanPengawas(ruang, pengawas){
 
 els.cardTokenAsesmen.addEventListener('click', async () => {
   if (els.cardTokenAsesmen.disabled) return;
-  const ruang = els.inputRuang.value.trim();
-  const pengawas = els.inputPengawas.value.trim();
+  const ruang = lokasiUntukDisimpan();
+  const pengawas = namaPengawasAktif;
   if (!ruang || !pengawas) return;
 
   els.entryStatus.textContent = '⏳ Sedang membuat token...';
@@ -1290,8 +1380,8 @@ async function kirimIzinKeluar(nisn){
     body: JSON.stringify({
       action: 'izinKeluarManual',
       nisn,
-      ruang: els.inputRuang.value.trim(),
-      pengawas: els.inputPengawas.value.trim(),
+      ruang: lokasiUntukDisimpan(),
+      pengawas: namaPengawasAktif,
     })
   });
   const json = await res.json();
@@ -1656,6 +1746,23 @@ function escapeHtmlRekap(s){
    data/siswa.csv (sumber yang sama dipakai Rekap Nilai &
    Kartu Siswa), supaya tidak perlu didaftar manual.
 ========================================================= */
+function pulihkanSesiLokasiJikaAda(){
+  const sesi = bacaSesiRuangKelasTersimpan();
+  if (!sesi) return;
+  const sisaMs = DURASI_SESI_RUANG_KELAS_MS - (Date.now() - sesi.mulai);
+  if (sisaMs <= 0){ localStorage.removeItem(KUNCI_SESI_RUANG_KELAS); return; }
+
+  if (sesi.tipe === 'kelas' && !daftarKelasTersedia.includes(sesi.nilai)) return; // tunggu data kelas siap
+
+  els.tipeLokasiRuang.checked = (sesi.tipe === 'ruang');
+  els.tipeLokasiKelas.checked = (sesi.tipe === 'kelas');
+  perbaruiPilihanLokasi();
+  els.inputLokasi.value = sesi.nilai;
+  mulaiSesiRuangKelas(sesi.tipe, sesi.nilai, sisaMs);
+  aturStatusKartuGrup1();
+}
+pulihkanSesiLokasiJikaAda(); // langsung coba untuk mode Ruang (datanya sudah siap dari awal)
+
 async function muatPilihanKelasHome(){
   try {
     const res = await fetch(SISWA_CSV_URL + '?t=' + Math.floor(Date.now()/60000), { cache: 'no-store' });
@@ -1664,26 +1771,14 @@ async function muatPilihanKelasHome(){
     const semuaKelas = [...new Set(objSiswa.map(o => ambilKolomRekap(o, 'KLS', 'KELAS')).filter(Boolean))].sort();
     if (!semuaKelas.length) throw new Error('Daftar kelas kosong');
 
-    els.inputKelas.innerHTML = '<option value="">Pilih kelas…</option>' +
-      semuaKelas.map(k => `<option value="${escapeHtmlRekap(k)}">${escapeHtmlRekap(k)}</option>`).join('');
-    els.inputKelas.disabled = false;
-
-    // pulihkan sesi Ruang+Kelas yang masih aktif (kalau ada & belum lewat 100 menit)
-    const sesi = bacaSesiRuangKelasTersimpan();
-    if (sesi && semuaKelas.includes(sesi.kelas)){
-      const sisaMs = DURASI_SESI_RUANG_KELAS_MS - (Date.now() - sesi.mulai);
-      if (sisaMs > 0){
-        els.inputRuang.value = sesi.ruang;
-        els.inputKelas.value = sesi.kelas;
-        mulaiSesiRuangKelas(sesi.ruang, sesi.kelas, sisaMs);
-        aturStatusKartuGrup1();
-      } else {
-        localStorage.removeItem(KUNCI_SESI_RUANG_KELAS);
-      }
-    }
+    daftarKelasTersedia = semuaKelas;
+    if (tipeLokasiTerpilih() === 'kelas' && !els.inputLokasi.disabled) perbaruiPilihanLokasi();
+    pulihkanSesiLokasiJikaAda(); // coba lagi untuk mode Kelas, sekarang datanya sudah siap
   } catch (e) {
-    els.inputKelas.innerHTML = '<option value="">Gagal memuat daftar kelas</option>';
     console.warn('⚠️ Gagal memuat daftar kelas untuk Menu Utama:', e.message);
+    if (tipeLokasiTerpilih() === 'kelas'){
+      els.inputLokasi.innerHTML = '<option value="">Gagal memuat daftar kelas</option>';
+    }
   }
 }
 muatPilihanKelasHome();
@@ -2171,8 +2266,8 @@ async function resetPasswordSiswa(){
     const res = await fetch(APPS_SCRIPT_URL_PW + '?' + new URLSearchParams({
       action: 'resetPassword',
       nisn,
-      ruang: els.inputRuang.value.trim(),
-      pengawas: els.inputPengawas.value.trim(),
+      ruang: lokasiUntukDisimpan(),
+      pengawas: namaPengawasAktif,
     }), { signal: ctrl.signal });
     clearTimeout(tid);
     const data = await res.json();

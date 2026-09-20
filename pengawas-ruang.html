@@ -2337,4 +2337,105 @@ async function muatDaftarLinkSoal(){
           <thead>
             <tr style="background:var(--navy-800);color:#fff">
               <th style="padding:6px 8px;text-align:left;white-space:nowrap">Kode</th>
-              <th style="padding:6px 8p
+              <th style="padding:6px 8px;text-align:left">Mapel</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Soal</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Respon</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsSoal.map(r => {
+              const kodeAsli = (r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined) ? String(r.c[0].v) : '-';
+              const nama = (r.c && r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? escapeHtmlRekap(r.c[1].v) : '-';
+              const linkSoal = (r.c && r.c[2] && r.c[2].v !== null && r.c[2].v !== undefined) ? String(r.c[2].v) : '';
+              const linkJwb = petaJwb[kodeAsli.trim().toUpperCase()] || '';
+              const tautanSoal = linkSoal ? `<a href="${linkSoal}" target="_blank" rel="noopener" style="color:var(--teal-500);font-weight:700;text-decoration:none">🔗</a>` : '—';
+              const tautanJwb = linkJwb ? `<a href="${linkJwb}" target="_blank" rel="noopener" style="color:var(--indigo-500);font-weight:700;text-decoration:none">🔗</a>` : '—';
+              return `<tr style="border-bottom:1px solid var(--ring-track)"><td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kodeAsli)}</td><td style="padding:6px 8px">${nama}</td><td style="padding:6px 8px;text-align:center">${tautanSoal}</td><td style="padding:6px 8px;text-align:center">${tautanJwb}</td></tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (err) {
+    els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--red-500);font-size:12.5px">Gagal memuat daftar: ${err.message}</div>`;
+  }
+}
+
+async function kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm, linkFormRespon){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'simpanLinkSoal', kodeAsesmen, namaAsesmen, linkForm, linkFormRespon })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan link soal');
+  return json;
+}
+
+els.cardInputSoal.addEventListener('click', () => {
+  aturHeader('inputsoal');
+  els.screenHome.classList.add('hidden');
+  els.screenInputSoal.classList.remove('hidden');
+  els.inputKodeAsesmen.value = '';
+  els.inputNamaAsesmen.value = '';
+  els.inputLinkAsesmen.value = '';
+  els.inputLinkFormRespon.value = '';
+  els.inputSoalStatus.textContent = '';
+  els.inputSoalStatus.className = 'status-msg';
+  muatDaftarLinkSoal();
+});
+els.btnKembaliDariInputSoal.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenInputSoal.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+els.btnSimpanLinkSoal.addEventListener('click', async () => {
+  const kodeAsesmen = els.inputKodeAsesmen.value.trim().toUpperCase();
+  const namaAsesmen = els.inputNamaAsesmen.value.trim();
+  const linkForm = els.inputLinkAsesmen.value.trim();
+  const linkFormRespon = els.inputLinkFormRespon.value.trim();
+
+  els.inputSoalStatus.textContent = '';
+  els.inputSoalStatus.className = 'status-msg';
+
+  if (!kodeAsesmen || !namaAsesmen || !linkForm || !linkFormRespon){
+    els.inputSoalStatus.textContent = 'Nama Pelajaran, Kode Soal, LINK Soal, dan Link Form Respon wajib diisi semua.';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+  try { new URL(linkForm); } catch(e){
+    els.inputSoalStatus.textContent = 'LINK Soal sepertinya belum valid — pastikan diawali https://';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+  try { new URL(linkFormRespon); } catch(e){
+    els.inputSoalStatus.textContent = 'Link Form Respon sepertinya belum valid — pastikan diawali https://';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnSimpanLinkSoal.disabled = true;
+  els.btnSimpanLinkSoalLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    await kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm, linkFormRespon);
+    els.inputSoalStatus.textContent = `✅ "${namaAsesmen}" (${kodeAsesmen}) berhasil disimpan.`;
+    els.inputSoalStatus.className = 'status-msg ok';
+    els.inputKodeAsesmen.value = '';
+    els.inputNamaAsesmen.value = '';
+    els.inputLinkAsesmen.value = '';
+    els.inputLinkFormRespon.value = '';
+    muatDaftarLinkSoal();
+  } catch (err) {
+    els.inputSoalStatus.textContent = '❌ ' + err.message;
+    els.inputSoalStatus.className = 'status-msg err';
+  } finally {
+    els.btnSimpanLinkSoal.disabled = false;
+    els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Link Soal';
+  }
+});
+
+aturStatusKartuGrup1();
+</script>
+</body>
+</html>

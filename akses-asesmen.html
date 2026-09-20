@@ -558,6 +558,20 @@
           <div class="menu-desc">Tambah soal baru</div>
         </div>
       </button>
+
+      <button type="button" id="cardSetingJadwal" class="menu-card" style="--accent:var(--indigo-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="white" stroke-width="1.7"/>
+            <path d="M3 9.5h18M8 3v3M16 3v3" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+            <path d="M7 13.5h3M14 13.5h3M7 17h3" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Seting Jadwal</div>
+          <div class="menu-desc">Atur jadwal asesmen</div>
+        </div>
+      </button>
     </div>
     <button type="button" id="btnBukaPetunjuk" class="btn btn-ghost" style="width:100%;margin-top:14px">
       ❓ Petunjuk Penggunaan
@@ -770,6 +784,58 @@
     <div id="inputSoalStatus" class="status-msg"></div>
 
     <div id="daftarLinkSoalWrap" style="margin-top:20px"></div>
+  </div>
+
+  <!-- ===================== SCREEN 10 : SETING JADWAL ===================== -->
+  <div id="screenSetingJadwal" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariSetingJadwal">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
+      Atur jadwal asesmen per tanggal & jam. Mapel dan Link diambil otomatis dari <b>Sheet5</b> berdasarkan Kode Soal yang dipilih. Data disimpan ke <b>Sheet1!A10:G</b>. Kelas yang sama tidak boleh punya jadwal dengan jam yang bersinggungan.
+    </div>
+    <div class="field">
+      <label for="inputTanggalJadwal">Tanggal Pelaksanaan</label>
+      <input type="date" id="inputTanggalJadwal" autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <div class="field">
+      <label for="inputKodeJadwal">Kode Soal</label>
+      <div class="select-wrap">
+        <select id="inputKodeJadwal" disabled>
+          <option value="">Memuat daftar kode soal…</option>
+        </select>
+      </div>
+    </div>
+    <div id="infoMapelLinkJadwal" class="hidden" style="font-size:12.5px;color:var(--ink-soft);background:#F5F7FA;border-radius:var(--radius-md);padding:10px 12px;margin:-6px 0 14px">
+      <div>📘 Mapel: <b id="tampilMapelJadwal">-</b></div>
+      <div style="overflow-wrap:anywhere">🔗 Link: <b id="tampilLinkJadwal">-</b></div>
+    </div>
+    <div class="field">
+      <label>Prioritas (Kelas yang dijadwalkan)</label>
+      <div id="daftarKelasJadwalWrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:12px;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;max-height:160px;overflow-y:auto">
+        <span style="font-size:12.5px;color:var(--ink-soft)">Memuat daftar kelas…</span>
+      </div>
+    </div>
+    <div class="field">
+      <label for="inputMulaiJadwal">Waktu Mulai</label>
+      <input type="time" id="inputMulaiJadwal" autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <div class="field">
+      <label for="inputSelesaiJadwal">Waktu Selesai</label>
+      <input type="time" id="inputSelesaiJadwal" autocomplete="off"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnSimpanJadwal" class="btn btn-primary" style="width:100%">
+      <span id="btnSimpanJadwalLabel">💾 Simpan Jadwal</span>
+    </button>
+    <div id="jadwalStatus" class="status-msg"></div>
+
+    <div id="daftarJadwalWrap" style="margin-top:20px"></div>
   </div>
 
   <!-- ===================== SCREEN 7 : TOKEN MANUAL ===================== -->
@@ -1030,6 +1096,21 @@ const els = {
   btnSimpanLinkSoalLabel: document.getElementById('btnSimpanLinkSoalLabel'),
   inputSoalStatus: document.getElementById('inputSoalStatus'),
   daftarLinkSoalWrap: document.getElementById('daftarLinkSoalWrap'),
+  cardSetingJadwal: document.getElementById('cardSetingJadwal'),
+  screenSetingJadwal: document.getElementById('screenSetingJadwal'),
+  btnKembaliDariSetingJadwal: document.getElementById('btnKembaliDariSetingJadwal'),
+  inputTanggalJadwal: document.getElementById('inputTanggalJadwal'),
+  inputKodeJadwal: document.getElementById('inputKodeJadwal'),
+  infoMapelLinkJadwal: document.getElementById('infoMapelLinkJadwal'),
+  tampilMapelJadwal: document.getElementById('tampilMapelJadwal'),
+  tampilLinkJadwal: document.getElementById('tampilLinkJadwal'),
+  daftarKelasJadwalWrap: document.getElementById('daftarKelasJadwalWrap'),
+  inputMulaiJadwal: document.getElementById('inputMulaiJadwal'),
+  inputSelesaiJadwal: document.getElementById('inputSelesaiJadwal'),
+  btnSimpanJadwal: document.getElementById('btnSimpanJadwal'),
+  btnSimpanJadwalLabel: document.getElementById('btnSimpanJadwalLabel'),
+  jadwalStatus: document.getElementById('jadwalStatus'),
+  daftarJadwalWrap: document.getElementById('daftarJadwalWrap'),
   btnKembaliDariToken: document.getElementById('btnKembaliDariToken'),
   cardTokenManual: document.getElementById('cardTokenManual'),
   screenTokenManual: document.getElementById('screenTokenManual'),
@@ -1999,6 +2080,7 @@ const HEADER_LAYAR = {
   resetpw:     { judul: 'Reset Password',tampilkanIkon: false },
   kartusiswa:  { judul: 'Kartu Siswa',   tampilkanIkon: false },
   inputsoal:   { judul: 'Input Link Soal', tampilkanIkon: false },
+  setingjadwal:{ judul: 'Seting Jadwal', tampilkanIkon: false },
   tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
   qrkeluar:    { judul: 'Izin Keluar',    tampilkanIkon: false },
 };
@@ -2669,6 +2751,204 @@ els.btnSimpanLinkSoal.addEventListener('click', async () => {
   } finally {
     els.btnSimpanLinkSoal.disabled = false;
     els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Link Soal';
+  }
+});
+
+/* =========================================================
+   SETING JADWAL — atur jadwal asesmen per tanggal/jam, disimpan
+   ke Sheet1!A10:G (TANGGAL | KODE | PRIORITAS | MULAI | SELESAI |
+   MAPEL | LINK). Mapel & Link diambil otomatis dari Sheet5
+   berdasarkan Kode Soal yang dipilih; validasi bentrok jam untuk
+   kelas yang sama dilakukan di Apps Script (action simpanJadwal).
+========================================================= */
+let petaSoalUntukJadwal = {}; // { KODE: { mapel, link } }
+
+async function muatDaftarSoalUntukJadwal(){
+  els.inputKodeJadwal.innerHTML = '<option value="">Memuat daftar kode soal…</option>';
+  els.inputKodeJadwal.disabled = true;
+  try {
+    const semuaBaris = await ambilSheetGviz('Sheet5', 'A,B,C');
+    const baris = semuaBaris.slice(1); // baris pertama Sheet5 = header
+    petaSoalUntukJadwal = {};
+    baris.forEach(r => {
+      if (!r.c || !r.c[0] || r.c[0].v === null || r.c[0].v === undefined) return;
+      const kode = String(r.c[0].v).trim().toUpperCase();
+      if (!kode) return;
+      const mapel = (r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? String(r.c[1].v) : '';
+      const link  = (r.c[2] && r.c[2].v !== null && r.c[2].v !== undefined) ? String(r.c[2].v) : '';
+      petaSoalUntukJadwal[kode] = { mapel, link };
+    });
+
+    const daftarKode = Object.keys(petaSoalUntukJadwal);
+    if (!daftarKode.length){
+      els.inputKodeJadwal.innerHTML = '<option value="">Belum ada soal di Sheet5</option>';
+      return;
+    }
+    els.inputKodeJadwal.innerHTML = '<option value="">Pilih kode soal…</option>' +
+      daftarKode.map(k => `<option value="${escapeHtmlRekap(k)}">${escapeHtmlRekap(k)} — ${escapeHtmlRekap(petaSoalUntukJadwal[k].mapel)}</option>`).join('');
+    els.inputKodeJadwal.disabled = false;
+  } catch (e) {
+    els.inputKodeJadwal.innerHTML = '<option value="">Gagal memuat daftar kode soal</option>';
+    console.warn('⚠️ Gagal memuat daftar soal untuk Seting Jadwal:', e.message);
+  }
+}
+
+els.inputKodeJadwal.addEventListener('change', () => {
+  const kode = els.inputKodeJadwal.value.trim().toUpperCase();
+  const data = petaSoalUntukJadwal[kode];
+  if (data){
+    els.tampilMapelJadwal.textContent = data.mapel || '-';
+    els.tampilLinkJadwal.textContent = data.link || '-';
+    els.infoMapelLinkJadwal.classList.remove('hidden');
+  } else {
+    els.infoMapelLinkJadwal.classList.add('hidden');
+  }
+});
+
+// Checkbox Kelas (Prioritas) — pakai daftar kelas yang sama dengan
+// yang dipakai di Menu Utama (daftarKelasTersedia, dari data/siswa.csv)
+function isiCheckboxKelasJadwal(){
+  if (!daftarKelasTersedia.length){
+    els.daftarKelasJadwalWrap.innerHTML = '<span style="font-size:12.5px;color:var(--ink-soft)">Daftar kelas belum tersedia.</span>';
+    return;
+  }
+  els.daftarKelasJadwalWrap.innerHTML = daftarKelasTersedia.map(k => `
+    <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;background:#fff;border:1.5px solid var(--ring-track);border-radius:8px;padding:6px 10px;cursor:pointer">
+      <input type="checkbox" class="chkKelasJadwal" value="${escapeHtmlRekap(k)}"> ${escapeHtmlRekap(k)}
+    </label>`).join('');
+}
+
+async function ambilDaftarJadwal(){
+  // Sheet1!A10:G — ambil semua baris A:G, lalu buang baris 1-9
+  // (bukan lewat parameter "range" URL, karena pernah tidak stabil
+  // untuk kombinasi sheet+select tertentu — lihat catatan di
+  // muatDaftarLinkSoal di atas).
+  const semuaBaris = await ambilSheetGviz('Sheet1', 'A,B,C,D,E,F,G');
+  return semuaBaris.slice(9).filter(r => r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined && String(r.c[0].v).trim() !== '');
+}
+
+async function muatDaftarJadwal(){
+  els.daftarJadwalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
+  try {
+    const daftar = await ambilDaftarJadwal();
+    if (!daftar.length){
+      els.daftarJadwalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--ink-soft);font-size:12.5px">Belum ada jadwal tersimpan.</div>`;
+      return;
+    }
+
+    const ambil = (r, i) => (r.c[i] && r.c[i].v !== null && r.c[i].v !== undefined) ? String(r.c[i].v) : '';
+    daftar.sort((a, b) => {
+      const ta = ambil(a, 0), tb = ambil(b, 0);
+      if (ta !== tb) return ta < tb ? -1 : 1;
+      return ambil(a, 3) < ambil(b, 3) ? -1 : ambil(a, 3) > ambil(b, 3) ? 1 : 0;
+    });
+
+    els.daftarJadwalWrap.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Jadwal Tersimpan (${daftar.length})</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--navy-800);color:#fff">
+              <th style="padding:6px 8px;text-align:left;white-space:nowrap">Tanggal</th>
+              <th style="padding:6px 8px;text-align:left;white-space:nowrap">Kode</th>
+              <th style="padding:6px 8px;text-align:left">Kelas</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Jam</th>
+              <th style="padding:6px 8px;text-align:left">Mapel</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${daftar.map(r => `<tr style="border-bottom:1px solid var(--ring-track)">
+              <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(ambil(r,0))}</td>
+              <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(ambil(r,1))}</td>
+              <td style="padding:6px 8px">${escapeHtmlRekap(ambil(r,2))}</td>
+              <td style="padding:6px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(ambil(r,3))}–${escapeHtmlRekap(ambil(r,4))}</td>
+              <td style="padding:6px 8px">${escapeHtmlRekap(ambil(r,5))}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (err) {
+    els.daftarJadwalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--red-500);font-size:12.5px">Gagal memuat daftar: ${err.message}</div>`;
+  }
+}
+
+async function kirimJadwal(tanggal, kode, prioritas, mulai, selesai){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'simpanJadwal', tanggal, kode, prioritas, mulai, selesai })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan jadwal');
+  return json;
+}
+
+async function bukaScreenSetingJadwal(){
+  aturHeader('setingjadwal');
+  els.screenHome.classList.add('hidden');
+  els.screenSetingJadwal.classList.remove('hidden');
+
+  els.inputTanggalJadwal.value = '';
+  els.inputMulaiJadwal.value = '';
+  els.inputSelesaiJadwal.value = '';
+  els.infoMapelLinkJadwal.classList.add('hidden');
+  els.jadwalStatus.textContent = '';
+  els.jadwalStatus.className = 'status-msg';
+
+  if (!daftarKelasTersedia.length) await muatPilihanKelasHome();
+  isiCheckboxKelasJadwal();
+  muatDaftarSoalUntukJadwal();
+  muatDaftarJadwal();
+}
+els.cardSetingJadwal.addEventListener('click', bukaScreenSetingJadwal);
+els.btnKembaliDariSetingJadwal.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenSetingJadwal.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+els.btnSimpanJadwal.addEventListener('click', async () => {
+  const tanggal = els.inputTanggalJadwal.value;
+  const kode = els.inputKodeJadwal.value.trim().toUpperCase();
+  const mulai = els.inputMulaiJadwal.value;
+  const selesai = els.inputSelesaiJadwal.value;
+  const kelasTerpilih = [...els.daftarKelasJadwalWrap.querySelectorAll('.chkKelasJadwal:checked')].map(c => c.value);
+  const prioritas = kelasTerpilih.join(', ');
+
+  els.jadwalStatus.textContent = '';
+  els.jadwalStatus.className = 'status-msg';
+
+  if (!tanggal || !kode || !mulai || !selesai || !kelasTerpilih.length){
+    els.jadwalStatus.textContent = 'Tanggal, Kode Soal, minimal satu Kelas (Prioritas), Mulai, dan Selesai wajib diisi.';
+    els.jadwalStatus.className = 'status-msg err';
+    return;
+  }
+  if (mulai >= selesai){
+    els.jadwalStatus.textContent = 'Waktu Selesai harus lebih besar dari Waktu Mulai.';
+    els.jadwalStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnSimpanJadwal.disabled = true;
+  els.btnSimpanJadwalLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    await kirimJadwal(tanggal, kode, prioritas, mulai, selesai);
+    els.jadwalStatus.textContent = `✅ Jadwal ${kode} (${prioritas}) tanggal ${tanggal} berhasil disimpan.`;
+    els.jadwalStatus.className = 'status-msg ok';
+    els.inputTanggalJadwal.value = '';
+    els.inputKodeJadwal.value = '';
+    els.inputMulaiJadwal.value = '';
+    els.inputSelesaiJadwal.value = '';
+    els.infoMapelLinkJadwal.classList.add('hidden');
+    isiCheckboxKelasJadwal(); // uncentang semua kelas lagi
+    muatDaftarJadwal();
+  } catch (err) {
+    els.jadwalStatus.textContent = '❌ ' + err.message;
+    els.jadwalStatus.className = 'status-msg err';
+  } finally {
+    els.btnSimpanJadwal.disabled = false;
+    els.btnSimpanJadwalLabel.textContent = '💾 Simpan Jadwal';
   }
 });
 

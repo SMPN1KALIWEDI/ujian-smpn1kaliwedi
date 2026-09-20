@@ -2836,7 +2836,11 @@ async function muatDaftarJadwal(){
       return;
     }
 
-    const ambil = (r, i) => (r.c[i] && r.c[i].v !== null && r.c[i].v !== undefined) ? String(r.c[i].v) : '';
+    const ambil = (r, i) => {
+      const c = r.c[i];
+      if (!c || c.v === null || c.v === undefined) return '';
+      return (c.f !== null && c.f !== undefined) ? c.f : String(c.v);
+    };
     daftar.sort((a, b) => {
       const ta = ambil(a, 0), tb = ambil(b, 0);
       if (ta !== tb) return ta < tb ? -1 : 1;

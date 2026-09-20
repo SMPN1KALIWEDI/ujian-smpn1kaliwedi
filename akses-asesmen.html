@@ -1230,6 +1230,25 @@ function masukSebagaiPengawas(nama, otomatis){
   els.screenLoginPengawas.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
   if (!otomatis) aturStatusKartuGrup1();
+  cekStatusSuperUser(nama);
+}
+
+/* =========================================================
+   SUPER USER — nama "ABAHHAMZAH" (default) atau nama-nama di
+   Sheet1!H2:H4 boleh EDIT & HAPUS Link Soal dan Jadwal Asesmen.
+   Dicek ulang di server tiap aksi edit/hapus — status di sini
+   cuma dipakai untuk tampil/sembunyikan tombolnya saja.
+========================================================= */
+let pengawasAdalahSuperuser = false;
+
+async function cekStatusSuperUser(nama){
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=cekSuperUser&nama=' + encodeURIComponent(nama), { method: 'GET' });
+    const json = await res.json();
+    pengawasAdalahSuperuser = !!(json.status === 'ok' && json.superuser);
+  } catch (e) {
+    pengawasAdalahSuperuser = false;
+  }
 }
 
 els.btnMasukPengawas.addEventListener('click', () => {
@@ -2621,6 +2640,8 @@ async function ambilSheetGviz(namaSheet, kolom, range){
   return (json.table && json.table.rows) || [];
 }
 
+let petaLinkSoalUntukEdit = {}; // { KODE: { nama, linkForm, linkFormRespon, skorMaksimal } } — dipakai isi ulang form saat Edit
+
 async function muatDaftarLinkSoal(){
   els.daftarLinkSoalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
   try {
@@ -2638,6 +2659,9 @@ async function muatDaftarLinkSoal(){
       return;
     }
 
+    petaLinkSoalUntukEdit = {};
+    const kolomAksi = pengawasAdalahSuperuser ? '<th style="padding:6px 8px;text-align:center;white-space:nowrap">Aksi</th>' : '';
+
     els.daftarLinkSoalWrap.innerHTML = `
       <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Soal Tersimpan (${daftar.length})</div>
       <div style="overflow-x:auto">
@@ -2649,18 +2673,27 @@ async function muatDaftarLinkSoal(){
               <th style="padding:6px 8px;text-align:center;white-space:nowrap">Soal</th>
               <th style="padding:6px 8px;text-align:center;white-space:nowrap">Respon</th>
               <th style="padding:6px 8px;text-align:center;white-space:nowrap">Skor Maks</th>
+              ${kolomAksi}
             </tr>
           </thead>
           <tbody>
             ${daftar.map(r => {
-              const kode = String(r.c[0].v);
-              const nama = (r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? escapeHtmlRekap(r.c[1].v) : '-';
+              const kode = String(r.c[0].v).trim().toUpperCase();
+              const nama = (r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? String(r.c[1].v) : '';
               const linkSoal = (r.c[2] && r.c[2].v !== null && r.c[2].v !== undefined) ? String(r.c[2].v) : '';
               const linkJwb = (r.c[3] && r.c[3].v !== null && r.c[3].v !== undefined) ? String(r.c[3].v) : '';
-              const skorMaks = (r.c[4] && r.c[4].v !== null && r.c[4].v !== undefined) ? escapeHtmlRekap(r.c[4].v) : '-';
+              const skorMaksNum = (r.c[4] && r.c[4].v !== null && r.c[4].v !== undefined) ? Number(r.c[4].v) : '';
+              petaLinkSoalUntukEdit[kode] = { nama, linkForm: linkSoal, linkFormRespon: linkJwb, skorMaksimal: skorMaksNum };
+
               const tautanSoal = linkSoal ? `<a href="${linkSoal}" target="_blank" rel="noopener" style="color:var(--teal-500);font-weight:700;text-decoration:none">🔗</a>` : '—';
               const tautanJwb = linkJwb ? `<a href="${linkJwb}" target="_blank" rel="noopener" style="color:var(--indigo-500);font-weight:700;text-decoration:none">🔗</a>` : '—';
-              return `<tr style="border-bottom:1px solid var(--ring-track)"><td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kode)}</td><td style="padding:6px 8px">${nama}</td><td style="padding:6px 8px;text-align:center">${tautanSoal}</td><td style="padding:6px 8px;text-align:center">${tautanJwb}</td><td style="padding:6px 8px;text-align:center">${skorMaks}</td></tr>`;
+              const aksi = pengawasAdalahSuperuser
+                ? `<td style="padding:6px 8px;text-align:center;white-space:nowrap">
+                     <button type="button" class="btnEditLinkSoal" data-kode="${escapeHtmlRekap(kode)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Edit">✏️</button>
+                     <button type="button" class="btnHapusLinkSoal" data-kode="${escapeHtmlRekap(kode)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Hapus">🗑️</button>
+                   </td>`
+                : '';
+              return `<tr style="border-bottom:1px solid var(--ring-track)"><td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kode)}</td><td style="padding:6px 8px">${escapeHtmlRekap(nama)}</td><td style="padding:6px 8px;text-align:center">${tautanSoal}</td><td style="padding:6px 8px;text-align:center">${tautanJwb}</td><td style="padding:6px 8px;text-align:center">${escapeHtmlRekap(skorMaksNum)}</td>${aksi}</tr>`;
             }).join('')}
           </tbody>
         </table>
@@ -2669,6 +2702,56 @@ async function muatDaftarLinkSoal(){
     els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--red-500);font-size:12.5px">Gagal memuat daftar: ${err.message}</div>`;
   }
 }
+
+// Event delegation — tombol Edit/Hapus dibuat ulang tiap render, jadi
+// listener-nya dipasang sekali di elemen pembungkus (daftarLinkSoalWrap)
+let kodeSedangDiedit = null; // null = mode tambah baru, string = mode edit (kode ini)
+
+function mulaiEditLinkSoal(kode){
+  const data = petaLinkSoalUntukEdit[kode];
+  if (!data) return;
+  kodeSedangDiedit = kode;
+  els.inputKodeAsesmen.value = kode;
+  els.inputKodeAsesmen.disabled = true; // Kode adalah kunci baris, tidak boleh diubah lewat Edit
+  els.inputNamaAsesmen.value = data.nama;
+  els.inputLinkAsesmen.value = data.linkForm;
+  els.inputLinkFormRespon.value = data.linkFormRespon;
+  els.inputSkorMaksimal.value = data.skorMaksimal;
+  els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Perubahan';
+  els.inputSoalStatus.textContent = `✏️ Mengedit soal ${kode}. Kode tidak bisa diubah lewat Edit.`;
+  els.inputSoalStatus.className = 'status-msg';
+  els.inputKodeAsesmen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function batalEditLinkSoal(){
+  kodeSedangDiedit = null;
+  els.inputKodeAsesmen.disabled = false;
+  els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Link Soal';
+}
+
+async function hapusLinkSoalKlik(kode){
+  if (!confirm(`Hapus soal dengan kode "${kode}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'hapusLinkSoal', kodeAsesmen: kode, namaPengawas: namaPengawasAktif })
+    });
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message || 'Gagal menghapus');
+    if (kodeSedangDiedit === kode) batalEditLinkSoal();
+    muatDaftarLinkSoal();
+  } catch (e) {
+    alert('❌ ' + e.message);
+  }
+}
+
+els.daftarLinkSoalWrap.addEventListener('click', (ev) => {
+  const btnEdit = ev.target.closest('.btnEditLinkSoal');
+  if (btnEdit) { mulaiEditLinkSoal(btnEdit.dataset.kode); return; }
+  const btnHapus = ev.target.closest('.btnHapusLinkSoal');
+  if (btnHapus) { hapusLinkSoalKlik(btnHapus.dataset.kode); return; }
+});
 
 async function kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal){
   const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
@@ -2685,6 +2768,7 @@ els.cardInputSoal.addEventListener('click', () => {
   aturHeader('inputsoal');
   els.screenHome.classList.add('hidden');
   els.screenInputSoal.classList.remove('hidden');
+  batalEditLinkSoal();
   els.inputKodeAsesmen.value = '';
   els.inputNamaAsesmen.value = '';
   els.inputLinkAsesmen.value = '';
@@ -2698,6 +2782,7 @@ els.btnKembaliDariInputSoal.addEventListener('click', () => {
   aturHeader('home');
   els.screenInputSoal.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
+  batalEditLinkSoal();
 });
 
 els.btnSimpanLinkSoal.addEventListener('click', async () => {
@@ -2736,9 +2821,21 @@ els.btnSimpanLinkSoal.addEventListener('click', async () => {
   els.btnSimpanLinkSoalLabel.innerHTML = '<span class="spinner"></span>';
 
   try {
-    await kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal);
-    els.inputSoalStatus.textContent = `✅ "${namaAsesmen}" (${kodeAsesmen}) berhasil disimpan.`;
+    if (kodeSedangDiedit){
+      const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'editLinkSoal', kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal, namaPengawas: namaPengawasAktif })
+      });
+      const json = await res.json();
+      if (json.status !== 'ok') throw new Error(json.message || 'Gagal memperbarui');
+      els.inputSoalStatus.textContent = `✅ "${namaAsesmen}" (${kodeAsesmen}) berhasil diperbarui.`;
+    } else {
+      await kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal);
+      els.inputSoalStatus.textContent = `✅ "${namaAsesmen}" (${kodeAsesmen}) berhasil disimpan.`;
+    }
     els.inputSoalStatus.className = 'status-msg ok';
+    batalEditLinkSoal();
     els.inputKodeAsesmen.value = '';
     els.inputNamaAsesmen.value = '';
     els.inputLinkAsesmen.value = '';
@@ -2824,7 +2921,19 @@ async function ambilDaftarJadwal(){
   // untuk kombinasi sheet+select tertentu — lihat catatan di
   // muatDaftarLinkSoal di atas).
   const semuaBaris = await ambilSheetGviz('Sheet1', 'A,B,C,D,E,F,G');
-  return semuaBaris.slice(9).filter(r => r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined && String(r.c[0].v).trim() !== '');
+  const potongan = semuaBaris.slice(9);
+  potongan.forEach((r, idx) => { r._baris = 10 + idx; }); // nomor baris asli di Sheet1, sebelum difilter
+  return potongan.filter(r => r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined && String(r.c[0].v).trim() !== '');
+}
+
+// gviz menulis tanggal sebagai literal string "Date(2025,0,15)" (bulan 0-based) —
+// dikonversi ke "yyyy-MM-dd" supaya sama persis dengan format yang dipakai server.
+function gvizTanggalKeYMD(v){
+  const s = String(v || '').trim();
+  const m = s.match(/^Date\((\d+),(\d+),(\d+)/);
+  if (!m) return s; // data lama yang masih tersimpan sebagai teks biasa
+  const tahun = m[1], bulan = String(Number(m[2]) + 1).padStart(2, '0'), tgl = String(Number(m[3])).padStart(2, '0');
+  return `${tahun}-${bulan}-${tgl}`;
 }
 
 async function muatDaftarJadwal(){
@@ -2847,6 +2956,8 @@ async function muatDaftarJadwal(){
       return ambil(a, 3) < ambil(b, 3) ? -1 : ambil(a, 3) > ambil(b, 3) ? 1 : 0;
     });
 
+    const kolomAksiJadwal = pengawasAdalahSuperuser ? '<th style="padding:6px 8px;text-align:center;white-space:nowrap">Aksi</th>' : '';
+
     els.daftarJadwalWrap.innerHTML = `
       <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Jadwal Tersimpan (${daftar.length})</div>
       <div style="overflow-x:auto">
@@ -2858,16 +2969,31 @@ async function muatDaftarJadwal(){
               <th style="padding:6px 8px;text-align:left">Kelas</th>
               <th style="padding:6px 8px;text-align:center;white-space:nowrap">Jam</th>
               <th style="padding:6px 8px;text-align:left">Mapel</th>
+              ${kolomAksiJadwal}
             </tr>
           </thead>
           <tbody>
-            ${daftar.map(r => `<tr style="border-bottom:1px solid var(--ring-track)">
-              <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(ambil(r,0))}</td>
-              <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(ambil(r,1))}</td>
-              <td style="padding:6px 8px">${escapeHtmlRekap(ambil(r,2))}</td>
-              <td style="padding:6px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(ambil(r,3))}–${escapeHtmlRekap(ambil(r,4))}</td>
-              <td style="padding:6px 8px">${escapeHtmlRekap(ambil(r,5))}</td>
-            </tr>`).join('')}
+            ${daftar.map(r => {
+              const tanggalAsli = gvizTanggalKeYMD(r.c[0].v);
+              const kodeAsli = ambil(r, 1).trim().toUpperCase();
+              const kelasRaw = ambil(r, 2);
+              const mulaiRaw = ambil(r, 3);
+              const selesaiRaw = ambil(r, 4);
+              const aksiJadwal = pengawasAdalahSuperuser
+                ? `<td style="padding:6px 8px;text-align:center;white-space:nowrap">
+                     <button type="button" class="btnEditJadwal" data-baris="${r._baris}" data-tanggal="${escapeHtmlRekap(tanggalAsli)}" data-kode="${escapeHtmlRekap(kodeAsli)}" data-kelas="${escapeHtmlRekap(kelasRaw)}" data-mulai="${escapeHtmlRekap(mulaiRaw)}" data-selesai="${escapeHtmlRekap(selesaiRaw)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Edit">✏️</button>
+                     <button type="button" class="btnHapusJadwal" data-baris="${r._baris}" data-tanggal="${escapeHtmlRekap(tanggalAsli)}" data-kode="${escapeHtmlRekap(kodeAsli)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Hapus">🗑️</button>
+                   </td>`
+                : '';
+              return `<tr style="border-bottom:1px solid var(--ring-track)">
+                <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(ambil(r,0))}</td>
+                <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kodeAsli)}</td>
+                <td style="padding:6px 8px">${escapeHtmlRekap(kelasRaw)}</td>
+                <td style="padding:6px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(mulaiRaw)}–${escapeHtmlRekap(selesaiRaw)}</td>
+                <td style="padding:6px 8px">${escapeHtmlRekap(ambil(r,5))}</td>
+                ${aksiJadwal}
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>`;
@@ -2875,6 +3001,62 @@ async function muatDaftarJadwal(){
     els.daftarJadwalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--red-500);font-size:12.5px">Gagal memuat daftar: ${err.message}</div>`;
   }
 }
+
+let jadwalSedangDiedit = null; // null = mode tambah baru, { baris, tanggalAsli, kodeAsli } = mode edit
+
+function mulaiEditJadwal(baris, tanggalAsli, kodeAsli, kelasRaw, mulai, selesai){
+  jadwalSedangDiedit = { baris: Number(baris), tanggalAsli, kodeAsli };
+  els.inputTanggalJadwal.value = tanggalAsli;
+  els.inputKodeJadwal.value = kodeAsli;
+  els.inputKodeJadwal.dispatchEvent(new Event('change'));
+  els.inputMulaiJadwal.value = mulai;
+  els.inputSelesaiJadwal.value = selesai;
+
+  const kelasTerpilihEdit = kelasRaw.split(',').map(k => k.trim().toUpperCase()).filter(Boolean);
+  els.daftarKelasJadwalWrap.querySelectorAll('.chkKelasJadwal').forEach(chk => {
+    chk.checked = kelasTerpilihEdit.includes(chk.value.trim().toUpperCase());
+  });
+
+  els.btnSimpanJadwalLabel.textContent = '💾 Simpan Perubahan Jadwal';
+  els.jadwalStatus.textContent = `✏️ Mengedit jadwal ${kodeAsli} tanggal ${tanggalAsli}.`;
+  els.jadwalStatus.className = 'status-msg';
+  els.inputTanggalJadwal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function batalEditJadwal(){
+  jadwalSedangDiedit = null;
+  els.btnSimpanJadwalLabel.textContent = '💾 Simpan Jadwal';
+}
+
+async function hapusJadwalKlik(baris, tanggalAsli, kodeAsli){
+  if (!confirm(`Hapus jadwal ${kodeAsli} tanggal ${tanggalAsli}? Tindakan ini tidak bisa dibatalkan.`)) return;
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'hapusJadwal', baris: Number(baris), tanggalAsli, kodeAsli, namaPengawas: namaPengawasAktif })
+    });
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message || 'Gagal menghapus');
+    if (jadwalSedangDiedit && jadwalSedangDiedit.baris === Number(baris)) batalEditJadwal();
+    muatDaftarJadwal();
+  } catch (e) {
+    alert('❌ ' + e.message);
+  }
+}
+
+els.daftarJadwalWrap.addEventListener('click', (ev) => {
+  const btnEdit = ev.target.closest('.btnEditJadwal');
+  if (btnEdit){
+    mulaiEditJadwal(btnEdit.dataset.baris, btnEdit.dataset.tanggal, btnEdit.dataset.kode, btnEdit.dataset.kelas, btnEdit.dataset.mulai, btnEdit.dataset.selesai);
+    return;
+  }
+  const btnHapus = ev.target.closest('.btnHapusJadwal');
+  if (btnHapus){
+    hapusJadwalKlik(btnHapus.dataset.baris, btnHapus.dataset.tanggal, btnHapus.dataset.kode);
+    return;
+  }
+});
 
 async function kirimJadwal(tanggal, kode, prioritas, mulai, selesai){
   const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
@@ -2891,6 +3073,7 @@ async function bukaScreenSetingJadwal(){
   aturHeader('setingjadwal');
   els.screenHome.classList.add('hidden');
   els.screenSetingJadwal.classList.remove('hidden');
+  batalEditJadwal();
 
   els.inputTanggalJadwal.value = '';
   els.inputMulaiJadwal.value = '';
@@ -2909,6 +3092,7 @@ els.btnKembaliDariSetingJadwal.addEventListener('click', () => {
   aturHeader('home');
   els.screenSetingJadwal.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
+  batalEditJadwal();
 });
 
 els.btnSimpanJadwal.addEventListener('click', async () => {
@@ -2937,9 +3121,28 @@ els.btnSimpanJadwal.addEventListener('click', async () => {
   els.btnSimpanJadwalLabel.innerHTML = '<span class="spinner"></span>';
 
   try {
-    await kirimJadwal(tanggal, kode, prioritas, mulai, selesai);
-    els.jadwalStatus.textContent = `✅ Jadwal ${kode} (${prioritas}) tanggal ${tanggal} berhasil disimpan.`;
+    if (jadwalSedangDiedit){
+      const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'editJadwal',
+          baris: jadwalSedangDiedit.baris,
+          tanggalAsli: jadwalSedangDiedit.tanggalAsli,
+          kodeAsli: jadwalSedangDiedit.kodeAsli,
+          tanggal, kode, prioritas, mulai, selesai,
+          namaPengawas: namaPengawasAktif
+        })
+      });
+      const json = await res.json();
+      if (json.status !== 'ok') throw new Error(json.message || 'Gagal memperbarui jadwal');
+      els.jadwalStatus.textContent = `✅ Jadwal ${kode} (${prioritas}) tanggal ${tanggal} berhasil diperbarui.`;
+    } else {
+      await kirimJadwal(tanggal, kode, prioritas, mulai, selesai);
+      els.jadwalStatus.textContent = `✅ Jadwal ${kode} (${prioritas}) tanggal ${tanggal} berhasil disimpan.`;
+    }
     els.jadwalStatus.className = 'status-msg ok';
+    batalEditJadwal();
     els.inputTanggalJadwal.value = '';
     els.inputKodeJadwal.value = '';
     els.inputMulaiJadwal.value = '';

@@ -413,12 +413,10 @@
   <div id="screenLoginPengawas" class="card">
     <div class="grup-label">👤 Masuk sebagai Pengawas</div>
     <div class="field">
-      <label for="inputNamaLogin">Pilih Nama Anda</label>
-      <div class="select-wrap">
-        <select id="inputNamaLogin" disabled>
-          <option value="">Memuat daftar guru…</option>
-        </select>
-      </div>
+      <label for="inputNamaLogin">Nama Anda</label>
+      <input type="text" id="inputNamaLogin" list="daftarNamaGuruList" placeholder="Memuat daftar guru…" autocomplete="off" disabled
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+      <datalist id="daftarNamaGuruList"></datalist>
     </div>
     <div id="loginPengawasStatus" class="status-msg"></div>
     <button type="button" id="btnMasukPengawas" class="btn btn-primary" style="width:100%">Masuk</button>
@@ -750,9 +748,6 @@
       </svg>
       Menu Utama
     </button>
-    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
-      Tambah soal baru tanpa perlu buka spreadsheet manual. Semua data disimpan ke <b>Sheet5</b> (Kode, Mapel, Link Soal, Link Form Respon, Skor Maksimal).
-    </div>
     <div class="field">
       <label for="inputNamaAsesmen">Nama Pelajaran</label>
       <input type="text" id="inputNamaAsesmen" placeholder="mis. Matematika, PABP" autocomplete="off"
@@ -1004,6 +999,7 @@ let qrObj = null;
 const els = {
   screenLoginPengawas: document.getElementById('screenLoginPengawas'),
   inputNamaLogin: document.getElementById('inputNamaLogin'),
+  daftarNamaGuruList: document.getElementById('daftarNamaGuruList'),
   loginPengawasStatus: document.getElementById('loginPengawasStatus'),
   btnMasukPengawas: document.getElementById('btnMasukPengawas'),
   tampilNamaPengawasAktif: document.getElementById('tampilNamaPengawasAktif'),
@@ -1152,27 +1148,29 @@ let daftarKelasTersedia = []; // diisi oleh muatPilihanKelasHome() di bawah
 ========================================================= */
 const GURU_CSV_URL = 'https://raw.githubusercontent.com/SMPN1KALIWEDI/ujian-smpn1kaliwedi/main/data/guru.csv';
 
-function isiDropdownGuru(daftar){
-  els.inputNamaLogin.innerHTML = '';
-  const optKosong = document.createElement('option');
-  optKosong.value = '';
-  optKosong.textContent = 'Pilih nama guru…';
-  els.inputNamaLogin.appendChild(optKosong);
+// Cocokkan nama yang diketik (bisa beda besar/kecil huruf atau ada spasi
+// berlebih) dengan nama asli di daftar guru. null kalau tidak ketemu.
+function cariNamaGuruCocok(namaDiketik){
+  const target = String(namaDiketik || '').trim().toUpperCase();
+  if (!target) return null;
+  return daftarGuruTersedia.find(n => n.trim().toUpperCase() === target) || null;
+}
 
-  daftar.forEach(nama => {
-    const opt = document.createElement('option');
-    opt.value = nama;
-    opt.textContent = nama;
-    els.inputNamaLogin.appendChild(opt);
-  });
+let daftarGuruTersedia = []; // dipakai untuk mencocokkan nama yang diketik manual di layar login
+
+function isiDropdownGuru(daftar){
+  daftarGuruTersedia = daftar;
+  els.daftarNamaGuruList.innerHTML = daftar.map(nama => `<option value="${escapeHtmlRekap(nama)}">`).join('');
+  els.inputNamaLogin.placeholder = 'Ketik atau pilih nama Anda…';
   els.inputNamaLogin.disabled = false;
 
   // kalau nama pengawas sudah tersimpan di HP ini & masih ada di daftar,
   // langsung masuk ke Menu Utama tanpa perlu pilih ulang.
   const tersimpan = localStorage.getItem(KUNCI_PENGAWAS_TERSIMPAN);
-  if (tersimpan && daftar.includes(tersimpan)){
-    els.inputNamaLogin.value = tersimpan;
-    masukSebagaiPengawas(tersimpan, /*otomatis*/ true);
+  const cocokTersimpan = cariNamaGuruCocok(tersimpan);
+  if (cocokTersimpan){
+    els.inputNamaLogin.value = cocokTersimpan;
+    masukSebagaiPengawas(cocokTersimpan, /*otomatis*/ true);
   }
 }
 
@@ -1207,7 +1205,7 @@ async function muatDaftarGuru(){
       const daftar = await muatDaftarGuruDariAppsScript();
       isiDropdownGuru(daftar);
     } catch (errAS) {
-      els.inputNamaLogin.innerHTML = '<option value="">Gagal memuat daftar guru</option>';
+      els.inputNamaLogin.placeholder = 'Gagal memuat daftar guru';
       els.loginPengawasStatus.textContent = 'Gagal memuat daftar nama guru. Muat ulang halaman.';
       els.loginPengawasStatus.className = 'status-msg err';
     }
@@ -1252,15 +1250,21 @@ async function cekStatusSuperUser(nama){
 }
 
 els.btnMasukPengawas.addEventListener('click', () => {
-  const nama = els.inputNamaLogin.value.trim();
+  const namaDiketik = els.inputNamaLogin.value.trim();
   els.loginPengawasStatus.textContent = '';
   els.loginPengawasStatus.className = 'status-msg';
-  if (!nama){
-    els.loginPengawasStatus.textContent = 'Pilih nama Anda dulu untuk masuk.';
+  if (!namaDiketik){
+    els.loginPengawasStatus.textContent = 'Ketik atau pilih nama Anda dulu untuk masuk.';
     els.loginPengawasStatus.className = 'status-msg err';
     return;
   }
-  masukSebagaiPengawas(nama, false);
+  const namaCocok = cariNamaGuruCocok(namaDiketik);
+  if (!namaCocok){
+    els.loginPengawasStatus.textContent = 'Nama tidak ditemukan di daftar guru. Periksa ejaan, atau pilih dari saran yang muncul saat mengetik.';
+    els.loginPengawasStatus.className = 'status-msg err';
+    return;
+  }
+  masukSebagaiPengawas(namaCocok, false);
 });
 
 // Tombol "✏️ Ubah" di Menu Utama — buka lagi layar login untuk ganti nama
@@ -2628,10 +2632,9 @@ els.btnPetunjukLanjut.addEventListener('click', () => {
 ========================================================= */
 const SPREADSHEET_ASESMEN_ID = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
 
-async function ambilSheetGviz(namaSheet, kolom, range){
+async function ambilSheetGviz(namaSheet, kolom){
   const tq = encodeURIComponent(`select ${kolom}`);
-  let url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&tq=${tq}&t=${Date.now()}`;
-  if (range) url += `&range=${encodeURIComponent(range)}`;
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&tq=${tq}&t=${Date.now()}`;
   const res = await fetch(url, { cache: 'no-store' });
   const txt = await res.text();
   const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
@@ -2640,19 +2643,28 @@ async function ambilSheetGviz(namaSheet, kolom, range){
   return (json.table && json.table.rows) || [];
 }
 
+// Baris header Sheet5 (kolom A = "KODE SOAL") kadang ikut kebawa oleh
+// Google Visualization API, kadang tidak — tergantung isi sheet, jadi
+// tidak bisa diandalkan lewat posisi (slice/range). Di sini disaring
+// lewat ISI-nya: baris mana pun yang kolom A-nya persis "KODE SOAL"
+// (atau kosong) dianggap bukan data soal, di baris berapa pun itu.
+const LABEL_HEADER_KODE = ['KODE SOAL', 'KODE'];
+function bukanBarisHeaderKode(r){
+  if (!r.c || !r.c[0] || r.c[0].v === null || r.c[0].v === undefined) return false;
+  const kodeMentah = String(r.c[0].v).trim();
+  if (!kodeMentah) return false;
+  return !LABEL_HEADER_KODE.includes(kodeMentah.toUpperCase());
+}
+
 let petaLinkSoalUntukEdit = {}; // { KODE: { nama, linkForm, linkFormRespon, skorMaksimal } } — dipakai isi ulang form saat Edit
 
 async function muatDaftarLinkSoal(){
   els.daftarLinkSoalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
   try {
-    // Ambil semua baris Sheet5 (termasuk header), lalu header (baris pertama)
-    // dibuang di sini — lebih aman daripada mengandalkan parameter range URL,
-    // yang ternyata tidak konsisten didukung untuk kombinasi sheet+select ini.
+    // Ambil semua baris Sheet5, lalu baris header disaring lewat ISI-nya
+    // (bukan posisinya) lewat bukanBarisHeaderKode() — lihat catatan di atas.
     const semuaBarisSoal = await ambilSheetGviz('Sheet5', 'A,B,C,D,E');
-    const rowsSoal = semuaBarisSoal.slice(1);
-
-    // baris kosong (kalau ada baris kosong nyempil) diabaikan
-    const daftar = rowsSoal.filter(r => r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined && String(r.c[0].v).trim() !== '');
+    const daftar = semuaBarisSoal.filter(bukanBarisHeaderKode);
 
     if (daftar.length === 0){
       els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--ink-soft);font-size:12.5px">Belum ada soal tersimpan.</div>`;
@@ -2865,10 +2877,9 @@ async function muatDaftarSoalUntukJadwal(){
   els.inputKodeJadwal.disabled = true;
   try {
     const semuaBaris = await ambilSheetGviz('Sheet5', 'A,B,C');
-    const baris = semuaBaris.slice(1); // baris pertama Sheet5 = header
+    const baris = semuaBaris.filter(bukanBarisHeaderKode);
     petaSoalUntukJadwal = {};
     baris.forEach(r => {
-      if (!r.c || !r.c[0] || r.c[0].v === null || r.c[0].v === undefined) return;
       const kode = String(r.c[0].v).trim().toUpperCase();
       if (!kode) return;
       const mapel = (r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? String(r.c[1].v) : '';

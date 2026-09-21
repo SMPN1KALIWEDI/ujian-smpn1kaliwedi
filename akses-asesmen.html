@@ -2962,10 +2962,17 @@ async function muatDaftarJadwal(){
       return (c.f !== null && c.f !== undefined) ? c.f : String(c.v);
     };
     daftar.sort((a, b) => {
-      const ta = ambil(a, 0), tb = ambil(b, 0);
+      const ta = gvizTanggalKeYMD(a.c[0].v), tb = gvizTanggalKeYMD(b.c[0].v);
       if (ta !== tb) return ta < tb ? -1 : 1;
       return ambil(a, 3) < ambil(b, 3) ? -1 : ambil(a, 3) > ambil(b, 3) ? 1 : 0;
     });
+
+    // Jadwal "sedang aktif" = tanggalnya hari ini & jam sekarang ada di
+    // antara Mulai-Selesai. Dicek di sisi HP (jam device), jadi pastikan
+    // jam di HP sudah benar.
+    const skrg = new Date();
+    const tanggalHariIni = skrg.getFullYear() + '-' + String(skrg.getMonth() + 1).padStart(2, '0') + '-' + String(skrg.getDate()).padStart(2, '0');
+    const jamSekarang = String(skrg.getHours()).padStart(2, '0') + ':' + String(skrg.getMinutes()).padStart(2, '0');
 
     const kolomAksiJadwal = pengawasAdalahSuperuser ? '<th style="padding:6px 8px;text-align:center;white-space:nowrap">Aksi</th>' : '';
 
@@ -2990,17 +2997,24 @@ async function muatDaftarJadwal(){
               const kelasRaw = ambil(r, 2);
               const mulaiRaw = ambil(r, 3);
               const selesaiRaw = ambil(r, 4);
+
+              const sedangAktif = tanggalAsli === tanggalHariIni && mulaiRaw && selesaiRaw && mulaiRaw <= jamSekarang && jamSekarang < selesaiRaw;
+              const gayaBaris = sedangAktif
+                ? 'border-bottom:1px solid var(--ring-track);background:#E3F7E9;box-shadow:inset 3px 0 0 var(--teal-500)'
+                : 'border-bottom:1px solid var(--ring-track)';
+              const lencanaAktif = sedangAktif ? ' <span style="color:var(--teal-600,var(--teal-500));font-weight:700">🟢 Aktif</span>' : '';
+
               const aksiJadwal = pengawasAdalahSuperuser
                 ? `<td style="padding:6px 8px;text-align:center;white-space:nowrap">
                      <button type="button" class="btnEditJadwal" data-baris="${r._baris}" data-tanggal="${escapeHtmlRekap(tanggalAsli)}" data-kode="${escapeHtmlRekap(kodeAsli)}" data-kelas="${escapeHtmlRekap(kelasRaw)}" data-mulai="${escapeHtmlRekap(mulaiRaw)}" data-selesai="${escapeHtmlRekap(selesaiRaw)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Edit">✏️</button>
                      <button type="button" class="btnHapusJadwal" data-baris="${r._baris}" data-tanggal="${escapeHtmlRekap(tanggalAsli)}" data-kode="${escapeHtmlRekap(kodeAsli)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Hapus">🗑️</button>
                    </td>`
                 : '';
-              return `<tr style="border-bottom:1px solid var(--ring-track)">
+              return `<tr style="${gayaBaris}">
                 <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(ambil(r,0))}</td>
                 <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kodeAsli)}</td>
                 <td style="padding:6px 8px">${escapeHtmlRekap(kelasRaw)}</td>
-                <td style="padding:6px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(mulaiRaw)}–${escapeHtmlRekap(selesaiRaw)}</td>
+                <td style="padding:6px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(mulaiRaw)}–${escapeHtmlRekap(selesaiRaw)}${lencanaAktif}</td>
                 <td style="padding:6px 8px">${escapeHtmlRekap(ambil(r,5))}</td>
                 ${aksiJadwal}
               </tr>`;
@@ -3080,6 +3094,18 @@ async function kirimJadwal(tanggal, kode, prioritas, mulai, selesai){
   return json;
 }
 
+// Minta server menghapus jadwal yang TANGGAL-nya sudah lewat >1 minggu.
+// Dipanggil tiap kali layar Seting Jadwal dibuka (selain trigger harian
+// di Apps Script — lihat pasangTriggerHapusJadwalKedaluwarsa()). Gagal
+// diam-diam kalau offline/error, supaya tidak menghalangi daftar tampil.
+async function bersihkanJadwalKedaluwarsa(){
+  try {
+    await fetch(CONFIG.APPS_SCRIPT_URL + '?action=bersihkanJadwalKedaluwarsa', { method: 'GET' });
+  } catch (e) {
+    console.warn('⚠️ Gagal membersihkan jadwal kedaluwarsa:', e.message);
+  }
+}
+
 async function bukaScreenSetingJadwal(){
   aturHeader('setingjadwal');
   els.screenHome.classList.add('hidden');
@@ -3096,7 +3122,7 @@ async function bukaScreenSetingJadwal(){
   if (!daftarKelasTersedia.length) await muatPilihanKelasHome();
   isiCheckboxKelasJadwal();
   muatDaftarSoalUntukJadwal();
-  muatDaftarJadwal();
+  bersihkanJadwalKedaluwarsa().finally(muatDaftarJadwal); // hapus data >1 minggu dulu, baru tampilkan daftar
 }
 els.cardSetingJadwal.addEventListener('click', bukaScreenSetingJadwal);
 els.btnKembaliDariSetingJadwal.addEventListener('click', () => {

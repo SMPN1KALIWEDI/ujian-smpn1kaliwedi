@@ -688,6 +688,11 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho1
 // Spreadsheet terpisah untuk data Sholat Berjamaah (Sheet3: Timestamp|NISN|Keterangan)
 const SPREADSHEET_ID_SHOLAT = '1dxNxE46xBmSjTDC5kJExdAE63HcAPuuCBgpzI1qTcto';
 
+// Spreadsheet absensi KEDUA — Sheet2 dengan kolom sama persis
+// (A=TIMESTAMP | B=NISN | C=NAMA | D=KELAS | E=KET | F=STATUS).
+// Barisnya digabung dengan Sheet2 di spreadsheet utama saat memuat kehadiran.
+const SPREADSHEET_ID_ABSEN2 = '1qMUj0xjNQ6dvA2-KmK8VAIqo5UK-5gF5Zasy_I_9gn0';
+
 // Spreadsheet terpisah untuk data Ekstrakurikuler
 // Sheet1: NAMA KEGIATAN | KODE
 // Sheet2: TIME STAMP | NISN | KODE | HADIR | MULAI | SELESAI
@@ -716,6 +721,24 @@ async function bacaSheet(namaSheet, spreadsheetId) {
     console.error('bacaSheet gagal:', namaSheet, err.message);
     return null;
   }
+}
+
+// Baca Sheet2 absensi dari KEDUA spreadsheet lalu gabungkan barisnya.
+// - Spreadsheet utama gagal  → null (dianggap gagal total)
+// - Spreadsheet kedua gagal  → tetap pakai data utama (peringatan di console)
+async function bacaAbsenGabungan() {
+  const [utama, kedua] = await Promise.all([
+    bacaSheet('Sheet2'),
+    bacaSheet('Sheet2', SPREADSHEET_ID_ABSEN2),
+  ]);
+  if (!utama) return null;
+  if (!kedua) {
+    console.warn('⚠️ Sheet2 spreadsheet kedua gagal dimuat — pastikan dibagikan publik. Memakai data utama saja.');
+    return utama;
+  }
+  return Object.assign({}, utama, {
+    rows: (utama.rows || []).concat(kedua.rows || [])
+  });
 }
 
 // Ambil nilai sel sebagai string
@@ -1120,7 +1143,7 @@ async function muatAbsen() {
 
   // Muat Sheet2 dan Sheet7 bersamaan
   const [tblAbsen, tblLibur] = await Promise.all([
-    bacaSheet('Sheet2'),
+    bacaAbsenGabungan(),
     bacaSheet('Sheet7'),
   ]);
 

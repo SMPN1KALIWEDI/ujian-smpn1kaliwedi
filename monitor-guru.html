@@ -532,6 +532,11 @@ table.tsiswa tbody tr:hover{background:var(--b5)}
 // ============================================================
 const SPREADSHEET_ID = '1BT4QyyNpfCLuNmNstiAFi67nAqfM-BDNCrIe_R9aXpM';
 
+// Spreadsheet absensi KEDUA — Sheet2 dengan kolom sama persis
+// (A=TIMESTAMP | B=NISN | C=NAMA | D=KELAS | E=KET | F=STATUS).
+// Barisnya digabung dengan Sheet2 di spreadsheet utama.
+const SPREADSHEET_ID_ABSEN2 = '1qMUj0xjNQ6dvA2-KmK8VAIqo5UK-5gF5Zasy_I_9gn0';
+
 let D = {
   siswa: [],      // semua siswa dari Sheet1
   kelasList: {},  // { '7': ['7A','7B',...], '8': [...], '9': [...] }
@@ -545,8 +550,8 @@ let D = {
 // ============================================================
 // BACA SHEET via gviz
 // ============================================================
-async function bacaSheet(nama) {
-  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(nama)}&t=${Date.now()}`;
+async function bacaSheet(nama, idSheet = SPREADSHEET_ID) {
+  const url = `https://docs.google.com/spreadsheets/d/${idSheet}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(nama)}&t=${Date.now()}`;
   try {
     const ctrl = new AbortController();
     const tid  = setTimeout(()=>ctrl.abort(), 12000);
@@ -560,6 +565,24 @@ async function bacaSheet(nama) {
     console.error('Gagal baca', nama, err.message);
     return null;
   }
+}
+
+// Baca Sheet2 absensi dari KEDUA spreadsheet lalu gabungkan barisnya.
+// - Spreadsheet utama gagal → null (dianggap gagal total)
+// - Spreadsheet kedua gagal → tetap pakai data utama (peringatan di console)
+async function bacaAbsenGabungan() {
+  const [utama, kedua] = await Promise.all([
+    bacaSheet('Sheet2'),
+    bacaSheet('Sheet2', SPREADSHEET_ID_ABSEN2),
+  ]);
+  if (!utama) return null;
+  if (!kedua) {
+    console.warn('⚠️ Sheet2 spreadsheet kedua gagal dimuat — pastikan dibagikan publik. Memakai data utama saja.');
+    return utama;
+  }
+  return Object.assign({}, utama, {
+    rows: (utama.rows || []).concat(kedua.rows || [])
+  });
 }
 
 function parseDate(tbl, row, col) {
@@ -921,7 +944,7 @@ async function muatRekapBulanan() {
   const tbl = document.getElementById('tblRekapBulanan');
   tbl.innerHTML = '<tbody><tr><td class="kosong-row">⏳ Memuat...</td></tr></tbody>';
 
-  const tblAbsen = await bacaSheet('Sheet2');
+  const tblAbsen = await bacaAbsenGabungan();
   if (!tblAbsen) {
     tbl.innerHTML = '<tbody><tr><td class="kosong-row">❌ Gagal memuat data.</td></tr></tbody>';
     return;
@@ -1137,7 +1160,7 @@ async function muatDashboard() {
   tbody.innerHTML = '<tr><td colspan="4" class="kosong-row">⏳ Memuat...</td></tr>';
 
   // Baca Sheet2
-  const tblAbsen = await bacaSheet('Sheet2');
+  const tblAbsen = await bacaAbsenGabungan();
   if (!tblAbsen) {
     tbody.innerHTML = '<tr><td colspan="4" class="kosong-row">❌ Gagal memuat data.</td></tr>';
     return;
@@ -1260,7 +1283,7 @@ async function muatRekapTingkat() {
   const tbl = document.getElementById('tblRekapTingkat');
   tbl.innerHTML = '<tbody><tr><td class="kosong-row">⏳ Memuat...</td></tr></tbody>';
 
-  const tblAbsen = await bacaSheet('Sheet2');
+  const tblAbsen = await bacaAbsenGabungan();
   if (!tblAbsen) {
     tbl.innerHTML = '<tbody><tr><td class="kosong-row">❌ Gagal memuat data.</td></tr></tbody>';
     return;

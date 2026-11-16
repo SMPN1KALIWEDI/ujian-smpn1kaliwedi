@@ -1508,15 +1508,12 @@ let timerTombolSelesai = null;
 
 // ============================================================
 // TOMBOL "✅ Selesai" (pojok kanan atas halaman soal)
-// SELALU tampil sejak ujian dimulai — supaya siswa yang perlu
-// keluar darurat tetap punya jalan RESMI (bukan pindah tab dsb).
-// Tapi perilakunya beda tergantung waktu:
-//  - Sudah masuk jendela wajar (15 menit sebelum jam SELESAI,
-//    atau jadwal tanpa jam selesai) → langsung keluar, tinggal
-//    konfirmasi biasa.
-//  - Masih jauh dari jam selesai → dianggap KELUAR DARURAT, wajib
-//    scan QR "QR Keluar" dari pengawas dulu.
+// Baru TAMPIL setelah 40 menit sejak aplikasi dibuka. Setelah tampil,
+// keluar lewat tombol ini TIDAK dianggap pelanggaran dan tidak perlu
+// izin pengawas — cukup konfirmasi biasa.
 // ============================================================
+const WAKTU_BUKA_APLIKASI = Date.now();   // saat halaman aplikasi dibuka
+const TOMBOL_KELUAR_MENIT = 40;           // tombol muncul setelah 40 menit
 let selesaiNormalAktif = false;
 
 function aturTombolSelesaiUjian() {
@@ -1524,31 +1521,25 @@ function aturTombolSelesaiUjian() {
   if (!btn) return;
   if (timerTombolSelesai) { clearTimeout(timerTombolSelesai); timerTombolSelesai = null; }
 
-  btn.classList.add('tampil'); // selalu tampil, lihat catatan di atas
+  const sisaMs = WAKTU_BUKA_APLIKASI + TOMBOL_KELUAR_MENIT * 60 * 1000 - Date.now();
 
-  const jadwal = jadwalAktifSekarang && jadwalAktifSekarang.jadwal;
-  const menitSelesai = jadwal ? parseJamMenit(jadwal.selesai) : null;
-
-  if (menitSelesai === null) {
+  if (sisaMs <= 0) {
     selesaiNormalAktif = true;
-    return;
-  }
-
-  const targetAktif = new Date();
-  targetAktif.setHours(Math.floor(menitSelesai / 60), (menitSelesai % 60) - 15, 0, 0);
-  const selisihMs = targetAktif.getTime() - Date.now();
-
-  if (selisihMs <= 0) {
-    selesaiNormalAktif = true;
+    btn.classList.add('tampil');
   } else {
     selesaiNormalAktif = false;
-    timerTombolSelesai = setTimeout(() => { selesaiNormalAktif = true; }, selisihMs);
+    btn.classList.remove('tampil');
+    timerTombolSelesai = setTimeout(() => {
+      selesaiNormalAktif = true;
+      btn.classList.add('tampil');
+      timerTombolSelesai = null;
+    }, sisaMs);
   }
 }
 
 function selesaiUjianManual() {
   if (selesaiNormalAktif) {
-    // Sudah masuk jendela waktu wajar (≤15 menit / lewat jam SELESAI) —
+    // Tombol sudah tampil (≥40 menit sejak aplikasi dibuka) —
     // pengawasan dimatikan dulu SEBELUM popup muncul (dialog konfirmasi
     // itu sendiri memicu event blur), baru tanya apakah jawaban sudah
     // dikirim. Kalau batal, pengawasan dinyalakan lagi.

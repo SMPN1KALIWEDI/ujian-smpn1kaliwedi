@@ -11,9 +11,24 @@ TANGGAL,KODE,PRIORITAS,MULAI,SELESAI,MAPEL,LINK
 12/1/2026,PKN7,7,9:30,11:00,PKN,https://docs.google.com/forms/d/e/1FAIpQLSfsQs8QXLDMpye-kG8DQyjIz7vcM6gILtVV4ORW6Isxd_dZeQ/viewform?usp=pp_url&entry.1066250760=PKN7&entry.436917597=KODE
 12/1/2026,PKN8,8,9:30,11:00,PENDIDIKAN PANCASILA,https://docs.google.com/forms/d/e/1FAIpQLScbBRuRBTTEmSWIVziVpSgI4LSk8WQc0CHMjQKF0gS6Isz5kw/viewform?usp=pp_url&entry.161355079=PKN8&entry.1018248013=KODE
 12/1/2026,PP9,9,9:30,11:00,PENDIDIKAN PANCASILA,https://docs.google.com/forms/d/e/1FAIpQLSfcSG1eDlXeBDg_2nDpET_zHhDLWMSb31jcF0XtcQWxzcinbw/viewform?usp=pp_url&entry.771112100=PP9&entry.121639160=KODE
-12/2/2026,,7,7:30,9:00,#N/A,#N/A
-12/2/2026,,8,7:30,9:00,#N/A,#N/A
-12/2/2026,,9,7:30,9:00,#N/A,#N/A
-12/2/2026,,7,9:30,11:00,#N/A,#N/A
-12/2/2026,,8,9:30,11:00,#N/A,#N/A
-12/2/2026,,9,9:30,11:00,#N/A,#N/A
+12/2/2026,IPA7,7,7:30,9:00,IPA,https://docs.google.com/forms/d/e/1FAIpQLScB83Z1RAUaeBAoh-NDx9Z2cyum4Cw2DnX_fZj6qdUmOJpBRQ/viewform?usp=pp_url&entry.1641249900=IPA7&entry.1707624445=KODE
+12/2/2026,IPA8,8,7:30,9:00,IPA,https://docs.google.com/forms/d/e/1FAIpQLSdtDfUj111iuOkSqZ5Vq0vHq0H1pzqIgUEa7QAGl2BZdsAf1A/viewform?usp=pp_url&entry.1300281571=IPA8&entry.1030524790=KODE
+12/2/2026,IPA9,9,7:30,9:00,IPA,https://docs.google.com/forms/d/e/1FAIpQLSeK7xmiyu1bpZBSWnOkbH8QEwhuabTauWYyFgz4CxZRVUASQA/viewform?usp=pp_url&entry.890241309=IPA9&entry.323412426=KODE
+12/2/2026,PJOK7,7,9:30,11:00,PJOK,https://docs.google.com/forms/d/e/1FAIpQLSf6vS0pfCQk4scOQvAfe68ARGAjwX1-Avx2t_BEo-dfEQIy_w/viewform?usp=pp_url&entry.593339914=PJOK7&entry.487456417=KODE
+12/2/2026,PJOK8,8,9:30,11:00,PJOK,https://docs.google.com/forms/d/e/1FAIpQLSfL-5i_0nHeQACiGNatv7ibsrNg-ueUwGZW4auZyUKK1wP2lA/viewform?usp=pp_url&entry.665704505=PJOK8&entry.1286321539=KODE
+12/2/2026,PJOK9,9,9:30,11:00,PJOK,https://docs.google.com/forms/d/e/1FAIpQLSdaBDb-X0H6BogWz1TkoMOII_9bLHOgaf04mMAW6JremkvpUA/viewform?usp=pp_url&entry.419954695=PJOK9&entry.694312130=KODE
+12/3/2026,BING7,7,7:30,9:00,BAHASA INGGRIS,https://docs.google.com/forms/d/e/1FAIpQLSdXyI3s-zARGUox63sS8velT3sUEfCMo1_-Dyn8puCOM06Iyw/viewform?usp=pp_url&entry.2031604792=BING7&entry.1674663429=KODE
+12/3/2026,BING8,8,7:30,9:00,BAHASA INGGRIS,https://docs.google.com/forms/d/e/1FAIpQLSeSmsGgi51nsWCNjOYzOzGCrzbSOQhqiIMJtR3ZlwR1YxPpoQ/viewform?usp=pp_url&entry.81634876=BING8&entry.557466540=KODE
+12/3/2026,BING9,9,7:30,9:00,BAHASA INGGRIS,https://docs.google.com/forms/d/e/1FAIpQLScR9Z5ZGdNscTgHnKZ8BZhw1PnilWjFgCcmJvu_QqrtR0RNtQ/viewform?usp=pp_url&entry.1250759616=BING9&entry.1453365861=KODE
+12/3/2026,INFOR7,7,9:30,11:00,INFORMATKA,https://docs.google.com/forms/d/e/1FAIpQLSczZtMCYa9vt9wCVUAcluwN2k5EtwdXQerR4Wt90TGgSXArSg/viewform?usp=pp_url&entry.373949399=INFOR7&entry.1826290471=KODE
+12/3/2026,INFOR8,8,9:30,11:00,INFORMATIKA,https://docs.google.com/forms/d/e/1FAIpQLSe1qDxZj91YBE6F-tUjjvQYUS1YSx3CHyX8Nof1lXBQma2xng/viewform?usp=pp_url&entry.373949399=INFOR8&entry.1826290471=KODE
+12/3/2026,INFOR9,9,9:30,11:00,INFORMATIKA,https://docs.google.com/forms/d/e/1FAIpQLScPer3seVv-hdBBBNHrGrzIrBZ0wzZd3KsEzcyKBqrViiM0RA/viewform?usp=pp_url&entry.341836919=INFOR9&entry.1737260760=KODE
+12/4/2026,IPS7,7,9:30,11:00,IPS,https://docs.google.com/forms/d/e/1FAIpQLSei4B3wNdh-4iFXNfVpmWu9anbTzfudPVtsPasC2xRqRc-xBA/viewform?usp=pp_url&entry.1189828529=IPS7&entry.1293077491=KODE
+12/4/2026,IPS8,8,9:30,11:00,IPS,https://docs.google.com/forms/d/e/1FAIpQLScqNlCrB98MKWOvpA6AyMmFr3u9pxSp8FM5VXk_7fQu6opiPg/viewform?usp=pp_url&entry.745421001=IPS8&entry.1960712111=KODE
+12/4/2026,IPS9,9,9:30,11:00,IPS,https://docs.google.com/forms/d/e/1FAIpQLSddKDWqUzg2N_jOgNTNp8C-rrw-9oBuqm0VisFjnTYF1nfH4A/viewform?usp=pp_url&entry.1461140829=IPS9&entry.19018904=KODE
+12/5/2026,SR7,7,7:30,9:00,SENI RUPA,https://docs.google.com/forms/d/e/1FAIpQLScY2XPx3bGjK5AC5k1RHvEGGfSDU4zNe15Jiz0pNi3K_l_KGg/viewform?usp=pp_url&entry.13883507=SR7&entry.248928200=KODE
+12/5/2026,PRAK8,8,7:30,9:00,PRAKARYA,https://docs.google.com/forms/d/e/1FAIpQLSelAsl7T2j4OVU2Pothj_5Y1jrnxiSddMkFt0pF2mwjWcVIWA/viewform?usp=pp_url&entry.1282086849=PRAK8&entry.2093573053=KODE
+12/5/2026,PRAK9,9,7:30,9:00,PRAKARYA,https://docs.google.com/forms/d/e/1FAIpQLSeB9M8MMjka7NaZ77Tmd9cm0KScvxPrlHzHivuzdutsVfWIGQ/viewform?usp=pp_url&entry.1554718313=PRAK9&entry.1467873718=KODE
+12/5/2026,BCER7,7,9:30,11:00,BASA CERBON,https://docs.google.com/forms/d/e/1FAIpQLSfS88f3jdtXQtAc9LzkL6uNKlefY8kbRH6mecSGroU103n58A/viewform?usp=pp_url&entry.689703241=BCER7&entry.2141449604=KODE
+12/5/2026,BCER8,8,9:30,11:00,BASA CERBON,https://docs.google.com/forms/d/e/1FAIpQLSf3tW29-iBgARHKJTktCnnwUfD_kPgm7c5ys6KAJa3l9lTBDw/viewform?usp=pp_url&entry.100785590=BCER8&entry.1398415108=KODE
+12/5/2026,BCER9,9,9:30,11:00,BASA CERBON,https://docs.google.com/forms/d/e/1FAIpQLSdg6IEktDeX5RGYU5iHacyJamHSUy-DVuj6tq_FqJKaWu7yUw/viewform?usp=pp_url&entry.1544182928=BCER9&entry.1074101945=KODE

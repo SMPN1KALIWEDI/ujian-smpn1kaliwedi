@@ -2271,4 +2271,932 @@ async function tampilkanKartuSiswa(kode){
   }
 }
 
-els.cardKartuSiswa.addEventListener('cl
+els.cardKartuSiswa.addEventListener('click', () => {
+  aturHeader('kartusiswa');
+  els.screenHome.classList.add('hidden');
+  els.screenKartuSiswa.classList.remove('hidden');
+  isiKartuFilterKelas();
+});
+els.btnTutupKartuSiswa.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenKartuSiswa.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+els.cardTokenManual.addEventListener('click', () => {
+  aturHeader('tokenmanual');
+  els.screenHome.classList.add('hidden');
+  els.screenTokenManual.classList.remove('hidden');
+  muatTokenManual();
+});
+els.btnKembaliDariTokenManual.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenTokenManual.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+els.btnRefreshTokenManual.addEventListener('click', muatTokenManual);
+
+els.cardQrKeluar.addEventListener('click', () => {
+  aturHeader('qrkeluar');
+  els.screenHome.classList.add('hidden');
+  els.screenQrKeluar.classList.remove('hidden');
+  els.inputNisnQrKeluar.value = '';
+  els.previewSiswaQrKeluar.style.display = 'none';
+  els.previewNotFoundQrKeluar.style.display = 'none';
+  els.izinKeluarStatus.textContent = '';
+  els.izinKeluarStatus.className = 'status-msg';
+  els.inputNisnQrKeluar.focus();
+});
+els.btnKembaliDariQrKeluar.addEventListener('click', () => {
+  tutupQrScanKeluar();
+  aturHeader('home');
+  els.screenQrKeluar.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+els.btnKembaliDariToken.addEventListener('click', () => {
+  stopTimers();
+  aturHeader('home');
+  els.screenToken.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+async function tampilkanPreviewSiswaResetPw(){
+  const nisn = els.inputNisnResetPw.value.trim();
+  els.previewSiswaResetPw.style.display = 'none';
+  els.previewNotFoundResetPw.style.display = 'none';
+  if (!nisn) return;
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+
+  if (siswa){
+    els.previewNamaResetPw.textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
+    els.previewKelasResetPw.textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
+    els.previewSiswaResetPw.style.display = 'block';
+  } else {
+    els.previewNotFoundResetPw.style.display = 'block';
+  }
+}
+
+/* =========================================================
+   RESET PASSWORD SISWA — panggil Apps Script AbsensiKu
+   (spreadsheet ROSTER, terpisah dari spreadsheet asesmen)
+   untuk menghapus password custom siswa yang gagal login,
+   sehingga otomatis balik ke password default "user123".
+========================================================= */
+const APPS_SCRIPT_URL_PW = 'https://script.google.com/macros/s/AKfycbzoqXyJYIr9lho170K98mlC_7ukpFvQj2bbFwPHalsQM4_qYwqeC8-IJASW50BFw60E/exec';
+
+async function resetPasswordSiswa(){
+  const nisn = els.inputNisnResetPw.value.trim();
+  els.resetPwStatus.textContent = '';
+  els.resetPwStatus.className = 'status-msg';
+
+  if (!nisn){
+    els.resetPwStatus.textContent = 'Ketik NISN siswa terlebih dahulu.';
+    els.resetPwStatus.className = 'status-msg err';
+    return;
+  }
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+  const namaSiswa = siswa ? (ambilKolomRekap(siswa, 'NAMA') || '') : '';
+
+  els.btnResetPwSubmit.disabled = true;
+  els.btnResetPwSubmitLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 12000);
+    const res = await fetch(APPS_SCRIPT_URL_PW + '?' + new URLSearchParams({
+      action: 'resetPassword',
+      nisn,
+      ruang: lokasiUntukDisimpan(),
+      pengawas: namaPengawasAktif,
+    }), { signal: ctrl.signal });
+    clearTimeout(tid);
+    const data = await res.json();
+
+    if (data.status === 'ok'){
+      els.resetPwStatus.textContent = '✅ ' + (data.pesan || 'Password berhasil direset.');
+      els.resetPwStatus.className = 'status-msg ok';
+      els.inputNisnResetPw.value = '';
+      els.previewSiswaResetPw.style.display = 'none';
+      els.previewNotFoundResetPw.style.display = 'none';
+      tampilkanPopupSukses(namaSiswa);
+    } else {
+      els.resetPwStatus.textContent = '❌ ' + (data.pesan || 'Gagal mereset password.');
+      els.resetPwStatus.className = 'status-msg err';
+    }
+  } catch (err){
+    els.resetPwStatus.textContent = '❌ Gagal menghubungi server: ' + err.message;
+    els.resetPwStatus.className = 'status-msg err';
+  } finally {
+    els.btnResetPwSubmit.disabled = false;
+    els.btnResetPwSubmitLabel.textContent = '🔑 Reset ke Password Default';
+  }
+}
+
+/* ---- Popup "RESET BERHASIL" dengan bintang warna-warni ---- */
+const WARNA_BINTANG = ['#FFC93C', '#FF6B6B', '#4D96FF', '#6BCB77', '#C780FA', '#FF9F45'];
+const SIMBOL_BINTANG = ['⭐', '✨', '🌟', '💫'];
+
+function tampilkanPopupSukses(nama){
+  els.popupSuksesNama.textContent = nama ? `Password ${nama} sudah direset` : '';
+  els.popupBintangLayer.innerHTML = '';
+
+  const jumlah = 22;
+  for (let i = 0; i < jumlah; i++){
+    const b = document.createElement('span');
+    b.className = 'bintang-jatuh';
+    b.textContent = SIMBOL_BINTANG[Math.floor(Math.random() * SIMBOL_BINTANG.length)];
+    b.style.left = Math.random() * 100 + '%';
+    b.style.color = WARNA_BINTANG[Math.floor(Math.random() * WARNA_BINTANG.length)];
+    b.style.fontSize = (14 + Math.random() * 14) + 'px';
+    b.style.animationDuration = (1.4 + Math.random() * 1.6) + 's';
+    b.style.animationDelay = (Math.random() * 0.8) + 's';
+    els.popupBintangLayer.appendChild(b);
+  }
+
+  els.popupSuksesReset.classList.remove('hidden');
+}
+
+function tutupPopupSukses(){
+  els.popupSuksesReset.classList.add('hidden');
+  els.popupBintangLayer.innerHTML = '';
+}
+
+els.btnTutupPopupSukses.addEventListener('click', tutupPopupSukses);
+
+els.cardResetPw.addEventListener('click', () => {
+  aturHeader('resetpw');
+  els.screenHome.classList.add('hidden');
+  els.screenResetPw.classList.remove('hidden');
+});
+els.btnResetPwSubmit.addEventListener('click', resetPasswordSiswa);
+els.inputNisnResetPw.addEventListener('input', () => {
+  clearTimeout(window._debounceLookupResetPw);
+  window._debounceLookupResetPw = setTimeout(tampilkanPreviewSiswaResetPw, 350);
+});
+els.inputNisnResetPw.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') els.btnResetPwSubmit.click();
+});
+els.btnTutupResetPw.addEventListener('click', () => {
+  aturHeader('home');
+  tutupQrResetPw();
+  els.screenResetPw.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
+
+/* ---- Scan QR NISN (kartu siswa) untuk Reset Password ---- */
+let qrScannerResetPw = null;
+
+function bukaQrResetPw(){
+  els.qrReaderResetPwWrap.style.display = 'block';
+  els.qrStatusResetPw.textContent = 'Memulai kamera...';
+  setTimeout(() => {
+    try {
+      qrScannerResetPw = new Html5Qrcode('qr-reader-resetpw');
+      qrScannerResetPw.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const teks = decodedText.trim();
+          els.inputNisnResetPw.value = teks;
+          els.qrStatusResetPw.textContent = '✅ Terbaca: ' + teks;
+          tampilkanPreviewSiswaResetPw();
+          if (qrScannerResetPw) { try { qrScannerResetPw.pause(true); } catch(e){} }
+          setTimeout(tutupQrResetPw, 700);
+        },
+        () => {}
+      ).then(() => { els.qrStatusResetPw.textContent = '🔍 Arahkan ke QR Code kartu siswa...'; })
+       .catch(err => { els.qrStatusResetPw.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
+    } catch (e) {
+      els.qrStatusResetPw.textContent = '❌ ' + e.message;
+    }
+  }, 300);
+}
+
+function tutupQrResetPw(){
+  if (qrScannerResetPw){
+    qrScannerResetPw.stop().catch(() => {}).finally(() => {
+      try { qrScannerResetPw.clear(); } catch(e){}
+      qrScannerResetPw = null;
+    });
+  }
+  els.qrReaderResetPwWrap.style.display = 'none';
+}
+
+els.btnScanQrResetPw.addEventListener('click', bukaQrResetPw);
+els.btnTutupQrResetPw.addEventListener('click', tutupQrResetPw);
+
+/* ---- Logo sekolah dari data/sekolah.csv (GitHub), tampil di Menu Utama ---- */
+
+/* =========================================================
+   PETUNJUK PENGGUNAAN — modal bertahap menjelaskan tiap menu:
+   fungsinya apa & cara pakainya, satu per satu.
+========================================================= */
+const DATA_PETUNJUK = [
+  {
+    judul: 'Token Asesmen', accent: 'var(--teal-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.4" stroke="white" stroke-width="1.8"/>
+      <path d="M14 14h3.2M14 18h7M20.5 14v7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Menampilkan QR Code token ujian yang berlaku untuk ruang & sesi saat ini. Siswa scan QR ini dari halaman ujian mereka supaya bisa mulai mengerjakan soal.',
+    caraPakai: [
+      'Pilih <b>Ruang Asesmen</b> dan <b>Nama Pengawas</b>.',
+      'Tap tombol <b>Buka Token</b>.',
+      'QR Code tampil dan otomatis refresh tiap beberapa menit.',
+      'Tunjukkan layar HP ke siswa satu per satu untuk di-scan.',
+    ],
+  },
+  {
+    judul: 'Token Manual', accent: 'var(--indigo-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.8"/>
+      <path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13.5h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Menampilkan kode token dalam bentuk TEKS (bukan QR) — dipakai kalau ada siswa yang kameranya bermasalah dan tidak bisa scan QR sama sekali.',
+    caraPakai: [
+      'Tap tombol <b>Tampilkan Kode Token</b>.',
+      'Bacakan atau tunjukkan kode yang muncul ke siswa.',
+      'Siswa mengetik kode itu manual lewat tombol pensil ✏️ di halaman ujiannya.',
+      'Tombol ini dibatasi <b>10 kali dibuka</b> per token, supaya tidak disalahgunakan.',
+    ],
+  },
+  {
+    judul: 'Izin Keluar', accent: 'var(--emerald-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M11 12h9m0 0-3-3m3 3-3 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Memberi izin RESMI ke siswa yang benar-benar darurat perlu keluar ujian sebelum jadwal selesai — tanpa dihitung pelanggaran oleh sistem anti-contek.',
+    caraPakai: [
+      'Scan QR kartu siswa, atau ketik NISN-nya manual.',
+      'Cek dulu nama & kelas yang muncul sudah benar.',
+      'Tap tombol <b>Izinkan Keluar Sekarang</b>.',
+      'Dalam beberapa detik, halaman ujian siswa itu otomatis lanjut keluar sendiri.',
+    ],
+  },
+  {
+    judul: 'Rekap Nilai', accent: 'var(--amber-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 20V10M12 20V4M20 20v-7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Melihat rekap nilai semua siswa, disusun rapi dalam tabel: satu baris per siswa, satu kolom per mata pelajaran.',
+    caraPakai: [
+      '(Opsional) pilih filter <b>Kelas</b> dan/atau <b>Mapel</b>.',
+      'Tap tombol <b>Muat / Refresh Rekap</b>.',
+      'Tabel nilai akan tampil — kolom "—" berarti siswa itu belum ada nilai di mapel tersebut.',
+      'Bisa diurutkan (Nama/Nilai) dan diunduh sebagai file Excel.',
+    ],
+  },
+  {
+    judul: 'Reset Password', accent: 'var(--red-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="15" r="4" stroke="white" stroke-width="2"/>
+      <path d="M11 12l9-9M17 6l2.5 2.5M14 9l2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    fungsi: 'Membantu siswa yang gagal login karena password bermasalah, dengan mereset akunnya balik ke password default.',
+    caraPakai: [
+      'Scan QR kartu siswa, atau ketik NISN-nya manual.',
+      'Cek dulu nama & kelas yang muncul sudah benar.',
+      'Tap tombol <b>Reset ke Password Default</b>.',
+      'Siswa login lagi pakai password default <b>user123</b>, lalu diminta ganti password baru sendiri.',
+    ],
+  },
+  {
+    judul: 'Kartu Siswa', accent: 'var(--violet-500)',
+    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.8"/>
+      <circle cx="8.5" cy="11" r="2" stroke="white" stroke-width="1.8"/>
+      <path d="M5.5 16c0-1.7 1.4-2.8 3-2.8s3 1.1 3 2.8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M14 10h4.2M14 13h4.2" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
+    fungsi: 'Melihat detail nilai satu siswa tertentu secara lengkap — semua mata pelajaran sekaligus rata-ratanya.',
+    caraPakai: [
+      'Pilih <b>Kelas</b> siswa yang dicari.',
+      'Pilih <b>Nama</b> siswa dari daftar yang muncul.',
+      'Nilai per mapel dan rata-ratanya langsung tampil.',
+    ],
+  },
+];
+
+let petunjukIndeks = 0;
+
+function renderPetunjuk(){
+  const d = DATA_PETUNJUK[petunjukIndeks];
+  els.petunjukLangkah.textContent = `Langkah ${petunjukIndeks + 1} dari ${DATA_PETUNJUK.length}`;
+  els.petunjukIkon.style.setProperty('--accent', d.accent);
+  els.petunjukIkon.innerHTML = d.ikonSvg;
+  els.petunjukJudul.textContent = d.judul;
+  els.petunjukFungsi.textContent = d.fungsi;
+  els.petunjukCaraPakai.innerHTML = d.caraPakai.map(langkah => `<li style="margin-bottom:4px">${langkah}</li>`).join('');
+
+  els.petunjukDots.innerHTML = DATA_PETUNJUK.map((_, i) => `
+    <span style="width:7px;height:7px;border-radius:50%;background:${i === petunjukIndeks ? 'var(--navy-800)' : '#D8DEE8'};transition:.15s"></span>
+  `).join('');
+
+  els.btnPetunjukSebelumnya.style.visibility = petunjukIndeks === 0 ? 'hidden' : 'visible';
+  els.btnPetunjukLanjut.textContent = petunjukIndeks === DATA_PETUNJUK.length - 1 ? 'Selesai ✓' : 'Lanjut →';
+}
+
+function bukaPetunjuk(){
+  petunjukIndeks = 0;
+  renderPetunjuk();
+  els.popupPetunjuk.classList.remove('hidden');
+}
+function tutupPetunjuk(){
+  els.popupPetunjuk.classList.add('hidden');
+}
+
+els.btnBukaPetunjuk.addEventListener('click', bukaPetunjuk);
+els.btnTutupPetunjuk.addEventListener('click', tutupPetunjuk);
+els.btnPetunjukSebelumnya.addEventListener('click', () => {
+  if (petunjukIndeks > 0){ petunjukIndeks--; renderPetunjuk(); }
+});
+els.btnPetunjukLanjut.addEventListener('click', () => {
+  if (petunjukIndeks < DATA_PETUNJUK.length - 1){ petunjukIndeks++; renderPetunjuk(); }
+  else tutupPetunjuk();
+});
+
+/* =========================================================
+   INPUT LINK SOAL — tambah soal baru ke Sheet5 (KODE SOAL |
+   Mapel | Link Soal) di spreadsheet asesmen, tanpa perlu buka
+   spreadsheet manual. Daftar yang sudah ada dibaca langsung lewat
+   gviz (bukan lewat CSV GitHub, karena Sheet5 belum masuk pipeline
+   export CSV) supaya selalu terbaru.
+========================================================= */
+const SPREADSHEET_ASESMEN_ID = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
+
+async function ambilSheetGviz(namaSheet, kolom){
+  const tq = encodeURIComponent(`select ${kolom}`);
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&tq=${tq}&t=${Date.now()}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  const txt = await res.text();
+  const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+  if (s < 0) throw new Error('Format respons tidak dikenal');
+  const json = JSON.parse(txt.substring(s, e + 1));
+  return (json.table && json.table.rows) || [];
+}
+
+// Baris header Sheet5 (kolom A = "KODE SOAL") kadang ikut kebawa oleh
+// Google Visualization API, kadang tidak — tergantung isi sheet, jadi
+// tidak bisa diandalkan lewat posisi (slice/range). Di sini disaring
+// lewat ISI-nya: baris mana pun yang kolom A-nya persis "KODE SOAL"
+// (atau kosong) dianggap bukan data soal, di baris berapa pun itu.
+const LABEL_HEADER_KODE = ['KODE SOAL', 'KODE'];
+function bukanBarisHeaderKode(r){
+  if (!r.c || !r.c[0] || r.c[0].v === null || r.c[0].v === undefined) return false;
+  const kodeMentah = String(r.c[0].v).trim();
+  if (!kodeMentah) return false;
+  return !LABEL_HEADER_KODE.includes(kodeMentah.toUpperCase());
+}
+
+let petaLinkSoalUntukEdit = {}; // { KODE: { nama, linkForm, linkFormRespon, skorMaksimal } } — dipakai isi ulang form saat Edit
+
+async function muatDaftarLinkSoal(){
+  els.daftarLinkSoalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
+  try {
+    // Ambil semua baris Sheet5, lalu baris header disaring lewat ISI-nya
+    // (bukan posisinya) lewat bukanBarisHeaderKode() — lihat catatan di atas.
+    const semuaBarisSoal = await ambilSheetGviz('Sheet5', 'A,B,C,D,E');
+    const daftar = semuaBarisSoal.filter(bukanBarisHeaderKode);
+
+    if (daftar.length === 0){
+      els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--ink-soft);font-size:12.5px">Belum ada soal tersimpan.</div>`;
+      return;
+    }
+
+    petaLinkSoalUntukEdit = {};
+    const kolomAksi = pengawasAdalahSuperuser ? '<th style="padding:6px 8px;text-align:center;white-space:nowrap">Aksi</th>' : '';
+
+    els.daftarLinkSoalWrap.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Soal Tersimpan (${daftar.length})</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--navy-800);color:#fff">
+              <th style="padding:6px 8px;text-align:left;white-space:nowrap">Kode</th>
+              <th style="padding:6px 8px;text-align:left">Mapel</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Soal</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Respon</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Skor Maks</th>
+              ${kolomAksi}
+            </tr>
+          </thead>
+          <tbody>
+            ${daftar.map(r => {
+              const kode = String(r.c[0].v).trim().toUpperCase();
+              const nama = (r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? String(r.c[1].v) : '';
+              const linkSoal = (r.c[2] && r.c[2].v !== null && r.c[2].v !== undefined) ? String(r.c[2].v) : '';
+              const linkJwb = (r.c[3] && r.c[3].v !== null && r.c[3].v !== undefined) ? String(r.c[3].v) : '';
+              const skorMaksNum = (r.c[4] && r.c[4].v !== null && r.c[4].v !== undefined) ? Number(r.c[4].v) : '';
+              petaLinkSoalUntukEdit[kode] = { nama, linkForm: linkSoal, linkFormRespon: linkJwb, skorMaksimal: skorMaksNum };
+
+              const tautanSoal = linkSoal ? `<a href="${linkSoal}" target="_blank" rel="noopener" style="color:var(--teal-500);font-weight:700;text-decoration:none">🔗</a>` : '—';
+              const tautanJwb = linkJwb ? `<a href="${linkJwb}" target="_blank" rel="noopener" style="color:var(--indigo-500);font-weight:700;text-decoration:none">🔗</a>` : '—';
+              const aksi = pengawasAdalahSuperuser
+                ? `<td style="padding:6px 8px;text-align:center;white-space:nowrap">
+                     <button type="button" class="btnEditLinkSoal" data-kode="${escapeHtmlRekap(kode)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Edit">✏️</button>
+                     <button type="button" class="btnHapusLinkSoal" data-kode="${escapeHtmlRekap(kode)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Hapus">🗑️</button>
+                   </td>`
+                : '';
+              return `<tr style="border-bottom:1px solid var(--ring-track)"><td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kode)}</td><td style="padding:6px 8px">${escapeHtmlRekap(nama)}</td><td style="padding:6px 8px;text-align:center">${tautanSoal}</td><td style="padding:6px 8px;text-align:center">${tautanJwb}</td><td style="padding:6px 8px;text-align:center">${escapeHtmlRekap(skorMaksNum)}</td>${aksi}</tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (err) {
+    els.daftarLinkSoalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--red-500);font-size:12.5px">Gagal memuat daftar: ${err.message}</div>`;
+  }
+}
+
+// Event delegation — tombol Edit/Hapus dibuat ulang tiap render, jadi
+// listener-nya dipasang sekali di elemen pembungkus (daftarLinkSoalWrap)
+let kodeSedangDiedit = null; // null = mode tambah baru, string = mode edit (kode ini)
+
+function mulaiEditLinkSoal(kode){
+  const data = petaLinkSoalUntukEdit[kode];
+  if (!data) return;
+  kodeSedangDiedit = kode;
+  els.inputKodeAsesmen.value = kode;
+  els.inputKodeAsesmen.disabled = true; // Kode adalah kunci baris, tidak boleh diubah lewat Edit
+  els.inputNamaAsesmen.value = data.nama;
+  els.inputLinkAsesmen.value = data.linkForm;
+  els.inputLinkFormRespon.value = data.linkFormRespon;
+  els.inputSkorMaksimal.value = data.skorMaksimal;
+  els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Perubahan';
+  els.inputSoalStatus.textContent = `✏️ Mengedit soal ${kode}. Kode tidak bisa diubah lewat Edit.`;
+  els.inputSoalStatus.className = 'status-msg';
+  els.inputKodeAsesmen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function batalEditLinkSoal(){
+  kodeSedangDiedit = null;
+  els.inputKodeAsesmen.disabled = false;
+  els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Link Soal';
+}
+
+async function hapusLinkSoalKlik(kode){
+  if (!confirm(`Hapus soal dengan kode "${kode}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'hapusLinkSoal', kodeAsesmen: kode, namaPengawas: namaPengawasAktif })
+    });
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message || 'Gagal menghapus');
+    if (kodeSedangDiedit === kode) batalEditLinkSoal();
+    muatDaftarLinkSoal();
+  } catch (e) {
+    alert('❌ ' + e.message);
+  }
+}
+
+els.daftarLinkSoalWrap.addEventListener('click', (ev) => {
+  const btnEdit = ev.target.closest('.btnEditLinkSoal');
+  if (btnEdit) { mulaiEditLinkSoal(btnEdit.dataset.kode); return; }
+  const btnHapus = ev.target.closest('.btnHapusLinkSoal');
+  if (btnHapus) { hapusLinkSoalKlik(btnHapus.dataset.kode); return; }
+});
+
+async function kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'simpanLinkSoal', kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan link soal');
+  return json;
+}
+
+els.cardInputSoal.addEventListener('click', () => {
+  aturHeader('inputsoal');
+  els.screenHome.classList.add('hidden');
+  els.screenInputSoal.classList.remove('hidden');
+  batalEditLinkSoal();
+  els.inputKodeAsesmen.value = '';
+  els.inputNamaAsesmen.value = '';
+  els.inputLinkAsesmen.value = '';
+  els.inputLinkFormRespon.value = '';
+  els.inputSkorMaksimal.value = '';
+  els.inputSoalStatus.textContent = '';
+  els.inputSoalStatus.className = 'status-msg';
+  muatDaftarLinkSoal();
+});
+els.btnKembaliDariInputSoal.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenInputSoal.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+  batalEditLinkSoal();
+});
+
+els.btnSimpanLinkSoal.addEventListener('click', async () => {
+  const kodeAsesmen = els.inputKodeAsesmen.value.trim().toUpperCase();
+  const namaAsesmen = els.inputNamaAsesmen.value.trim();
+  const linkForm = els.inputLinkAsesmen.value.trim();
+  const linkFormRespon = els.inputLinkFormRespon.value.trim();
+  const skorMaksimalStr = els.inputSkorMaksimal.value.trim();
+  const skorMaksimal = Number(skorMaksimalStr);
+
+  els.inputSoalStatus.textContent = '';
+  els.inputSoalStatus.className = 'status-msg';
+
+  if (!kodeAsesmen || !namaAsesmen || !linkForm || !linkFormRespon || !skorMaksimalStr){
+    els.inputSoalStatus.textContent = 'Semua kolom (termasuk Skor Maksimal) wajib diisi.';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+  if (!isFinite(skorMaksimal) || skorMaksimal <= 0){
+    els.inputSoalStatus.textContent = 'Skor Maksimal harus berupa angka lebih dari 0.';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+  try { new URL(linkForm); } catch(e){
+    els.inputSoalStatus.textContent = 'LINK Soal sepertinya belum valid — pastikan diawali https://';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+  try { new URL(linkFormRespon); } catch(e){
+    els.inputSoalStatus.textContent = 'Link Form Respon sepertinya belum valid — pastikan diawali https://';
+    els.inputSoalStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnSimpanLinkSoal.disabled = true;
+  els.btnSimpanLinkSoalLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    if (kodeSedangDiedit){
+      const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'editLinkSoal', kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal, namaPengawas: namaPengawasAktif })
+      });
+      const json = await res.json();
+      if (json.status !== 'ok') throw new Error(json.message || 'Gagal memperbarui');
+      els.inputSoalStatus.textContent = `✅ "${namaAsesmen}" (${kodeAsesmen}) berhasil diperbarui.`;
+    } else {
+      await kirimLinkSoal(kodeAsesmen, namaAsesmen, linkForm, linkFormRespon, skorMaksimal);
+      els.inputSoalStatus.textContent = `✅ "${namaAsesmen}" (${kodeAsesmen}) berhasil disimpan.`;
+    }
+    els.inputSoalStatus.className = 'status-msg ok';
+    batalEditLinkSoal();
+    els.inputKodeAsesmen.value = '';
+    els.inputNamaAsesmen.value = '';
+    els.inputLinkAsesmen.value = '';
+    els.inputLinkFormRespon.value = '';
+    els.inputSkorMaksimal.value = '';
+    muatDaftarLinkSoal();
+  } catch (err) {
+    els.inputSoalStatus.textContent = '❌ ' + err.message;
+    els.inputSoalStatus.className = 'status-msg err';
+  } finally {
+    els.btnSimpanLinkSoal.disabled = false;
+    els.btnSimpanLinkSoalLabel.textContent = '💾 Simpan Link Soal';
+  }
+});
+
+/* =========================================================
+   SETING JADWAL — atur jadwal asesmen per tanggal/jam, disimpan
+   ke Sheet1!A10:G (TANGGAL | KODE | PRIORITAS | MULAI | SELESAI |
+   MAPEL | LINK). Mapel & Link diambil otomatis dari Sheet5
+   berdasarkan Kode Soal yang dipilih; validasi bentrok jam untuk
+   kelas yang sama dilakukan di Apps Script (action simpanJadwal).
+========================================================= */
+let petaSoalUntukJadwal = {}; // { KODE: { mapel, link } }
+
+async function muatDaftarSoalUntukJadwal(){
+  els.inputKodeJadwal.innerHTML = '<option value="">Memuat daftar kode soal…</option>';
+  els.inputKodeJadwal.disabled = true;
+  try {
+    const semuaBaris = await ambilSheetGviz('Sheet5', 'A,B,C');
+    const baris = semuaBaris.filter(bukanBarisHeaderKode);
+    petaSoalUntukJadwal = {};
+    baris.forEach(r => {
+      const kode = String(r.c[0].v).trim().toUpperCase();
+      if (!kode) return;
+      const mapel = (r.c[1] && r.c[1].v !== null && r.c[1].v !== undefined) ? String(r.c[1].v) : '';
+      const link  = (r.c[2] && r.c[2].v !== null && r.c[2].v !== undefined) ? String(r.c[2].v) : '';
+      petaSoalUntukJadwal[kode] = { mapel, link };
+    });
+
+    const daftarKode = Object.keys(petaSoalUntukJadwal);
+    if (!daftarKode.length){
+      els.inputKodeJadwal.innerHTML = '<option value="">Belum ada soal di Sheet5</option>';
+      return;
+    }
+    els.inputKodeJadwal.innerHTML = '<option value="">Pilih kode soal…</option>' +
+      daftarKode.map(k => `<option value="${escapeHtmlRekap(k)}">${escapeHtmlRekap(k)} — ${escapeHtmlRekap(petaSoalUntukJadwal[k].mapel)}</option>`).join('');
+    els.inputKodeJadwal.disabled = false;
+  } catch (e) {
+    els.inputKodeJadwal.innerHTML = '<option value="">Gagal memuat daftar kode soal</option>';
+    console.warn('⚠️ Gagal memuat daftar soal untuk Seting Jadwal:', e.message);
+  }
+}
+
+els.inputKodeJadwal.addEventListener('change', () => {
+  const kode = els.inputKodeJadwal.value.trim().toUpperCase();
+  const data = petaSoalUntukJadwal[kode];
+  if (data){
+    els.tampilMapelJadwal.textContent = data.mapel || '-';
+    els.tampilLinkJadwal.textContent = data.link || '-';
+    els.infoMapelLinkJadwal.classList.remove('hidden');
+  } else {
+    els.infoMapelLinkJadwal.classList.add('hidden');
+  }
+});
+
+// Checkbox Kelas (Prioritas) — pakai daftar kelas yang sama dengan
+// yang dipakai di Menu Utama (daftarKelasTersedia, dari data/siswa.csv)
+function isiCheckboxKelasJadwal(){
+  if (!daftarKelasTersedia.length){
+    els.daftarKelasJadwalWrap.innerHTML = '<span style="font-size:12.5px;color:var(--ink-soft)">Daftar kelas belum tersedia.</span>';
+    return;
+  }
+  els.daftarKelasJadwalWrap.innerHTML = daftarKelasTersedia.map(k => `
+    <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;background:#fff;border:1.5px solid var(--ring-track);border-radius:8px;padding:6px 10px;cursor:pointer">
+      <input type="checkbox" class="chkKelasJadwal" value="${escapeHtmlRekap(k)}"> ${escapeHtmlRekap(k)}
+    </label>`).join('');
+}
+
+async function ambilDaftarJadwal(){
+  // Sheet1!A10:G — ambil semua baris A:G, lalu buang baris 1-9
+  // (bukan lewat parameter "range" URL, karena pernah tidak stabil
+  // untuk kombinasi sheet+select tertentu — lihat catatan di
+  // muatDaftarLinkSoal di atas).
+  const semuaBaris = await ambilSheetGviz('Sheet1', 'A,B,C,D,E,F,G');
+  const potongan = semuaBaris.slice(9);
+  potongan.forEach((r, idx) => { r._baris = 10 + idx; }); // nomor baris asli di Sheet1, sebelum difilter
+  return potongan.filter(r => r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined && String(r.c[0].v).trim() !== '');
+}
+
+// gviz menulis tanggal sebagai literal string "Date(2025,0,15)" (bulan 0-based) —
+// dikonversi ke "yyyy-MM-dd" supaya sama persis dengan format yang dipakai server.
+function gvizTanggalKeYMD(v){
+  const s = String(v || '').trim();
+  const m = s.match(/^Date\((\d+),(\d+),(\d+)/);
+  if (!m) return s; // data lama yang masih tersimpan sebagai teks biasa
+  const tahun = m[1], bulan = String(Number(m[2]) + 1).padStart(2, '0'), tgl = String(Number(m[3])).padStart(2, '0');
+  return `${tahun}-${bulan}-${tgl}`;
+}
+
+async function muatDaftarJadwal(){
+  els.daftarJadwalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
+  try {
+    const daftar = await ambilDaftarJadwal();
+    if (!daftar.length){
+      els.daftarJadwalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--ink-soft);font-size:12.5px">Belum ada jadwal tersimpan.</div>`;
+      return;
+    }
+
+    const ambil = (r, i) => {
+      const c = r.c[i];
+      if (!c || c.v === null || c.v === undefined) return '';
+      return (c.f !== null && c.f !== undefined) ? c.f : String(c.v);
+    };
+    daftar.sort((a, b) => {
+      const ta = gvizTanggalKeYMD(a.c[0].v), tb = gvizTanggalKeYMD(b.c[0].v);
+      if (ta !== tb) return ta < tb ? -1 : 1;
+      return ambil(a, 3) < ambil(b, 3) ? -1 : ambil(a, 3) > ambil(b, 3) ? 1 : 0;
+    });
+
+    // Jadwal "sedang aktif" = tanggalnya hari ini & jam sekarang ada di
+    // antara Mulai-Selesai. Dicek di sisi HP (jam device), jadi pastikan
+    // jam di HP sudah benar.
+    const skrg = new Date();
+    const tanggalHariIni = skrg.getFullYear() + '-' + String(skrg.getMonth() + 1).padStart(2, '0') + '-' + String(skrg.getDate()).padStart(2, '0');
+    const jamSekarang = String(skrg.getHours()).padStart(2, '0') + ':' + String(skrg.getMinutes()).padStart(2, '0');
+
+    const kolomAksiJadwal = pengawasAdalahSuperuser ? '<th style="padding:6px 8px;text-align:center;white-space:nowrap">Aksi</th>' : '';
+
+    els.daftarJadwalWrap.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Jadwal Tersimpan (${daftar.length})</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--navy-800);color:#fff">
+              <th style="padding:6px 8px;text-align:left;white-space:nowrap">Tanggal</th>
+              <th style="padding:6px 8px;text-align:left;white-space:nowrap">Kode</th>
+              <th style="padding:6px 8px;text-align:left">Kelas</th>
+              <th style="padding:6px 8px;text-align:center;white-space:nowrap">Jam</th>
+              <th style="padding:6px 8px;text-align:left">Mapel</th>
+              ${kolomAksiJadwal}
+            </tr>
+          </thead>
+          <tbody>
+            ${daftar.map(r => {
+              const tanggalAsli = gvizTanggalKeYMD(r.c[0].v);
+              const kodeAsli = ambil(r, 1).trim().toUpperCase();
+              const kelasRaw = ambil(r, 2);
+              const mulaiRaw = ambil(r, 3);
+              const selesaiRaw = ambil(r, 4);
+
+              const sedangAktif = tanggalAsli === tanggalHariIni && mulaiRaw && selesaiRaw && mulaiRaw <= jamSekarang && jamSekarang < selesaiRaw;
+              const gayaBaris = sedangAktif
+                ? 'border-bottom:1px solid var(--ring-track);background:#E3F7E9;box-shadow:inset 3px 0 0 var(--teal-500)'
+                : 'border-bottom:1px solid var(--ring-track)';
+              const lencanaAktif = sedangAktif ? ' <span style="color:var(--teal-600,var(--teal-500));font-weight:700">🟢 Aktif</span>' : '';
+
+              const aksiJadwal = pengawasAdalahSuperuser
+                ? `<td style="padding:6px 8px;text-align:center;white-space:nowrap">
+                     <button type="button" class="btnEditJadwal" data-baris="${r._baris}" data-tanggal="${escapeHtmlRekap(tanggalAsli)}" data-kode="${escapeHtmlRekap(kodeAsli)}" data-kelas="${escapeHtmlRekap(kelasRaw)}" data-mulai="${escapeHtmlRekap(mulaiRaw)}" data-selesai="${escapeHtmlRekap(selesaiRaw)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Edit">✏️</button>
+                     <button type="button" class="btnHapusJadwal" data-baris="${r._baris}" data-tanggal="${escapeHtmlRekap(tanggalAsli)}" data-kode="${escapeHtmlRekap(kodeAsli)}" style="border:none;background:none;cursor:pointer;font-size:14px" title="Hapus">🗑️</button>
+                   </td>`
+                : '';
+              return `<tr style="${gayaBaris}">
+                <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(ambil(r,0))}</td>
+                <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kodeAsli)}</td>
+                <td style="padding:6px 8px">${escapeHtmlRekap(kelasRaw)}</td>
+                <td style="padding:6px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(mulaiRaw)}–${escapeHtmlRekap(selesaiRaw)}${lencanaAktif}</td>
+                <td style="padding:6px 8px">${escapeHtmlRekap(ambil(r,5))}</td>
+                ${aksiJadwal}
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (err) {
+    els.daftarJadwalWrap.innerHTML = `<div style="text-align:center;padding:16px;color:var(--red-500);font-size:12.5px">Gagal memuat daftar: ${err.message}</div>`;
+  }
+}
+
+let jadwalSedangDiedit = null; // null = mode tambah baru, { baris, tanggalAsli, kodeAsli } = mode edit
+
+function mulaiEditJadwal(baris, tanggalAsli, kodeAsli, kelasRaw, mulai, selesai){
+  jadwalSedangDiedit = { baris: Number(baris), tanggalAsli, kodeAsli };
+  els.inputTanggalJadwal.value = tanggalAsli;
+  els.inputKodeJadwal.value = kodeAsli;
+  els.inputKodeJadwal.dispatchEvent(new Event('change'));
+  els.inputMulaiJadwal.value = mulai;
+  els.inputSelesaiJadwal.value = selesai;
+
+  const kelasTerpilihEdit = kelasRaw.split(',').map(k => k.trim().toUpperCase()).filter(Boolean);
+  els.daftarKelasJadwalWrap.querySelectorAll('.chkKelasJadwal').forEach(chk => {
+    chk.checked = kelasTerpilihEdit.includes(chk.value.trim().toUpperCase());
+  });
+
+  els.btnSimpanJadwalLabel.textContent = '💾 Simpan Perubahan Jadwal';
+  els.jadwalStatus.textContent = `✏️ Mengedit jadwal ${kodeAsli} tanggal ${tanggalAsli}.`;
+  els.jadwalStatus.className = 'status-msg';
+  els.inputTanggalJadwal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function batalEditJadwal(){
+  jadwalSedangDiedit = null;
+  els.btnSimpanJadwalLabel.textContent = '💾 Simpan Jadwal';
+}
+
+async function hapusJadwalKlik(baris, tanggalAsli, kodeAsli){
+  if (!confirm(`Hapus jadwal ${kodeAsli} tanggal ${tanggalAsli}? Tindakan ini tidak bisa dibatalkan.`)) return;
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'hapusJadwal', baris: Number(baris), tanggalAsli, kodeAsli, namaPengawas: namaPengawasAktif })
+    });
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message || 'Gagal menghapus');
+    if (jadwalSedangDiedit && jadwalSedangDiedit.baris === Number(baris)) batalEditJadwal();
+    muatDaftarJadwal();
+  } catch (e) {
+    alert('❌ ' + e.message);
+  }
+}
+
+els.daftarJadwalWrap.addEventListener('click', (ev) => {
+  const btnEdit = ev.target.closest('.btnEditJadwal');
+  if (btnEdit){
+    mulaiEditJadwal(btnEdit.dataset.baris, btnEdit.dataset.tanggal, btnEdit.dataset.kode, btnEdit.dataset.kelas, btnEdit.dataset.mulai, btnEdit.dataset.selesai);
+    return;
+  }
+  const btnHapus = ev.target.closest('.btnHapusJadwal');
+  if (btnHapus){
+    hapusJadwalKlik(btnHapus.dataset.baris, btnHapus.dataset.tanggal, btnHapus.dataset.kode);
+    return;
+  }
+});
+
+async function kirimJadwal(tanggal, kode, prioritas, mulai, selesai){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'simpanJadwal', tanggal, kode, prioritas, mulai, selesai })
+  });
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan jadwal');
+  return json;
+}
+
+// Minta server menghapus jadwal yang TANGGAL-nya sudah lewat >1 minggu.
+// Dipanggil tiap kali layar Seting Jadwal dibuka (selain trigger harian
+// di Apps Script — lihat pasangTriggerHapusJadwalKedaluwarsa()). Gagal
+// diam-diam kalau offline/error, supaya tidak menghalangi daftar tampil.
+async function bersihkanJadwalKedaluwarsa(){
+  try {
+    await fetch(CONFIG.APPS_SCRIPT_URL + '?action=bersihkanJadwalKedaluwarsa', { method: 'GET' });
+  } catch (e) {
+    console.warn('⚠️ Gagal membersihkan jadwal kedaluwarsa:', e.message);
+  }
+}
+
+async function bukaScreenSetingJadwal(){
+  aturHeader('setingjadwal');
+  els.screenHome.classList.add('hidden');
+  els.screenSetingJadwal.classList.remove('hidden');
+  batalEditJadwal();
+
+  els.inputTanggalJadwal.value = '';
+  els.inputMulaiJadwal.value = '';
+  els.inputSelesaiJadwal.value = '';
+  els.infoMapelLinkJadwal.classList.add('hidden');
+  els.jadwalStatus.textContent = '';
+  els.jadwalStatus.className = 'status-msg';
+
+  if (!daftarKelasTersedia.length) await muatPilihanKelasHome();
+  isiCheckboxKelasJadwal();
+  muatDaftarSoalUntukJadwal();
+  bersihkanJadwalKedaluwarsa().finally(muatDaftarJadwal); // hapus data >1 minggu dulu, baru tampilkan daftar
+}
+els.cardSetingJadwal.addEventListener('click', bukaScreenSetingJadwal);
+els.btnKembaliDariSetingJadwal.addEventListener('click', () => {
+  aturHeader('home');
+  els.screenSetingJadwal.classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+  batalEditJadwal();
+});
+
+els.btnSimpanJadwal.addEventListener('click', async () => {
+  const tanggal = els.inputTanggalJadwal.value;
+  const kode = els.inputKodeJadwal.value.trim().toUpperCase();
+  const mulai = els.inputMulaiJadwal.value;
+  const selesai = els.inputSelesaiJadwal.value;
+  const kelasTerpilih = [...els.daftarKelasJadwalWrap.querySelectorAll('.chkKelasJadwal:checked')].map(c => c.value);
+  const prioritas = kelasTerpilih.join(', ');
+
+  els.jadwalStatus.textContent = '';
+  els.jadwalStatus.className = 'status-msg';
+
+  if (!tanggal || !kode || !mulai || !selesai || !kelasTerpilih.length){
+    els.jadwalStatus.textContent = 'Tanggal, Kode Soal, minimal satu Kelas (Prioritas), Mulai, dan Selesai wajib diisi.';
+    els.jadwalStatus.className = 'status-msg err';
+    return;
+  }
+  if (mulai >= selesai){
+    els.jadwalStatus.textContent = 'Waktu Selesai harus lebih besar dari Waktu Mulai.';
+    els.jadwalStatus.className = 'status-msg err';
+    return;
+  }
+
+  els.btnSimpanJadwal.disabled = true;
+  els.btnSimpanJadwalLabel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    if (jadwalSedangDiedit){
+      const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'editJadwal',
+          baris: jadwalSedangDiedit.baris,
+          tanggalAsli: jadwalSedangDiedit.tanggalAsli,
+          kodeAsli: jadwalSedangDiedit.kodeAsli,
+          tanggal, kode, prioritas, mulai, selesai,
+          namaPengawas: namaPengawasAktif
+        })
+      });
+      const json = await res.json();
+      if (json.status !== 'ok') throw new Error(json.message || 'Gagal memperbarui jadwal');
+      els.jadwalStatus.textContent = `✅ Jadwal ${kode} (${prioritas}) tanggal ${tanggal} berhasil diperbarui.`;
+    } else {
+      await kirimJadwal(tanggal, kode, prioritas, mulai, selesai);
+      els.jadwalStatus.textContent = `✅ Jadwal ${kode} (${prioritas}) tanggal ${tanggal} berhasil disimpan.`;
+    }
+    els.jadwalStatus.className = 'status-msg ok';
+    batalEditJadwal();
+    els.inputTanggalJadwal.value = '';
+    els.inputKodeJadwal.value = '';
+    els.inputMulaiJadwal.value = '';
+    els.inputSelesaiJadwal.value = '';
+    els.infoMapelLinkJadwal.classList.add('hidden');
+    isiCheckboxKelasJadwal(); // uncentang semua kelas lagi
+    muatDaftarJadwal();
+  } catch (err) {
+    els.jadwalStatus.textContent = '❌ ' + err.message;
+    els.jadwalStatus.className = 'status-msg err';
+  } finally {
+    els.btnSimpanJadwal.disabled = false;
+    els.btnSimpanJadwalLabel.textContent = '💾 Simpan Jadwal';
+  }
+});
+
+aturStatusKartuGrup1();
+</script>
+</body>
+</html>

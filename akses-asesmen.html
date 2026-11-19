@@ -2956,7 +2956,7 @@ function tanggalTeksKeYMD(t){
   m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
   if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
   const bln = {jan:1,feb:2,mar:3,apr:4,mei:5,may:5,jun:6,jul:7,agu:8,aug:8,agt:8,sep:9,okt:10,oct:10,nov:11,des:12,dec:12};
-  m = s.toLowerCase().match(/^(\d{1,2})\s+([a-z]+)\.?\s+(\d{4})/);
+  m = s.toLowerCase().match(/^(\d{1,2})[\s\-\/.,]+([a-z]+)\.?[\s\-\/.,]+(\d{4})/);
   if (m && bln[m[2].slice(0,3)]) return `${m[3]}-${String(bln[m[2].slice(0,3)]).padStart(2,'0')}-${m[1].padStart(2,'0')}`;
   return s;
 }
@@ -3012,12 +3012,38 @@ async function ambilDaftarJadwalJson(){
   });
 }
 
+// Jalur paling andal: Apps Script membaca Sheet1!A11:G langsung (tanpa Google
+// Visualization API). Butuh action "jadwal" di Apps Script; kalau belum ada,
+// otomatis jatuh ke CSV/JSON di bawah.
+async function ambilDaftarJadwalServer(){
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=jadwal&t=' + Date.now(), { cache: 'no-store' });
+  const json = await res.json();
+  if (json.status !== 'ok' || !Array.isArray(json.rows)) throw new Error(json.message || 'action jadwal belum tersedia');
+  const hasil = json.rows.map(x => {
+    const t = (x.tampil || []);
+    const c = [0,1,2,3,4,5,6].map(k => {
+      const v = String(t[k] == null ? '' : t[k]).trim();
+      return v === '' ? null : { v, f: v };
+    });
+    const tglYmd = x.tanggal ? String(x.tanggal) : tanggalTeksKeYMD(t[0] || '');
+    c[0] = { v: tglYmd, f: String(t[0] || tglYmd) };
+    return { c, _baris: Number(x.baris) };
+  });
+  const nomor = hasil.map(r => r._baris);
+  hasil.info = { awal: nomor.length ? Math.min(...nomor) : 11, akhir: nomor.length ? Math.max(...nomor) : 11, kosong: [], sumber: 'server' };
+  return hasil;
+}
+
 async function ambilDaftarJadwal(){
   // Sheet1!A10:G — baris 10 = header, jadwal mulai baris 11.
-  try { return await ambilDaftarJadwalCsv(); }
-  catch (e){
-    console.warn('⚠️ Baca jadwal via CSV gagal, pakai JSON:', e.message);
-    return await ambilDaftarJadwalJson();
+  try { return await ambilDaftarJadwalServer(); }
+  catch (e1){
+    console.warn('ℹ️ Jalur server jadwal tidak tersedia, pakai CSV:', e1.message);
+    try { return await ambilDaftarJadwalCsv(); }
+    catch (e2){
+      console.warn('⚠️ Baca jadwal via CSV gagal, pakai JSON:', e2.message);
+      return await ambilDaftarJadwalJson();
+    }
   }
 }
 
@@ -3073,6 +3099,7 @@ async function muatDaftarJadwal(){
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
             <tr style="background:var(--navy-800);color:#fff">
+              ${pengawasAdalahSuperuser ? '<th style="padding:6px 8px;text-align:center;white-space:nowrap" title="Nomor baris di Sheet1">Brs</th>' : ''}
               <th style="padding:6px 8px;text-align:left;white-space:nowrap">Tanggal</th>
               <th style="padding:6px 8px;text-align:left;white-space:nowrap">Kode</th>
               <th style="padding:6px 8px;text-align:left">Kelas</th>
@@ -3102,6 +3129,7 @@ async function muatDaftarJadwal(){
                    </td>`
                 : '';
               return `<tr style="${gayaBaris}">
+                ${pengawasAdalahSuperuser ? `<td style="padding:6px 8px;text-align:center;color:var(--ink-soft);font-size:11px">${r._baris}</td>` : ''}
                 <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(ambil(r,0))}</td>
                 <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kodeAsli)}</td>
                 <td style="padding:6px 8px">${escapeHtmlRekap(kelasRaw)}</td>

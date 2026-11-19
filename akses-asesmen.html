@@ -844,8 +844,28 @@
     <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
       Dipakai kalau siswa perlu tahu kode token tapi kameranya gagal scan QR. Dibatasi 10 kali dibuka per token supaya tidak disalahgunakan.
     </div>
-    <button type="button" id="btnBukaTokenTeks" class="btn btn-primary" style="width:100%" onclick="toggleTokenTeks()">👁️ Tampilkan Kode Token</button>
+    <div class="field">
+      <label for="inputNisnTokenManual">NISN Siswa</label>
+      <input type="text" id="inputNisnTokenManual" placeholder="Ketik atau scan QR NISN siswa"
+        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
+    </div>
+    <button id="btnScanQrTokenManual" class="btn btn-ghost" style="width:100%">📷 Scan QR Kartu Siswa</button>
+    <div id="qrReaderTokenManualWrap" style="margin-top:10px;display:none">
+      <div id="qr-reader-tokenmanual" style="border-radius:12px;overflow:hidden"></div>
+      <div id="qrStatusTokenManualScan" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
+      <button id="btnTutupQrScanTokenManual" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
+    </div>
+    <div id="previewSiswaTokenManual" style="display:none;margin-top:12px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px">Siswa ditemukan</div>
+      <div id="previewNamaTokenManual" style="font-size:15px;font-weight:700;color:var(--navy-800)">-</div>
+      <div id="previewKelasTokenManual" style="font-size:12.5px;color:var(--ink-soft)">-</div>
+    </div>
+    <div id="previewNotFoundTokenManual" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF6E5;border:1.5px solid #F3DFA8;border-radius:var(--radius-md);font-size:12.5px;color:#8A6A17">
+      ⚠️ NISN belum ditemukan di data siswa — cek lagi penulisannya.
+    </div>
+    <button type="button" id="btnBukaTokenTeks" class="btn btn-primary" style="width:100%;margin-top:14px" onclick="toggleTokenTeks()">👁️ Tampilkan Kode Token</button>
     <div id="tokenTeksBox" style="display:none;margin-top:14px;text-align:center;padding:20px;background:var(--bg);border-radius:var(--radius-md)">
+      <div id="tokenTeksUntuk" style="font-size:12px;font-weight:600;color:var(--navy-800);margin-bottom:6px"></div>
       <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Kode Token Saat Ini</div>
       <div id="tokenTeks" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:28px;letter-spacing:.14em;color:var(--navy-800)">-</div>
     </div>
@@ -1598,6 +1618,14 @@ function toggleTokenTeks(){
     return;
   }
 
+  if (!document.getElementById('inputNisnTokenManual').value.trim()){
+    els.tokenManualStatus.textContent = 'Ketik atau scan NISN siswa terlebih dahulu.';
+    els.tokenManualStatus.className = 'status-msg err';
+    return;
+  }
+  els.tokenManualStatus.textContent = '';
+  els.tokenManualStatus.className = 'status-msg';
+
   if (tokenTeksSisaBuka <= 0){
     els.btnBukaTokenTeks.disabled = true;
     els.btnBukaTokenTeks.textContent = '🚫 Batas tampil token habis — pakai QR atau Otorisasi Manual';
@@ -1606,10 +1634,95 @@ function toggleTokenTeks(){
 
   tokenTeksSisaBuka--;
   tokenTeksSedangTampil = true;
+  const namaTM = document.getElementById('previewNamaTokenManual').textContent;
+  const adaTM = document.getElementById('previewSiswaTokenManual').style.display === 'block';
+  document.getElementById('tokenTeksUntuk').textContent =
+    'Untuk: ' + (adaTM && namaTM && namaTM !== '-' ? namaTM + ' · ' : '') + 'NISN ' + document.getElementById('inputNisnTokenManual').value.trim();
   els.tokenTeksBox.style.display = 'block';
   els.btnBukaTokenTeks.textContent = tokenTeksSisaBuka > 0
     ? `🙈 Sembunyikan (sisa ${tokenTeksSisaBuka}x)`
     : `🙈 Sembunyikan (jatah habis, jangan dibuka lagi)`;
+}
+
+/* ---- Scan QR NISN di Token Manual (pola sama dengan Izin Keluar) ---- */
+let qrScannerTokenManual = null;
+
+function sembunyikanTokenTeksKarenaGantiSiswa(){
+  // Ganti siswa → kode token disembunyikan lagi (jatah tidak dikembalikan)
+  if (tokenTeksSedangTampil) toggleTokenTeks();
+}
+
+async function tampilkanPreviewSiswaTokenManual(){
+  const nisn = document.getElementById('inputNisnTokenManual').value.trim();
+  const boxOk = document.getElementById('previewSiswaTokenManual');
+  const boxNo = document.getElementById('previewNotFoundTokenManual');
+  boxOk.style.display = 'none';
+  boxNo.style.display = 'none';
+  if (!nisn) return;
+
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+  if (siswa){
+    document.getElementById('previewNamaTokenManual').textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
+    document.getElementById('previewKelasTokenManual').textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
+    boxOk.style.display = 'block';
+  } else {
+    boxNo.style.display = 'block';
+  }
+}
+
+document.getElementById('inputNisnTokenManual').addEventListener('input', () => {
+  sembunyikanTokenTeksKarenaGantiSiswa();
+  clearTimeout(window._debounceLookupTokenManual);
+  window._debounceLookupTokenManual = setTimeout(tampilkanPreviewSiswaTokenManual, 350);
+});
+
+function bukaQrScanTokenManual(){
+  const wrap = document.getElementById('qrReaderTokenManualWrap');
+  const status = document.getElementById('qrStatusTokenManualScan');
+  wrap.style.display = 'block';
+  status.textContent = 'Memulai kamera...';
+  setTimeout(() => {
+    try {
+      qrScannerTokenManual = new Html5Qrcode('qr-reader-tokenmanual');
+      qrScannerTokenManual.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const teks = decodedText.trim();
+          document.getElementById('inputNisnTokenManual').value = teks;
+          status.textContent = '✅ Terbaca: ' + teks;
+          sembunyikanTokenTeksKarenaGantiSiswa();
+          tampilkanPreviewSiswaTokenManual();
+          if (qrScannerTokenManual) { try { qrScannerTokenManual.pause(true); } catch(e){} }
+          setTimeout(tutupQrScanTokenManual, 700);
+        },
+        () => {}
+      ).then(() => { status.textContent = '🔍 Arahkan ke QR Code kartu siswa...'; })
+       .catch(err => { status.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
+    } catch (e) {
+      status.textContent = '❌ ' + e.message;
+    }
+  }, 300);
+}
+
+function tutupQrScanTokenManual(){
+  if (qrScannerTokenManual){
+    const sc = qrScannerTokenManual;
+    qrScannerTokenManual = null;
+    sc.stop().catch(() => {}).finally(() => { try { sc.clear(); } catch(e){} });
+  }
+  document.getElementById('qrReaderTokenManualWrap').style.display = 'none';
+}
+
+document.getElementById('btnScanQrTokenManual').addEventListener('click', bukaQrScanTokenManual);
+document.getElementById('btnTutupQrScanTokenManual').addEventListener('click', tutupQrScanTokenManual);
+
+function resetFormNisnTokenManual(){
+  tutupQrScanTokenManual();
+  document.getElementById('inputNisnTokenManual').value = '';
+  document.getElementById('previewSiswaTokenManual').style.display = 'none';
+  document.getElementById('previewNotFoundTokenManual').style.display = 'none';
 }
 
 async function muatTokenManual(){
@@ -2287,9 +2400,11 @@ els.cardTokenManual.addEventListener('click', () => {
   aturHeader('tokenmanual');
   els.screenHome.classList.add('hidden');
   els.screenTokenManual.classList.remove('hidden');
+  resetFormNisnTokenManual();
   muatTokenManual();
 });
 els.btnKembaliDariTokenManual.addEventListener('click', () => {
+  resetFormNisnTokenManual();
   aturHeader('home');
   els.screenTokenManual.classList.add('hidden');
   els.screenHome.classList.remove('hidden');

@@ -2978,11 +2978,15 @@ async function ambilDaftarJadwalCsv(){
   if (idxHeader < 0) idxHeader = BARIS_HEADER - 1;
 
   const hasil = [];
-  for (let i = idxHeader + 1; i < semua.length; i++){
+  const kosong = [];
+  // cari baris terakhir yang ada isinya (baris kosong di tengah dilaporkan, bukan diam-diam hilang)
+  let idxAkhir = semua.length - 1;
+  while (idxAkhir > idxHeader && !semua[idxAkhir].some(x => (x || '').trim() !== '')) idxAkhir--;
+  for (let i = idxHeader + 1; i <= idxAkhir; i++){
     const r = semua[i];
     const sel = k => (r[k] || '').trim();
-    // baris dianggap jadwal bila kolom A atau Kode (B) terisi — tidak hanya bergantung pada A
-    if (!sel(0) && !sel(1)) continue;
+    // baris dianggap jadwal bila SEL APA PUN di A:G terisi
+    if (![0,1,2,3,4,5,6].some(k => sel(k) !== '')){ kosong.push(BARIS_HEADER + (i - idxHeader)); continue; }
     if (sel(0).toUpperCase() === 'TANGGAL') continue;
     const c = [0,1,2,3,4,5,6].map(k => {
       const t = sel(k);
@@ -2992,6 +2996,7 @@ async function ambilDaftarJadwalCsv(){
     else c[0] = { v: '', f: '' };
     hasil.push({ c, _baris: BARIS_HEADER + (i - idxHeader) });
   }
+  hasil.info = { awal: BARIS_HEADER + 1, akhir: BARIS_HEADER + (idxAkhir - idxHeader), kosong };
   return hasil;
 }
 
@@ -3040,10 +3045,17 @@ async function muatDaftarJadwal(){
       if (!c || c.v === null || c.v === undefined) return '';
       return (c.f !== null && c.f !== undefined) ? c.f : String(c.v);
     };
+    // Sortir: Tanggal (naik) → Waktu mulai (naik) → Kode soal (A-Z)
+    const menitDariJam = (t) => {
+      const m = String(t || '').match(/(\d{1,2})[:.](\d{2})/);
+      return m ? Number(m[1]) * 60 + Number(m[2]) : 99999;
+    };
     daftar.sort((a, b) => {
-      const ta = gvizTanggalKeYMD(a.c[0].v), tb = gvizTanggalKeYMD(b.c[0].v);
+      const ta = gvizTanggalKeYMD(a.c[0].v) || '9999', tb = gvizTanggalKeYMD(b.c[0].v) || '9999';
       if (ta !== tb) return ta < tb ? -1 : 1;
-      return ambil(a, 3) < ambil(b, 3) ? -1 : ambil(a, 3) > ambil(b, 3) ? 1 : 0;
+      const wa = menitDariJam(ambil(a, 3)), wb = menitDariJam(ambil(b, 3));
+      if (wa !== wb) return wa - wb;
+      return ambil(a, 1).trim().toUpperCase().localeCompare(ambil(b, 1).trim().toUpperCase(), 'id', { numeric: true });
     });
 
     // Jadwal "sedang aktif" = tanggalnya hari ini & jam sekarang ada di
@@ -3056,7 +3068,7 @@ async function muatDaftarJadwal(){
     const kolomAksiJadwal = pengawasAdalahSuperuser ? '<th style="padding:6px 8px;text-align:center;white-space:nowrap">Aksi</th>' : '';
 
     els.daftarJadwalWrap.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Jadwal Tersimpan (${daftar.length})</div>
+      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Jadwal Tersimpan (${daftar.length})${daftar.info ? ` <span style="font-weight:500;text-transform:none;letter-spacing:0">· terbaca dari baris ${daftar.info.awal}–${daftar.info.akhir}${daftar.info.kosong.length ? ', baris kosong: ' + daftar.info.kosong.join(', ') : ''}</span>` : ''}</div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
@@ -3077,7 +3089,7 @@ async function muatDaftarJadwal(){
               const mulaiRaw = ambil(r, 3);
               const selesaiRaw = ambil(r, 4);
 
-              const sedangAktif = tanggalAsli === tanggalHariIni && mulaiRaw && selesaiRaw && mulaiRaw <= jamSekarang && jamSekarang < selesaiRaw;
+              const sedangAktif = tanggalAsli === tanggalHariIni && mulaiRaw && selesaiRaw && menitDariJam(mulaiRaw) <= menitDariJam(jamSekarang) && menitDariJam(jamSekarang) < menitDariJam(selesaiRaw);
               const gayaBaris = sedangAktif
                 ? 'border-bottom:1px solid var(--ring-track);background:#E3F7E9;box-shadow:inset 3px 0 0 var(--teal-500)'
                 : 'border-bottom:1px solid var(--ring-track)';

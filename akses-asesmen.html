@@ -2996,7 +2996,7 @@ async function ambilDaftarJadwalCsv(){
     else c[0] = { v: '', f: '' };
     hasil.push({ c, _baris: BARIS_HEADER + (i - idxHeader) });
   }
-  hasil.info = { awal: BARIS_HEADER + 1, akhir: BARIS_HEADER + (idxAkhir - idxHeader), kosong };
+  hasil.info = { awal: BARIS_HEADER + 1, akhir: BARIS_HEADER + (idxAkhir - idxHeader), kosong, sumber: 'csv' };
   return hasil;
 }
 
@@ -3057,6 +3057,14 @@ function gvizTanggalKeYMD(v){
   return `${tahun}-${bulan}-${tgl}`;
 }
 
+// Tampilan tanggal seragam "30-Nov-2026" walau di sheet formatnya campur (05/12/2026 dst)
+function tampilTanggalSeragam(ymd, cadangan){
+  const m = String(ymd || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return cadangan;
+  const nama = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${Number(m[3])}-${nama[Number(m[2]) - 1]}-${m[1]}`;
+}
+
 async function muatDaftarJadwal(){
   els.daftarJadwalWrap.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span></div>';
   try {
@@ -3094,7 +3102,7 @@ async function muatDaftarJadwal(){
     const kolomAksiJadwal = pengawasAdalahSuperuser ? '<th style="padding:6px 8px;text-align:center;white-space:nowrap">Aksi</th>' : '';
 
     els.daftarJadwalWrap.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Jadwal Tersimpan (${daftar.length})${daftar.info ? ` <span style="font-weight:500;text-transform:none;letter-spacing:0">· terbaca dari baris ${daftar.info.awal}–${daftar.info.akhir}${daftar.info.kosong.length ? ', baris kosong: ' + daftar.info.kosong.join(', ') : ''}</span>` : ''}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Jadwal Tersimpan (${daftar.length})${daftar.info ? ` <span style="font-weight:500;text-transform:none;letter-spacing:0">· terbaca dari baris ${daftar.info.awal}–${daftar.info.akhir}${daftar.info.kosong.length ? ', baris kosong: ' + daftar.info.kosong.join(', ') : ''} · sumber: ${daftar.info.sumber || '-'}</span>` : ''}</div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
@@ -3130,7 +3138,7 @@ async function muatDaftarJadwal(){
                 : '';
               return `<tr style="${gayaBaris}">
                 ${pengawasAdalahSuperuser ? `<td style="padding:6px 8px;text-align:center;color:var(--ink-soft);font-size:11px">${r._baris}</td>` : ''}
-                <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(ambil(r,0))}</td>
+                <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(tampilTanggalSeragam(gvizTanggalKeYMD(r.c[0].v), ambil(r,0)))}</td>
                 <td style="padding:6px 8px;white-space:nowrap">${escapeHtmlRekap(kodeAsli)}</td>
                 <td style="padding:6px 8px">${escapeHtmlRekap(kelasRaw)}</td>
                 <td style="padding:6px 8px;text-align:center;white-space:nowrap">${escapeHtmlRekap(mulaiRaw)}–${escapeHtmlRekap(selesaiRaw)}${lencanaAktif}</td>

@@ -2929,23 +2929,91 @@ function isiCheckboxKelasJadwal(){
     </label>`).join('');
 }
 
-async function ambilDaftarJadwal(){
-  // Sheet1!A10:G — baris 10 = HEADER kolom, data jadwal mulai baris 11.
-  // Penyebab jadwal "hilang" sebelumnya: tanpa headers=0, Google
-  // Visualization API menebak sendiri berapa baris atas yang dianggap
-  // header (baris 1-9 Sheet1 berisi teks pengaturan, jadi banyak baris
-  // ikut ditelan), lalu slice(9) memotong lagi → sebagian jadwal terbuang.
-  // Sekarang: headers=0 → rows[i] = baris (i+1) sheet, posisi pasti.
+// --- Pembaca CSV sederhana (mendukung tanda kutip & koma di dalam sel, mis. "7A, 7B") ---
+function parseCsv(teks){
+  const baris = []; let sel = '', row = [], kutip = false;
+  for (let i = 0; i < teks.length; i++){
+    const ch = teks[i];
+    if (kutip){
+      if (ch === '"'){ if (teks[i+1] === '"'){ sel += '"'; i++; } else kutip = false; }
+      else sel += ch;
+    } else if (ch === '"') kutip = true;
+    else if (ch === ','){ row.push(sel); sel = ''; }
+    else if (ch === '\n' || ch === '\r'){
+      if (ch === '\r' && teks[i+1] === '\n') i++;
+      row.push(sel); baris.push(row); row = []; sel = '';
+    } else sel += ch;
+  }
+  if (sel !== '' || row.length) { row.push(sel); baris.push(row); }
+  return baris;
+}
+
+// Ubah teks tanggal apa pun (2026-11-20, 20/11/2026, 20-11-2026, "20 Nov 2026") → yyyy-MM-dd
+function tanggalTeksKeYMD(t){
+  const s = String(t || '').trim();
+  let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  const bln = {jan:1,feb:2,mar:3,apr:4,mei:5,may:5,jun:6,jul:7,agu:8,aug:8,agt:8,sep:9,okt:10,oct:10,nov:11,des:12,dec:12};
+  m = s.toLowerCase().match(/^(\d{1,2})\s+([a-z]+)\.?\s+(\d{4})/);
+  if (m && bln[m[2].slice(0,3)]) return `${m[3]}-${String(bln[m[2].slice(0,3)]).padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return s;
+}
+
+// Ambil via CSV: SEMUA sel dibaca sebagai teks apa adanya, jadi tidak ada sel
+// yang "hilang" gara-gara tipe kolom tidak seragam (penyebab jadwal baris 12
+// tidak terbaca: gviz JSON menjadikan sel yang tipenya beda dari mayoritas
+// kolom = kosong/null, lalu baris itu ikut tersaring).
+async function ambilDaftarJadwalCsv(){
+  const tq = encodeURIComponent('select A,B,C,D,E,F,G');
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1&tq=${tq}&headers=0&t=${Date.now()}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const semua = parseCsv(await res.text());
+
+  const BARIS_HEADER = 10; // header kolom ada di baris 10 sheet
+  // Cari baris header lewat ISI-nya (kolom A = "TANGGAL"); kalau tidak ketemu, pakai posisi.
+  let idxHeader = semua.findIndex(r => r[0] && r[0].trim().toUpperCase() === 'TANGGAL');
+  if (idxHeader < 0) idxHeader = BARIS_HEADER - 1;
+
+  const hasil = [];
+  for (let i = idxHeader + 1; i < semua.length; i++){
+    const r = semua[i];
+    const sel = k => (r[k] || '').trim();
+    // baris dianggap jadwal bila kolom A atau Kode (B) terisi — tidak hanya bergantung pada A
+    if (!sel(0) && !sel(1)) continue;
+    if (sel(0).toUpperCase() === 'TANGGAL') continue;
+    const c = [0,1,2,3,4,5,6].map(k => {
+      const t = sel(k);
+      return t === '' ? null : { v: t, f: t };
+    });
+    if (c[0]) c[0] = { v: tanggalTeksKeYMD(sel(0)), f: sel(0) }; // v = yyyy-MM-dd (dipakai sort/edit/hapus), f = tampilan asli
+    else c[0] = { v: '', f: '' };
+    hasil.push({ c, _baris: BARIS_HEADER + (i - idxHeader) });
+  }
+  return hasil;
+}
+
+async function ambilDaftarJadwalJson(){
   const semuaBaris = await ambilSheetGviz('Sheet1', 'A,B,C,D,E,F,G', true);
-  const BARIS_HEADER = 10;                       // baris header kolom di sheet
-  const potongan = semuaBaris.slice(BARIS_HEADER); // index 10 = baris 11 (data pertama)
-  potongan.forEach((r, idx) => { r._baris = BARIS_HEADER + 1 + idx; }); // nomor baris asli di Sheet1
+  const BARIS_HEADER = 10;
+  const potongan = semuaBaris.slice(BARIS_HEADER);
+  potongan.forEach((r, idx) => { r._baris = BARIS_HEADER + 1 + idx; });
   return potongan.filter(r => {
-    if (!r.c || !r.c[0] || r.c[0].v === null || r.c[0].v === undefined) return false;
-    const a = String(r.c[0].v).trim();
-    if (a === '') return false;
-    return a.toUpperCase() !== 'TANGGAL'; // jaga-jaga bila header terulang
+    const a = r.c && r.c[0] && r.c[0].v != null ? String(r.c[0].v).trim() : '';
+    const b = r.c && r.c[1] && r.c[1].v != null ? String(r.c[1].v).trim() : '';
+    return (a || b) && a.toUpperCase() !== 'TANGGAL';
   });
+}
+
+async function ambilDaftarJadwal(){
+  // Sheet1!A10:G — baris 10 = header, jadwal mulai baris 11.
+  try { return await ambilDaftarJadwalCsv(); }
+  catch (e){
+    console.warn('⚠️ Baca jadwal via CSV gagal, pakai JSON:', e.message);
+    return await ambilDaftarJadwalJson();
+  }
 }
 
 // gviz menulis tanggal sebagai literal string "Date(2025,0,15)" (bulan 0-based) —

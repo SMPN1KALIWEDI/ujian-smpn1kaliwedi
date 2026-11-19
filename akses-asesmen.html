@@ -2632,9 +2632,12 @@ els.btnPetunjukLanjut.addEventListener('click', () => {
 ========================================================= */
 const SPREADSHEET_ASESMEN_ID = '1T4xMUrr8orUE5j-X6v1o9zg6Cf7V1VwzupE6ZXtpcbg';
 
-async function ambilSheetGviz(namaSheet, kolom){
+async function ambilSheetGviz(namaSheet, kolom, tanpaHeader){
   const tq = encodeURIComponent(`select ${kolom}`);
-  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&tq=${tq}&t=${Date.now()}`;
+  // headers=0 → gviz TIDAK menebak/menelan baris atas sebagai header, sehingga
+  // rows[0] = baris 1 sheet, rows[9] = baris 10, dst (posisi baris pasti).
+  const paramHeader = tanpaHeader ? '&headers=0' : '';
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(namaSheet)}&tq=${tq}${paramHeader}&t=${Date.now()}`;
   const res = await fetch(url, { cache: 'no-store' });
   const txt = await res.text();
   const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
@@ -2927,14 +2930,22 @@ function isiCheckboxKelasJadwal(){
 }
 
 async function ambilDaftarJadwal(){
-  // Sheet1!A10:G — ambil semua baris A:G, lalu buang baris 1-9
-  // (bukan lewat parameter "range" URL, karena pernah tidak stabil
-  // untuk kombinasi sheet+select tertentu — lihat catatan di
-  // muatDaftarLinkSoal di atas).
-  const semuaBaris = await ambilSheetGviz('Sheet1', 'A,B,C,D,E,F,G');
-  const potongan = semuaBaris.slice(9);
-  potongan.forEach((r, idx) => { r._baris = 10 + idx; }); // nomor baris asli di Sheet1, sebelum difilter
-  return potongan.filter(r => r.c && r.c[0] && r.c[0].v !== null && r.c[0].v !== undefined && String(r.c[0].v).trim() !== '');
+  // Sheet1!A10:G — baris 10 = HEADER kolom, data jadwal mulai baris 11.
+  // Penyebab jadwal "hilang" sebelumnya: tanpa headers=0, Google
+  // Visualization API menebak sendiri berapa baris atas yang dianggap
+  // header (baris 1-9 Sheet1 berisi teks pengaturan, jadi banyak baris
+  // ikut ditelan), lalu slice(9) memotong lagi → sebagian jadwal terbuang.
+  // Sekarang: headers=0 → rows[i] = baris (i+1) sheet, posisi pasti.
+  const semuaBaris = await ambilSheetGviz('Sheet1', 'A,B,C,D,E,F,G', true);
+  const BARIS_HEADER = 10;                       // baris header kolom di sheet
+  const potongan = semuaBaris.slice(BARIS_HEADER); // index 10 = baris 11 (data pertama)
+  potongan.forEach((r, idx) => { r._baris = BARIS_HEADER + 1 + idx; }); // nomor baris asli di Sheet1
+  return potongan.filter(r => {
+    if (!r.c || !r.c[0] || r.c[0].v === null || r.c[0].v === undefined) return false;
+    const a = String(r.c[0].v).trim();
+    if (a === '') return false;
+    return a.toUpperCase() !== 'TANGGAL'; // jaga-jaga bila header terulang
+  });
 }
 
 // gviz menulis tanggal sebagai literal string "Date(2025,0,15)" (bulan 0-based) —

@@ -393,6 +393,27 @@
     margin-bottom:10px;
   }
   .menu-card:disabled{opacity:.4;cursor:not-allowed;pointer-events:none;}
+
+  /* ===== Absensi Siswa ===== */
+  .abs-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)}
+  .abs-lokasi{font-family:'Poppins',sans-serif;font-weight:700;font-size:16px;color:var(--navy-800)}
+  .abs-sub{font-size:12px;color:var(--ink-soft);margin-top:2px}
+  .abs-counter{text-align:center;line-height:1.1}
+  .abs-counter b{font-family:'Poppins',sans-serif;font-size:24px;color:var(--emerald-500)}
+  .abs-counter span{font-size:14px;color:var(--ink-soft);font-weight:600}
+  .abs-counter small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-top:2px}
+  .abs-manual{display:flex;gap:8px;margin-top:10px}
+  .abs-manual input{flex:1;min-width:0;padding:13px 14px;font-size:15px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box}
+  .abs-manual button{width:auto;padding:0 18px;margin:0}
+  .abs-sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin:18px 0 6px}
+  .abs-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;margin-bottom:6px;background:#F7F8FB;border:1.5px solid transparent}
+  .abs-row.hadir{background:#EAF8F1;border-color:#BFE8D2}
+  .abs-info{flex:1;min-width:0}
+  .abs-nama{font-size:13.5px;font-weight:700;color:var(--navy-800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .abs-meta{font-size:11.5px;color:var(--ink-soft)}
+  .abs-stat{font-size:11.5px;font-weight:700;color:var(--ink-soft);white-space:nowrap;text-align:right}
+  .abs-row.hadir .abs-stat{color:var(--emerald-500)}
+  .abs-undo{border:none;background:rgba(0,0,0,.06);color:var(--ink-soft);width:28px;height:28px;border-radius:50%;font-size:13px;cursor:pointer;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -484,6 +505,19 @@
         <div class="menu-text">
           <div class="menu-title">Token Manual</div>
           <div class="menu-desc">Kode token tanpa QR</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardAbsensi" class="menu-card" style="--accent:var(--teal-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 11.5l2 2 4-4.5" stroke="white" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="4" y="4" width="16" height="16" rx="3" stroke="white" stroke-width="1.8"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Absensi Siswa</div>
+          <div class="menu-desc">Scan QR kartu peserta</div>
         </div>
       </button>
 
@@ -909,6 +943,43 @@
       <span id="btnKirimIzinKeluarLabel">🚪 Izinkan Keluar Sekarang</span>
     </button>
     <div id="izinKeluarStatus" class="status-msg"></div>
+  </div>
+
+  <!-- ===================== SCREEN 9 : ABSENSI SISWA ===================== -->
+  <div id="screenAbsensi" class="card hidden" style="margin-top:16px">
+    <button type="button" class="menu-back" id="btnKembaliDariAbsensi">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+
+    <div class="abs-head">
+      <div>
+        <div class="abs-lokasi" id="absLokasi">-</div>
+        <div class="abs-sub" id="absSub">Memuat daftar peserta…</div>
+      </div>
+      <div class="abs-counter"><b id="absHadir">0</b><span>/<span id="absTotal">0</span></span><small>hadir</small></div>
+    </div>
+
+    <button id="btnScanAbsensi" class="btn btn-primary" style="width:100%">📷 Scan QR Kartu Peserta</button>
+    <div id="qrReaderAbsensiWrap" style="margin-top:10px;display:none">
+      <div id="qr-reader-absensi" style="border-radius:12px;overflow:hidden"></div>
+      <div id="qrStatusAbsensiScan" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
+      <button id="btnTutupQrScanAbsensi" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
+    </div>
+    <div class="abs-manual">
+      <input type="text" id="inputNisnAbsensi" inputmode="numeric" placeholder="Atau ketik NISN lalu Tambah">
+      <button id="btnTambahAbsensi" class="btn btn-ghost">Tambah</button>
+    </div>
+    <div id="absFeedback" class="status-msg" style="margin-top:10px"></div>
+
+    <button id="btnSimpanAbsensi" class="btn btn-primary" style="width:100%;margin-top:12px" disabled>
+      <span id="btnSimpanAbsensiLabel">💾 Simpan Absensi (0)</span>
+    </button>
+    <div id="absSimpanStatus" class="status-msg"></div>
+
+    <div id="absDaftar"></div>
   </div>
   <div id="popupSuksesReset" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(15,30,55,.55);display:flex;align-items:center;justify-content:center;padding:20px">
     <div id="popupSuksesBox" style="position:relative;background:#fff;border-radius:20px;padding:34px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
@@ -1356,7 +1427,7 @@ function lokasiUntukDisimpan(){
 // pasti terisi karena wajib login dulu).
 function aturStatusKartuGrup1(){
   const ok = els.inputLokasi.value.trim().length > 0;
-  [els.cardTokenAsesmen, els.cardTokenManual, els.cardQrKeluar, els.cardResetPw].forEach(btn => {
+  [els.cardTokenAsesmen, els.cardTokenManual, document.getElementById('cardAbsensi'), els.cardQrKeluar, els.cardResetPw].forEach(btn => {
     if (btn) btn.disabled = !ok;
   });
   els.petunjukRuangBelumDipilih.style.display = ok ? 'none' : 'block';
@@ -1590,6 +1661,288 @@ function tutupQrScanKeluar(){
 els.btnScanQrKeluar.addEventListener('click', bukaQrScanKeluar);
 els.btnTutupQrScanKeluar.addEventListener('click', tutupQrScanKeluar);
 
+
+/* =========================================================
+   ABSENSI SISWA — pengawas scan QR NISN pada kartu peserta.
+   Data peserta dibaca dari sheet PESERTA (NISN, NAMA, KLS, RUANG)
+   lewat Apps Script. Hasil scan dikumpulkan dulu di HP pengawas
+   (localStorage, aman kalau halaman tertutup/refresh), lalu
+   dikirim ke sheet ABSENSI saat tombol "Simpan Absensi" ditekan.
+========================================================= */
+const KUNCI_ABSENSI_DRAFT = 'absensiDraftV1';
+const KUNCI_PESERTA_CACHE = 'pesertaAbsensiCacheV1';
+let pesertaSemuaAbs = null;
+let qrScannerAbsensi = null;
+let scanTerakhirAbs = { teks: '', waktu: 0 };
+let sedangMemprosesScanAbs = false;
+
+const absEl = id => document.getElementById(id);
+
+function normNisnAbs(x){ return String(x == null ? '' : x).trim().replace(/\D/g, '').replace(/^0+/, ''); }
+function normTeksAbs(x){ return String(x == null ? '' : x).trim().replace(/\s+/g, ' ').toUpperCase(); }
+function dua(n){ return String(n).padStart(2, '0'); }
+function tanggalHariIniAbs(){ const d = new Date(); return `${d.getFullYear()}-${dua(d.getMonth()+1)}-${dua(d.getDate())}`; }
+function sekarangStrAbs(){ const d = new Date(); return `${tanggalHariIniAbs()} ${dua(d.getHours())}:${dua(d.getMinutes())}:${dua(d.getSeconds())}`; }
+
+function kunciDraftAbs(){ return tanggalHariIniAbs() + '|' + tipeLokasiTerpilih() + '|' + els.inputLokasi.value.trim(); }
+function bacaSemuaDraftAbs(){ try { return JSON.parse(localStorage.getItem(KUNCI_ABSENSI_DRAFT) || '{}') || {}; } catch(e){ return {}; } }
+function bacaDraftAbs(){ return bacaSemuaDraftAbs()[kunciDraftAbs()] || []; }
+function tulisDraftAbs(arr){
+  const semua = bacaSemuaDraftAbs();
+  // buang draft hari-hari lama supaya localStorage tidak menumpuk
+  const hariIni = tanggalHariIniAbs();
+  Object.keys(semua).forEach(k => { if (!k.startsWith(hariIni)) delete semua[k]; });
+  semua[kunciDraftAbs()] = arr;
+  try { localStorage.setItem(KUNCI_ABSENSI_DRAFT, JSON.stringify(semua)); } catch(e){ console.warn(e); }
+}
+
+async function muatPesertaAbsensi(paksa){
+  if (pesertaSemuaAbs && !paksa) return pesertaSemuaAbs;
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=peserta&t=' + Date.now(), { cache: 'no-store' });
+    const json = await res.json();
+    if (json.status !== 'ok' || !Array.isArray(json.peserta)) throw new Error(json.message || 'Data peserta tidak tersedia');
+    pesertaSemuaAbs = json.peserta;
+    try { localStorage.setItem(KUNCI_PESERTA_CACHE, JSON.stringify(pesertaSemuaAbs)); } catch(e){}
+    return pesertaSemuaAbs;
+  } catch (err){
+    // cadangan: salinan terakhir di HP (kalau sinyal sedang jelek)
+    try {
+      const cache = JSON.parse(localStorage.getItem(KUNCI_PESERTA_CACHE) || 'null');
+      if (Array.isArray(cache) && cache.length){ pesertaSemuaAbs = cache; return pesertaSemuaAbs; }
+    } catch(e){}
+    throw err;
+  }
+}
+
+function rosterAbsensi(){
+  const nilai = els.inputLokasi.value.trim();
+  const mode = tipeLokasiTerpilih();
+  const kunci = normTeksAbs(nilai);
+  return (pesertaSemuaAbs || []).filter(p => normTeksAbs(mode === 'kelas' ? p.kls : p.ruang) === kunci)
+                                .sort((a, b) => String(a.nama).localeCompare(String(b.nama), 'id'));
+}
+
+function setFeedbackAbs(teks, tipe){
+  const el = absEl('absFeedback');
+  el.textContent = teks;
+  el.className = 'status-msg' + (tipe ? ' ' + tipe : '');
+}
+
+function bunyiAbsensi(ok){
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC){
+      window._acAbs = window._acAbs || new AC();
+      const c = window._acAbs, o = c.createOscillator(), g = c.createGain();
+      o.connect(g); g.connect(c.destination);
+      o.frequency.value = ok ? 880 : 220; g.gain.value = 0.08;
+      o.start(); o.stop(c.currentTime + (ok ? 0.12 : 0.3));
+    }
+  } catch(e){}
+  try { if (navigator.vibrate) navigator.vibrate(ok ? 60 : [80, 60, 80]); } catch(e){}
+}
+
+function renderAbsensi(){
+  const roster = rosterAbsensi();
+  const draft = bacaDraftAbs();
+  const hadirMap = new Map(draft.map(d => [normNisnAbs(d.nisn), d]));
+  const mode = tipeLokasiTerpilih();
+
+  absEl('absLokasi').textContent = lokasiUntukDisimpan() || '-';
+  absEl('absSub').textContent = roster.length
+    ? `${roster.length} peserta terdaftar · ${tanggalHariIniAbs()}`
+    : (pesertaSemuaAbs ? `Tidak ada peserta terdaftar di ${mode === 'kelas' ? 'kelas' : 'ruang'} ini` : 'Memuat daftar peserta…');
+  absEl('absHadir').textContent = draft.length;
+  absEl('absTotal').textContent = roster.length;
+
+  const belumTersimpan = draft.filter(d => !d.saved).length;
+  absEl('btnSimpanAbsensiLabel').textContent = `💾 Simpan Absensi (${belumTersimpan})`;
+  absEl('btnSimpanAbsensi').disabled = belumTersimpan === 0;
+
+  const rosterKey = new Set(roster.map(p => normNisnAbs(p.nisn)));
+  const belum = roster.filter(p => !hadirMap.has(normNisnAbs(p.nisn)));
+  const hadir = draft.slice().sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
+
+  const barisBelum = p => `
+    <div class="abs-row">
+      <div class="abs-info"><div class="abs-nama">${escapeHtmlRekap(p.nama)}</div><div class="abs-meta">${escapeHtmlRekap(p.nisn)} · ${escapeHtmlRekap(p.kls)}</div></div>
+      <div class="abs-stat">Belum</div>
+    </div>`;
+  const barisHadir = d => `
+    <div class="abs-row hadir">
+      <div class="abs-info"><div class="abs-nama">${escapeHtmlRekap(d.nama)}</div>
+        <div class="abs-meta">${escapeHtmlRekap(d.nisn)} · ${escapeHtmlRekap(d.kelas)}${rosterKey.has(normNisnAbs(d.nisn)) ? '' : ' · <b>dari ' + escapeHtmlRekap(d.asal || 'lokasi lain') + '</b>'}</div></div>
+      <div class="abs-stat">✓ ${escapeHtmlRekap(String(d.ts).slice(11, 16))}<br><span style="font-weight:500;font-size:10.5px">${d.saved ? 'tersimpan' : 'belum disimpan'}</span></div>
+      ${d.saved ? '' : `<button type="button" class="abs-undo" data-undo="${escapeHtmlRekap(normNisnAbs(d.nisn))}" title="Batalkan">✕</button>`}
+    </div>`;
+
+  absEl('absDaftar').innerHTML =
+    `<div class="abs-sec">Sudah hadir (${hadir.length})</div>${hadir.map(barisHadir).join('') || '<div style="font-size:12.5px;color:var(--ink-soft)">Belum ada yang discan.</div>'}` +
+    `<div class="abs-sec">Belum hadir (${belum.length})</div>${belum.map(barisBelum).join('') || '<div style="font-size:12.5px;color:var(--ink-soft)">Semua peserta sudah hadir 🎉</div>'}`;
+}
+
+function tambahHadirAbsensi(nisnMentah){
+  const n = normNisnAbs(nisnMentah);
+  if (!n){ setFeedbackAbs('NISN tidak terbaca / kosong.', 'err'); bunyiAbsensi(false); return false; }
+  if (!pesertaSemuaAbs){ setFeedbackAbs('Daftar peserta belum termuat. Tunggu sebentar.', 'err'); return false; }
+
+  const siswa = pesertaSemuaAbs.find(p => normNisnAbs(p.nisn) === n);
+  if (!siswa){ setFeedbackAbs(`❌ NISN ${nisnMentah} tidak ada di data peserta.`, 'err'); bunyiAbsensi(false); return false; }
+
+  const draft = bacaDraftAbs();
+  const sudah = draft.find(d => normNisnAbs(d.nisn) === n);
+  if (sudah){ setFeedbackAbs(`ℹ️ ${siswa.nama} sudah tercatat hadir (${String(sudah.ts).slice(11, 16)}).`, ''); bunyiAbsensi(false); return false; }
+
+  const mode = tipeLokasiTerpilih();
+  const lokasi = els.inputLokasi.value.trim();
+  const sesuai = normTeksAbs(mode === 'kelas' ? siswa.kls : siswa.ruang) === normTeksAbs(lokasi);
+  let asal = '';
+  if (!sesuai){
+    asal = mode === 'kelas' ? ('Kelas ' + siswa.kls) : siswa.ruang;
+    if (qrScannerAbsensi){ try { qrScannerAbsensi.pause(true); } catch(e){} }
+    bunyiAbsensi(false);
+    const lanjut = window.confirm(`${siswa.nama} (kelas ${siswa.kls}) terdaftar di ${asal || '-'}, bukan di ${lokasiUntukDisimpan()}.\n\nTetap catat hadir di sini?`);
+    if (qrScannerAbsensi){ try { qrScannerAbsensi.resume(); } catch(e){} }
+    if (!lanjut){ setFeedbackAbs(`Dibatalkan: ${siswa.nama} terdaftar di ${asal}.`, ''); return false; }
+  }
+
+  draft.push({
+    nisn: siswa.nisn, nama: siswa.nama, kelas: siswa.kls,
+    ruang: mode === 'kelas' ? siswa.ruang : lokasi,   // RUANG = tempat siswa benar-benar hadir
+    asal, ts: sekarangStrAbs(), saved: false
+  });
+  tulisDraftAbs(draft);
+  setFeedbackAbs(`✅ ${siswa.nama} — kelas ${siswa.kls}`, 'ok');
+  bunyiAbsensi(true);
+  renderAbsensi();
+  return true;
+}
+
+async function simpanAbsensi(){
+  const draft = bacaDraftAbs();
+  const kirim = draft.filter(d => !d.saved);
+  const st = absEl('absSimpanStatus');
+  st.textContent = ''; st.className = 'status-msg';
+  if (!kirim.length) return;
+
+  const tombol = absEl('btnSimpanAbsensi'), label = absEl('btnSimpanAbsensiLabel');
+  tombol.disabled = true; label.innerHTML = '<span class="spinner"></span>';
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'simpanAbsensi',
+        pengawas: namaPengawasAktif,
+        lokasi: lokasiUntukDisimpan(),
+        rows: kirim.map(d => ({ timestamp: d.ts, nisn: d.nisn, nama: d.nama, kelas: d.kelas, ruang: d.ruang }))
+      })
+    });
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan');
+
+    const kunciKirim = new Set(kirim.map(d => normNisnAbs(d.nisn)));
+    tulisDraftAbs(draft.map(d => kunciKirim.has(normNisnAbs(d.nisn)) ? Object.assign({}, d, { saved: true }) : d));
+    st.textContent = `✅ ${json.tersimpan} data tersimpan ke sheet` + (json.duplikat ? ` (${json.duplikat} sudah ada sebelumnya, dilewati)` : '') + '.';
+    st.className = 'status-msg ok';
+  } catch (err){
+    st.textContent = 'Gagal menyimpan: ' + err.message + '. Data tetap aman di HP ini — coba Simpan lagi.';
+    st.className = 'status-msg err';
+  } finally {
+    label.textContent = '💾 Simpan Absensi (0)';
+    renderAbsensi();
+  }
+}
+
+function bukaQrScanAbsensi(){
+  const wrap = absEl('qrReaderAbsensiWrap'), status = absEl('qrStatusAbsensiScan');
+  wrap.style.display = 'block';
+  status.textContent = 'Memulai kamera...';
+  setTimeout(() => {
+    try {
+      qrScannerAbsensi = new Html5Qrcode('qr-reader-absensi');
+      qrScannerAbsensi.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          const teks = decodedText.trim();
+          const now = Date.now();
+          if (sedangMemprosesScanAbs) return;
+          if (teks === scanTerakhirAbs.teks && now - scanTerakhirAbs.waktu < 2500) return; // QR yang sama masih di depan kamera
+          scanTerakhirAbs = { teks, waktu: now };
+          sedangMemprosesScanAbs = true;
+          try { tambahHadirAbsensi(teks); } finally { sedangMemprosesScanAbs = false; scanTerakhirAbs.waktu = Date.now(); }
+          status.textContent = '🔍 Arahkan ke QR berikutnya...';
+        },
+        () => {}
+      ).then(() => { status.textContent = '🔍 Arahkan ke QR Code kartu peserta...'; })
+       .catch(err => { status.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
+    } catch (e){
+      status.textContent = '❌ ' + e.message;
+    }
+  }, 300);
+}
+
+function tutupQrScanAbsensi(){
+  if (qrScannerAbsensi){
+    const sc = qrScannerAbsensi;
+    qrScannerAbsensi = null;
+    sc.stop().catch(() => {}).finally(() => { try { sc.clear(); } catch(e){} });
+  }
+  absEl('qrReaderAbsensiWrap').style.display = 'none';
+}
+
+absEl('btnScanAbsensi').addEventListener('click', bukaQrScanAbsensi);
+absEl('btnTutupQrScanAbsensi').addEventListener('click', tutupQrScanAbsensi);
+absEl('btnSimpanAbsensi').addEventListener('click', simpanAbsensi);
+absEl('btnTambahAbsensi').addEventListener('click', () => {
+  const inp = absEl('inputNisnAbsensi');
+  if (tambahHadirAbsensi(inp.value)) inp.value = '';
+});
+absEl('inputNisnAbsensi').addEventListener('keydown', (e) => { if (e.key === 'Enter') absEl('btnTambahAbsensi').click(); });
+absEl('absDaftar').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-undo]');
+  if (!b) return;
+  const n = b.getAttribute('data-undo');
+  const draft = bacaDraftAbs();
+  const d = draft.find(x => normNisnAbs(x.nisn) === n && !x.saved);
+  if (!d) return;
+  if (!window.confirm(`Batalkan kehadiran ${d.nama}?`)) return;
+  tulisDraftAbs(draft.filter(x => x !== d && !(normNisnAbs(x.nisn) === n && !x.saved)));
+  setFeedbackAbs(`Kehadiran ${d.nama} dibatalkan.`, '');
+  renderAbsensi();
+});
+
+els.cardAbsensi = document.getElementById('cardAbsensi');
+els.cardAbsensi.addEventListener('click', async () => {
+  if (els.cardAbsensi.disabled) return;
+  aturHeader('absensi');
+  els.screenHome.classList.add('hidden');
+  absEl('screenAbsensi').classList.remove('hidden');
+  absEl('absSimpanStatus').textContent = '';
+  setFeedbackAbs('', '');
+  renderAbsensi();
+  try {
+    await muatPesertaAbsensi(true);
+  } catch (err){
+    if (!pesertaSemuaAbs){
+      absEl('absSub').textContent = 'Gagal memuat daftar peserta';
+      setFeedbackAbs('Gagal memuat daftar peserta: ' + err.message, 'err');
+      return;
+    }
+  }
+  renderAbsensi();
+});
+
+absEl('btnKembaliDariAbsensi').addEventListener('click', () => {
+  const belum = bacaDraftAbs().filter(d => !d.saved).length;
+  if (belum && !window.confirm(`Ada ${belum} absensi yang BELUM disimpan ke sheet.\nData tetap aman di HP ini, tapi belum terkirim.\n\nKeluar dari layar ini?`)) return;
+  tutupQrScanAbsensi();
+  aturHeader('home');
+  absEl('screenAbsensi').classList.add('hidden');
+  els.screenHome.classList.remove('hidden');
+});
 
 /* =========================================================
    TOKEN MANUAL — layar terpisah dari QR. Tombol "Tampilkan
@@ -2219,6 +2572,7 @@ const HEADER_LAYAR = {
   setingjadwal:{ judul: 'Seting Jadwal', tampilkanIkon: false },
   tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
   qrkeluar:    { judul: 'Izin Keluar',    tampilkanIkon: false },
+  absensi:     { judul: 'Absensi Siswa',  tampilkanIkon: false },
 };
 function aturHeader(kunci){
   const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;

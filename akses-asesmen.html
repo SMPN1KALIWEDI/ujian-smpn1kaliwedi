@@ -1058,6 +1058,9 @@
 ========================================================= */
 const CONFIG = {
   APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyI3ZLv-jOhSxINB10yz8wMuUPwPUo3VeSw6hrkLCFdsuM8Hka49cvfBNzePgfgJAYbow/exec',
+  // Opsional: URL Web App terpisah khusus Absensi (AppsScript-Absensi-Mandiri.gs).
+  // Kosong = pakai APPS_SCRIPT_URL di atas.
+  ABSENSI_SCRIPT_URL: '',
   REFRESH_INTERVAL_MS: 5 * 60 * 1000 // 5 menit
 };
 
@@ -1726,7 +1729,7 @@ const ABS_SS_ID_KLIEN = '13IlK4ep8Db8YssWRg7U5OxIy-VZWEk3KVqmPK72KauA';
 let sumberPesertaAbs = '';
 
 async function ambilPesertaViaServer(){
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=peserta&t=' + Date.now(), { cache: 'no-store' });
+  const res = await fetch((CONFIG.ABSENSI_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL) + '?action=peserta&t=' + Date.now(), { cache: 'no-store' });
   const json = await res.json();
   if (json.status !== 'ok' || !Array.isArray(json.peserta)) throw new Error(json.message || 'action peserta belum tersedia');
   return json.peserta;
@@ -1974,7 +1977,7 @@ async function simpanAbsensi(){
   const tombol = absEl('btnSimpanAbsensi'), label = absEl('btnSimpanAbsensiLabel');
   tombol.disabled = true; label.innerHTML = '<span class="spinner"></span>';
   try {
-    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    const res = await fetch((CONFIG.ABSENSI_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -1992,7 +1995,10 @@ async function simpanAbsensi(){
     st.textContent = `✅ ${json.tersimpan} data tersimpan ke sheet` + (json.duplikat ? ` (${json.duplikat} sudah ada sebelumnya, dilewati)` : '') + '.';
     st.className = 'status-msg ok';
   } catch (err){
-    st.textContent = 'Gagal menyimpan: ' + err.message + '. Data tetap aman di HP ini — coba Simpan lagi.';
+    const belumTerpasang = /tidak dikenali|unknown action/i.test(err.message);
+    st.textContent = belumTerpasang
+      ? 'Gagal menyimpan: Apps Script belum punya action "simpanAbsensi" (atau versi barunya belum di-Deploy). Data tetap aman di HP ini — setelah Apps Script dipasang, tekan Simpan lagi.'
+      : 'Gagal menyimpan: ' + err.message + '. Data tetap aman di HP ini — coba Simpan lagi.';
     st.className = 'status-msg err';
   } finally {
     label.textContent = '💾 Simpan Absensi (0)';

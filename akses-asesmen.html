@@ -431,6 +431,63 @@
     80%{top:62%;opacity:1}
     100%{top:78%;opacity:0}
   }
+
+  /* ===== Rekap Kelas (siswa x jadwal asesmen) ===== */
+  .rk-screen{max-width:1180px}
+  .rk-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .rk-controls .field{margin-bottom:0}
+  .rk-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .rk-btns .btn{width:100%;margin:0}
+  .rk-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .rk-chip{font-size:11.5px;font-weight:600;color:var(--navy-800);background:#EEF3FB;border-radius:999px;padding:4px 10px}
+  .rk-chip.warn{background:#FFF3D6;color:#8A6A17}
+  .rk-wrap{margin-top:14px;overflow:auto;max-height:70vh;border:1.5px solid var(--ring-track);border-radius:14px;background:#fff}
+  .rk-wrap table{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%}
+  .rk-wrap th,.rk-wrap td{padding:7px 9px;border-bottom:1px solid #E8ECF3;border-right:1px solid #EFF2F7;white-space:nowrap;text-align:center}
+  .rk-wrap thead th{position:sticky;background:var(--navy-800);color:#fff;font-weight:700;z-index:3}
+  .rk-wrap thead tr:first-child th{top:0;height:34px}
+  .rk-wrap thead tr:nth-child(2) th{top:34px}
+  .rk-wrap thead th.rk-g{background:#243a63}
+  .rk-wrap thead th.rk-g.rk-fut{background:#52638A}
+  .rk-wrap thead th.rk-h2{white-space:normal;min-width:100px;max-width:145px;vertical-align:top}
+  .rk-wrap thead th.rk-h2.rk-fut{background:#3B4B72}
+  .rk-hm{font-size:11.5px;font-weight:700;line-height:1.25}
+  .rk-hk{font-size:10px;font-weight:500;opacity:.85;margin-top:2px}
+  .rk-wrap .rk-no{position:sticky;left:0;min-width:40px;width:40px;z-index:2;background:#fff}
+  .rk-wrap .rk-nama{position:sticky;left:40px;min-width:190px;text-align:left;z-index:2;background:#fff;font-weight:600;color:var(--navy-950);box-shadow:2px 0 4px -2px rgba(15,27,51,.12)}
+  .rk-wrap thead th.rk-no,.rk-wrap thead th.rk-nama{z-index:5;background:var(--navy-800);color:#fff;box-shadow:none}
+  .rk-wrap tbody tr:nth-child(even) td{background:#FAFBFD}
+  .rk-wrap .rk-nisn{color:var(--ink-soft);font-size:11.5px}
+  .rk-wrap td.rk-nilai{font-weight:700;color:var(--navy-950)}
+  .rk-wrap td.rk-kosong{background:#FFF8E1 !important;color:#B58A12;font-weight:500}
+  .rk-wrap td.rk-avg{font-weight:800;color:var(--teal-500);background:#F2FBFA !important}
+  .rk-wrap td.rk-terisi{color:var(--ink-soft);font-size:11.5px}
+  .rk-wrap tfoot td{background:#EEF3FB;font-weight:700;color:var(--navy-800);border-top:2px solid #CFDAEE}
+  .rk-wrap tfoot td.rk-lbl{text-align:left;position:sticky;left:0;z-index:2}
+  .rk-state{padding:34px 16px;text-align:center;color:var(--ink-soft);font-size:13.5px}
+  details.rk-diag{margin-top:12px;background:#FFF8E1;border:1.5px solid #F3DFA8;border-radius:12px;padding:10px 14px;font-size:12.5px;color:#7A5E12}
+  details.rk-diag summary{cursor:pointer;font-weight:700}
+  details.rk-diag ul{margin:8px 0 0;padding-left:18px}
+  .rk-judul-cetak{display:none}
+  @page{size:A4 landscape;margin:10mm}
+  @media print{
+    body.cetak-rk #app > *:not(.rk-cetak-target){display:none !important}
+    body.cetak-rk .rk-cetak-target{display:block !important;max-width:none;box-shadow:none;padding:0;margin:0}
+    body.cetak-rk .rk-noprint{display:none !important}
+    body.cetak-rk .rk-judul-cetak{display:block;margin:0 0 8px}
+    body.cetak-rk .rk-judul-cetak h2{margin:0;font-size:15px}
+    body.cetak-rk .rk-judul-cetak p{margin:2px 0 0;font-size:11px;color:#444}
+    body.cetak-rk .rk-wrap{max-height:none;overflow:visible;border:none}
+    body.cetak-rk .rk-wrap table{font-size:10px}
+    body.cetak-rk .rk-wrap th,body.cetak-rk .rk-wrap td{padding:4px 5px;position:static !important}
+    body.cetak-rk .rk-wrap thead th,body.cetak-rk .rk-wrap td.rk-kosong,body.cetak-rk .rk-wrap td.rk-avg,body.cetak-rk .rk-wrap tfoot td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+
+  .rk-wrap td.rk-hadir{background:#EAF8F1 !important;color:#1B8A5A;font-weight:700;line-height:1.1}
+  .rk-wrap td.rk-hadir small{display:block;font-size:10px;font-weight:500;color:#3A9C74}
+  .rk-wrap td.rk-alpa{background:#FDECEC !important;color:#C43A3A;font-weight:800}
+  .rk-wrap td.rk-belum{color:#A9B1C2}
+  .rk-wrap td.rk-pct{font-weight:800}
 </style>
 </head>
 <body>
@@ -579,6 +636,32 @@
         </div>
       </button>
 
+      <button type="button" id="cardRekapKelas" class="menu-card" style="--accent:var(--teal-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" stroke="white" stroke-width="1.8"/>
+            <path d="M3.5 10h17M9.5 4.5v15" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Rekap Kelas</div>
+          <div class="menu-desc">Nilai per jadwal asesmen</div>
+        </div>
+      </button>
+
+      <button type="button" id="cardRekapKehadiran" class="menu-card" style="--accent:var(--emerald-500)">
+        <div class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="3.5" width="16" height="17" rx="2.5" stroke="white" stroke-width="1.8"/>
+            <path d="M8 9.5l1.6 1.6L12.5 8M8 15.5l1.6 1.6 2.9-3.1M14.5 10h2.5M14.5 16h2.5" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-title">Rekap Kehadiran</div>
+          <div class="menu-desc">Hadir per jadwal asesmen</div>
+        </div>
+      </button>
+
       <button type="button" id="cardKartuSiswa" class="menu-card" style="--accent:var(--violet-500)">
         <div class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -723,6 +806,84 @@
     <button id="btnDownloadXLS" class="btn btn-ghost" style="margin-top:14px;width:100%" disabled>
       ⬇️ Download Excel (.xlsx)
     </button>
+  </div>
+
+  <!-- ===================== SCREEN 10 : REKAP KELAS (siswa x jadwal asesmen) ===================== -->
+  <div id="screenRekapKelas" class="card rk-screen hidden" style="margin-top:16px">
+    <button type="button" class="menu-back rk-noprint" id="btnTutupRekapKelas">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+
+    <div class="rk-controls rk-noprint">
+      <div class="field">
+        <label for="rkKelas">Kelas</label>
+        <div class="select-wrap"><select id="rkKelas"><option value="">Memuat…</option></select></div>
+      </div>
+      <div class="field">
+        <label for="rkUrut">Urutan siswa</label>
+        <div class="select-wrap">
+          <select id="rkUrut">
+            <option value="nama">Nama (A–Z)</option>
+            <option value="desc">Rata-rata tertinggi</option>
+            <option value="asc">Rata-rata terendah</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="rk-btns rk-noprint">
+      <button id="rkBtnMuat" class="btn btn-primary" style="grid-column:1 / -1"><span id="rkBtnMuatLabel">🔄 Muat / Refresh</span></button>
+      <button id="rkBtnXlsKelas" class="btn btn-ghost" disabled>⬇️ Excel Kelas Ini</button>
+      <button id="rkBtnXlsSemua" class="btn btn-ghost" disabled>⬇️ Excel Semua Kelas</button>
+      <button id="rkBtnCetak" class="btn btn-ghost" style="grid-column:1 / -1" disabled>🖨️ Cetak</button>
+    </div>
+    <div class="rk-chips rk-noprint" id="rkChips"></div>
+    <div id="rkStatus" class="status-msg rk-noprint"></div>
+
+    <div class="rk-judul-cetak" id="rkJudulCetak"></div>
+    <div id="rkWrap" class="rk-wrap"><div class="rk-state">Memuat data jadwal, siswa, dan nilai…</div></div>
+    <div id="rkDiag" class="rk-noprint"></div>
+  </div>
+
+  <!-- ===================== SCREEN 11 : REKAP KEHADIRAN (siswa x jadwal asesmen) ===================== -->
+  <div id="screenRekapHadir" class="card rk-screen hidden" style="margin-top:16px">
+    <button type="button" class="menu-back rk-noprint" id="btnTutupRekapHadir">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Menu Utama
+    </button>
+
+    <div class="rk-controls rk-noprint">
+      <div class="field">
+        <label for="rhKelas">Kelas</label>
+        <div class="select-wrap"><select id="rhKelas"><option value="">Memuat…</option></select></div>
+      </div>
+      <div class="field">
+        <label for="rhUrut">Urutan siswa</label>
+        <div class="select-wrap">
+          <select id="rhUrut">
+            <option value="nama">Nama (A–Z)</option>
+            <option value="asc">Kehadiran terendah</option>
+            <option value="desc">Kehadiran tertinggi</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="rk-btns rk-noprint">
+      <button id="rhBtnMuat" class="btn btn-primary" style="grid-column:1 / -1"><span id="rhBtnMuatLabel">🔄 Muat / Refresh</span></button>
+      <button id="rhBtnXlsKelas" class="btn btn-ghost" disabled>⬇️ Excel Kelas Ini</button>
+      <button id="rhBtnXlsSemua" class="btn btn-ghost" disabled>⬇️ Excel Semua Kelas</button>
+      <button id="rhBtnCetak" class="btn btn-ghost" style="grid-column:1 / -1" disabled>🖨️ Cetak</button>
+    </div>
+    <div class="rk-chips rk-noprint" id="rhChips"></div>
+    <div id="rhStatus" class="status-msg rk-noprint"></div>
+
+    <div class="rk-judul-cetak" id="rhJudulCetak"></div>
+    <div id="rhWrap" class="rk-wrap"><div class="rk-state">Memuat data jadwal, siswa, dan absensi…</div></div>
+    <div id="rhDiag" class="rk-noprint"></div>
   </div>
 
   <!-- ===================== SCREEN 5 : RESET PASSWORD SISWA ===================== -->
@@ -2764,6 +2925,8 @@ const HEADER_LAYAR = {
   tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
   qrkeluar:    { judul: 'Izin Keluar',    tampilkanIkon: false },
   absensi:     { judul: 'Absensi Siswa',  tampilkanIkon: false },
+  rekapkelas:  { judul: 'Rekap Kelas',    tampilkanIkon: false },
+  rekapkehadiran: { judul: 'Rekap Kehadiran', tampilkanIkon: false },
 };
 function aturHeader(kunci){
   const cfg = HEADER_LAYAR[kunci] || HEADER_LAYAR.home;
@@ -2792,6 +2955,544 @@ els.btnTutupRekap.addEventListener('click', () => {
   els.screenRekap.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
 });
+
+/* =========================================================
+   REKAP KELAS — baris = siswa satu kelas, kolom = jadwal asesmen
+   yang BERLAKU untuk kelas itu (urut Tanggal → Waktu → Kode,
+   dikelompokkan per tanggal), sel = nilai dari data/nilai.csv.
+
+   PRIORITAS pada jadwal: kosong = semua kelas · angka (7) = semua
+   kelas tingkat itu · kode kelas (7A) = kelas itu saja · boleh
+   digabung koma (7A,8).
+   Jadwal dibaca lewat ambilDaftarJadwal() — sumber yang SAMA dengan
+   menu Seting Jadwal, jadi isinya selalu konsisten.
+========================================================= */
+(function(){
+  const $ = id => document.getElementById(id);
+  const dua = n => String(n).padStart(2, '0');
+  const esc = s => escapeHtmlRekap(s);
+  const norm  = s => String(s == null ? '' : s).trim().toUpperCase().replace(/\s+/g, ' ');
+  const norm2 = s => norm(s).replace(/[^A-Z0-9]/g, '');            // "PAI-BP" == "PAIBP"
+  const HARI = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const BLN  = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const NAMA_SEKOLAH = 'SMP Negeri 1 Kaliwedi';
+  const KUNCI_KELAS = 'rekapKelasTerakhir';
+  const RK = { siswa: [], nilai: [], jadwal: [], sumber: '', kelas: [], model: null };
+
+  const ymdValid = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '');
+  const ymdTampil = ymd => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || ''); return m ? `${+m[3]}-${BLN[+m[2]-1]}-${m[1]}` : (ymd || ''); };
+  const ymdHari = ymd => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || ''); return m ? HARI[new Date(+m[1], +m[2]-1, +m[3]).getDay()] : ''; };
+  const hariIni = () => { const d = new Date(); return `${d.getFullYear()}-${dua(d.getMonth()+1)}-${dua(d.getDate())}`; };
+  const jamKe = t => { const m = String(t || '').match(/(\d{1,2})[:.](\d{2})/); return m ? `${dua(m[1])}:${m[2]}` : ''; };
+  const menit = t => { const j = jamKe(t); return j ? (+j.slice(0, 2)) * 60 + (+j.slice(3)) : 99999; };
+  const angka = v => { const n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? null : n; };
+  const fmt = n => n == null ? '' : n.toLocaleString('id-ID', { maximumFractionDigits: 2 });
+  const tsMs = t => { const x = Date.parse(String(t || '').replace(' ', 'T')); return isNaN(x) ? 0 : x; };
+  const cell = (r, i) => { const c = r.c && r.c[i]; if (!c) return ''; const x = (c.f != null && c.f !== '') ? c.f : c.v; return x == null ? '' : String(x).trim(); };
+
+  function berlaku(prioritas, kelas){
+    const p = String(prioritas || '').trim();
+    if (!p) return true;
+    const k = norm(kelas), tingkat = (k.match(/^\d+/) || [''])[0];
+    return p.split(/[,;\/]+/).map(x => norm(x).replace(/\.0+$/, '')).filter(Boolean)
+            .some(tok => /^\d+$/.test(tok) ? tok === tingkat : tok === k);
+  }
+
+  function setStatus(t, tipe){ const e = $('rkStatus'); e.textContent = t || ''; e.className = 'status-msg rk-noprint' + (tipe ? ' ' + tipe : ''); }
+
+  async function muatSemua(){
+    const t = Math.floor(Date.now() / 60000);
+    const [rS, rN, jad] = await Promise.all([
+      fetch(SISWA_CSV_URL + '?t=' + t, { cache: 'no-store' }),
+      fetch(NILAI_CSV_URL + '?t=' + t, { cache: 'no-store' }),
+      ambilDaftarJadwal(),
+    ]);
+    if (!rS.ok) throw new Error('data/siswa.csv belum tersedia (HTTP ' + rS.status + ')');
+    if (!rN.ok) throw new Error('data/nilai.csv belum tersedia (HTTP ' + rN.status + ')');
+
+    RK.siswa = csvKeObjek(parseCSVGenerik(await rS.text())).map(o => ({
+      kode: norm(ambilKolomRekap(o, 'KODE SOAL', 'KODE SISWA', 'KODE')),
+      nama: ambilKolomRekap(o, 'NAMA') || '-',
+      nisn: ambilKolomRekap(o, 'NISN'),
+      kelas: ambilKolomRekap(o, 'KLS', 'KELAS') || '-',
+    })).filter(s => s.kode);
+
+    RK.nilai = csvKeObjek(parseCSVGenerik(await rN.text())).map(o => ({
+      kode: norm(ambilKolomRekap(o, 'KODE')),
+      uji: ambilKolomRekap(o, 'MATA UJI', 'MATA UI', 'MATA PELAJARAN', 'ASESMEN'),
+      nilai: ambilKolomRekap(o, 'NILAI'),
+      ts: ambilKolomRekap(o, 'TIMESTAMP', 'WAKTU', 'TANGGAL'),
+    })).filter(n => n.kode);
+
+    RK.jadwal = jad.map(r => {
+      const ymd = [gvizTanggalKeYMD(r.c[0] && r.c[0].v), tanggalTeksKeYMD(cell(r, 0))].find(ymdValid) || '';
+      return { ymd, kode: cell(r, 1), prioritas: cell(r, 2), mulai: jamKe(cell(r, 3)), selesai: jamKe(cell(r, 4)), mapel: cell(r, 5) };
+    }).filter(j => j.kode || j.ymd)
+      .sort((a, b) => (a.ymd || '9999').localeCompare(b.ymd || '9999') || menit(a.mulai) - menit(b.mulai) || a.kode.localeCompare(b.kode, 'id', { numeric: true }));
+    RK.sumber = (jad.info && jad.info.sumber) ? jad.info.sumber : 'Sheet1';
+
+    RK.kelas = [...new Set(RK.siswa.map(s => s.kelas))].filter(k => k && k !== '-')
+      .sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+  }
+
+  function susun(kelas){
+    const kolom = RK.jadwal.filter(j => berlaku(j.prioritas, kelas));
+    const siswa = RK.siswa.filter(s => norm(s.kelas) === norm(kelas));
+    const peta = new Map(siswa.map(s => [s.kode, s]));
+    const sel = new Map(siswa.map(s => [s.kode, new Array(kolom.length).fill(null)]));
+    const tidakCocok = new Map();
+    const kKode = kolom.map(c => norm2(c.kode)), kMapel = kolom.map(c => norm2(c.mapel));
+
+    RK.nilai.forEach(n => {
+      if (!peta.has(n.kode)) return;
+      const k = norm2(n.uji);
+      let i = kKode.indexOf(k);                // 1) cocokkan ke KODE jadwal
+      if (i < 0) i = kMapel.indexOf(k);        // 2) cocokkan ke nama MAPEL
+      if (i < 0){ const lb = n.uji || '(kosong)'; tidakCocok.set(lb, (tidakCocok.get(lb) || 0) + 1); return; }
+      const arr = sel.get(n.kode), lama = arr[i], ts = tsMs(n.ts);
+      if (!lama || ts >= lama.ts) arr[i] = { raw: n.nilai, ts };  // duplikat: yang terbaru dipakai
+    });
+
+    const baris = siswa.map(s => {
+      const vals = sel.get(s.kode).map(v => v ? { raw: v.raw, num: angka(v.raw) } : null);
+      const nums = vals.map(v => v && v.num).filter(x => x != null);
+      return { nama: s.nama, nisn: s.nisn, vals, avg: nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null,
+               terisi: vals.filter(v => v && v.raw !== '').length };
+    });
+    const footer = kolom.map((_, i) => {
+      const nums = baris.map(b => b.vals[i] && b.vals[i].num).filter(x => x != null);
+      return { avg: nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null,
+               terisi: baris.filter(b => b.vals[i] && b.vals[i].raw !== '').length };
+    });
+    return { kelas, kolom, baris, footer, tidakCocok };
+  }
+
+  function urut(model, mode){
+    const b = model.baris.slice();
+    if (mode === 'nama') return b.sort((x, y) => x.nama.localeCompare(y.nama, 'id'));
+    return b.sort((x, y) => {
+      if (x.avg == null && y.avg == null) return x.nama.localeCompare(y.nama, 'id');
+      if (x.avg == null) return 1; if (y.avg == null) return -1;
+      return mode === 'asc' ? x.avg - y.avg : y.avg - x.avg;
+    });
+  }
+
+  function kelompok(kolom){
+    const g = [];
+    kolom.forEach(c => { const l = g[g.length - 1]; if (l && l.ymd === c.ymd) l.n++; else g.push({ ymd: c.ymd, n: 1 }); });
+    return g;
+  }
+
+  function render(){
+    const kelas = $('rkKelas').value;
+    if (!kelas){ $('rkWrap').innerHTML = '<div class="rk-state">Pilih kelas terlebih dahulu.</div>'; return; }
+    const m = susun(kelas); RK.model = m;
+    const baris = urut(m, $('rkUrut').value), hi = hariIni();
+    const totalTdkCocok = [...m.tidakCocok.values()].reduce((a, b) => a + b, 0);
+
+    $('rkChips').innerHTML =
+      `<span class="rk-chip">📅 ${m.kolom.length} jadwal untuk kelas ${esc(kelas)}</span>` +
+      `<span class="rk-chip">👥 ${m.baris.length} siswa</span>` +
+      `<span class="rk-chip">🗂️ ${RK.jadwal.length} jadwal terbaca · sumber: ${esc(RK.sumber)}</span>` +
+      (m.kolom.some(c => c.ymd > hi) ? '<span class="rk-chip">kolom redup = belum berlangsung</span>' : '') +
+      (totalTdkCocok ? `<span class="rk-chip warn">⚠️ ${totalTdkCocok} nilai tidak cocok jadwal</span>` : '');
+    $('rkJudulCetak').innerHTML = `<h2>REKAP NILAI ASESMEN — KELAS ${esc(kelas)}</h2><p>${esc(NAMA_SEKOLAH)} · dicetak ${esc(ymdTampil(hi))}</p>`;
+
+    if (!m.kolom.length){
+      $('rkWrap').innerHTML = `<div class="rk-state">Belum ada jadwal asesmen yang berlaku untuk kelas ${esc(kelas)}.<br>Cek kolom PRIORITAS pada Seting Jadwal.</div>`;
+    } else if (!m.baris.length){
+      $('rkWrap').innerHTML = `<div class="rk-state">Tidak ada siswa di kelas ${esc(kelas)}.</div>`;
+    } else {
+      let h1 = '<tr><th class="rk-no" rowspan="2">No</th><th class="rk-nama" rowspan="2">Nama</th><th rowspan="2">NISN</th>';
+      kelompok(m.kolom).forEach(g => {
+        h1 += `<th class="rk-g${g.ymd && g.ymd > hi ? ' rk-fut' : ''}" colspan="${g.n}">${g.ymd ? esc(ymdHari(g.ymd) + ', ' + ymdTampil(g.ymd)) : 'Tanggal belum diisi'}</th>`;
+      });
+      h1 += '<th rowspan="2">Rata-rata</th><th rowspan="2">Terisi</th></tr>';
+      let h2 = '<tr>';
+      m.kolom.forEach(c => {
+        const jam = c.mulai ? ` · ${c.mulai}${c.selesai ? '–' + c.selesai : ''}` : '';
+        h2 += `<th class="rk-h2${c.ymd && c.ymd > hi ? ' rk-fut' : ''}"><div class="rk-hm">${esc(c.mapel || c.kode)}</div><div class="rk-hk">${esc(c.kode + jam)}</div></th>`;
+      });
+      h2 += '</tr>';
+      const isi = baris.map((b, i) => {
+        const sels = b.vals.map(v => v && v.raw !== '' ? `<td class="rk-nilai">${esc(v.raw)}</td>` : '<td class="rk-kosong">—</td>').join('');
+        return `<tr><td class="rk-no">${i + 1}</td><td class="rk-nama">${esc(b.nama)}</td><td class="rk-nisn">${esc(b.nisn)}</td>${sels}<td class="rk-avg">${b.avg == null ? '—' : fmt(b.avg)}</td><td class="rk-terisi">${b.terisi}/${m.kolom.length}</td></tr>`;
+      }).join('');
+      const tot = m.baris.length;
+      const foot =
+        `<tr><td class="rk-lbl" colspan="3">Rata-rata kelas</td>${m.footer.map(f => `<td>${f.avg == null ? '—' : fmt(f.avg)}</td>`).join('')}<td></td><td></td></tr>` +
+        `<tr><td class="rk-lbl" colspan="3">Sudah ada nilai</td>${m.footer.map(f => `<td>${f.terisi}/${tot}</td>`).join('')}<td></td><td></td></tr>`;
+      $('rkWrap').innerHTML = `<table><thead>${h1}${h2}</thead><tbody>${isi}</tbody><tfoot>${foot}</tfoot></table>`;
+    }
+
+    if (m.tidakCocok.size){
+      const daftar = [...m.tidakCocok.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([k, n]) => `<li><b>${esc(k)}</b> — ${n} baris</li>`).join('');
+      $('rkDiag').innerHTML = `<details class="rk-diag"><summary>⚠️ ${totalTdkCocok} nilai siswa kelas ${esc(kelas)} tidak masuk kolom mana pun (ketuk untuk lihat)</summary><div style="margin-top:6px">Nilai ini ada di nilai.csv, tetapi isi kolom MATA UJI-nya tidak sama dengan KODE maupun MAPEL pada jadwal yang berlaku untuk kelas ini:</div><ul>${daftar}</ul></details>`;
+    } else $('rkDiag').innerHTML = '';
+
+    const ada = m.kolom.length && m.baris.length;
+    $('rkBtnXlsKelas').disabled = !ada; $('rkBtnCetak').disabled = !ada;
+    $('rkBtnXlsSemua').disabled = !RK.kelas.length;
+  }
+
+  /* ---------- Excel ---------- */
+  function buatSheet(m, mode){
+    const baris = urut(m, mode), grup = kelompok(m.kolom);
+    const nK = m.kolom.length, k0 = 3, kAvg = k0 + nK, kTerisi = kAvg + 1;
+    const aoa = [[`REKAP NILAI ASESMEN — KELAS ${m.kelas}`], [NAMA_SEKOLAH], []];
+    const r1 = ['No', 'Nama', 'NISN'], r2 = ['', '', ''];
+    grup.forEach(g => { for (let i = 0; i < g.n; i++) r1.push(i === 0 ? (g.ymd ? `${ymdHari(g.ymd)}, ${ymdTampil(g.ymd)}` : 'Tanggal belum diisi') : ''); });
+    m.kolom.forEach(c => r2.push(`${c.mapel || c.kode} (${c.kode})${c.mulai ? ' ' + c.mulai + (c.selesai ? '–' + c.selesai : '') : ''}`));
+    r1.push('Rata-rata', 'Terisi'); r2.push('', '');
+    aoa.push(r1, r2);
+    baris.forEach((b, i) => aoa.push([i + 1, b.nama, String(b.nisn || '')]
+      .concat(b.vals.map(v => v && v.raw !== '' ? (v.num != null ? v.num : v.raw) : ''))
+      .concat([b.avg == null ? '' : Math.round(b.avg * 100) / 100, `${b.terisi}/${nK}`])));
+    aoa.push(['', 'Rata-rata kelas', ''].concat(m.footer.map(f => f.avg == null ? '' : Math.round(f.avg * 100) / 100)).concat(['', '']));
+    aoa.push(['', 'Sudah ada nilai', ''].concat(m.footer.map(f => `${f.terisi}/${m.baris.length}`)).concat(['', '']));
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const mg = [{ s: { r: 0, c: 0 }, e: { r: 0, c: Math.max(kTerisi, 4) } }, { s: { r: 1, c: 0 }, e: { r: 1, c: Math.max(kTerisi, 4) } }];
+    [0, 1, 2, kAvg, kTerisi].forEach(c => mg.push({ s: { r: 3, c }, e: { r: 4, c } }));
+    let c0 = k0; grup.forEach(g => { if (g.n > 1) mg.push({ s: { r: 3, c: c0 }, e: { r: 3, c: c0 + g.n - 1 } }); c0 += g.n; });
+    ws['!merges'] = mg;
+    ws['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 13 }].concat(m.kolom.map(() => ({ wch: 19 }))).concat([{ wch: 11 }, { wch: 9 }]);
+    return ws;
+  }
+  function namaSheet(s, dipakai){
+    const n = String(s).replace(/[\\\/\?\*\[\]:]/g, '-').slice(0, 28) || 'Kelas';
+    let u = n, i = 2; while (dipakai.has(u)) u = n + '_' + (i++);
+    dipakai.add(u); return u;
+  }
+  function unduhKelas(){
+    if (!RK.model || typeof XLSX === 'undefined') return;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, buatSheet(RK.model, $('rkUrut').value), namaSheet('Kelas ' + RK.model.kelas, new Set()));
+    XLSX.writeFile(wb, `Rekap-Kelas-${RK.model.kelas}-${hariIni()}.xlsx`);
+  }
+  function unduhSemua(){
+    if (typeof XLSX === 'undefined') return;
+    const wb = XLSX.utils.book_new(), dipakai = new Set();
+    RK.kelas.forEach(k => { const m = susun(k); if (m.kolom.length && m.baris.length) XLSX.utils.book_append_sheet(wb, buatSheet(m, $('rkUrut').value), namaSheet(k, dipakai)); });
+    if (!wb.SheetNames.length){ setStatus('Tidak ada kelas yang punya jadwal & siswa untuk diunduh.', 'err'); return; }
+    XLSX.writeFile(wb, `Rekap-Semua-Kelas-${hariIni()}.xlsx`);
+  }
+  function cetak(){
+    document.body.classList.add('cetak-rk'); $('screenRekapKelas').classList.add('rk-cetak-target');
+    const bersih = () => { document.body.classList.remove('cetak-rk'); $('screenRekapKelas').classList.remove('rk-cetak-target'); window.removeEventListener('afterprint', bersih); };
+    window.addEventListener('afterprint', bersih);
+    window.print();
+  }
+
+  /* ---------- Kontrol ---------- */
+  function isiKelas(){
+    const lama = $('rkKelas').value || localStorage.getItem(KUNCI_KELAS) || '';
+    $('rkKelas').innerHTML = RK.kelas.map(k => `<option value="${esc(k)}">Kelas ${esc(k)}</option>`).join('') || '<option value="">(tidak ada kelas)</option>';
+    if (RK.kelas.includes(lama)) $('rkKelas').value = lama;
+  }
+  async function muat(){
+    $('rkBtnMuat').disabled = true; $('rkBtnMuatLabel').innerHTML = '<span class="spinner"></span>';
+    setStatus('');
+    try {
+      await muatSemua(); isiKelas(); render();
+      setStatus(`✅ Dimuat ${dua(new Date().getHours())}:${dua(new Date().getMinutes())} — ${RK.siswa.length} siswa, ${RK.nilai.length} nilai, ${RK.jadwal.length} jadwal.`, 'ok');
+    } catch (err){
+      $('rkWrap').innerHTML = '<div class="rk-state">Data belum bisa dimuat.</div>';
+      setStatus('Gagal memuat rekap: ' + err.message, 'err');
+    } finally {
+      $('rkBtnMuat').disabled = false; $('rkBtnMuatLabel').textContent = '🔄 Muat / Refresh';
+    }
+  }
+
+  $('cardRekapKelas').addEventListener('click', () => {
+    aturHeader('rekapkelas');
+    els.screenHome.classList.add('hidden');
+    $('screenRekapKelas').classList.remove('hidden');
+    if (!RK.siswa.length) muat(); else render();
+  });
+  $('btnTutupRekapKelas').addEventListener('click', () => {
+    aturHeader('home');
+    $('screenRekapKelas').classList.add('hidden');
+    els.screenHome.classList.remove('hidden');
+  });
+  $('rkBtnMuat').addEventListener('click', muat);
+  $('rkKelas').addEventListener('change', () => { localStorage.setItem(KUNCI_KELAS, $('rkKelas').value); render(); });
+  $('rkUrut').addEventListener('change', render);
+  $('rkBtnXlsKelas').addEventListener('click', unduhKelas);
+  $('rkBtnXlsSemua').addEventListener('click', unduhSemua);
+  $('rkBtnCetak').addEventListener('click', cetak);
+})();
+
+/* =========================================================
+   REKAP KEHADIRAN — baris = siswa satu kelas, kolom = jadwal asesmen
+   yang berlaku untuk kelas itu (kolom & aturan PRIORITAS sama dengan
+   Rekap Kelas). Kehadiran dibaca dari sheet ABSENSI (hasil scan QR
+   pengawas), dicocokkan lewat NISN (cadangan: nama + kelas).
+
+   Absensi dicatat PER TANGGAL, jadi semua jadwal pada tanggal yang
+   sama berstatus sama:
+     ✓ jam  = ada catatan hadir pada tanggal itu
+     A      = tidak ada catatan, dan tanggal/jam mulai sudah lewat
+     ·      = jadwal belum berlangsung
+========================================================= */
+(function(){
+  const $ = id => document.getElementById(id);
+  const dua = n => String(n).padStart(2, '0');
+  const esc = s => escapeHtmlRekap(s);
+  const norm  = s => String(s == null ? '' : s).trim().toUpperCase().replace(/\s+/g, ' ');
+  const nisnN = s => String(s == null ? '' : s).replace(/\D/g, '').replace(/^0+/, '');
+  const HARI = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const BLN  = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const NAMA_SEKOLAH = 'SMP Negeri 1 Kaliwedi';
+  const KUNCI_KELAS = 'rekapHadirTerakhir';
+  const SS_PENGAWAS_ID = '13IlK4ep8Db8YssWRg7U5OxIy-VZWEk3KVqmPK72KauA';
+  const RH = { siswa: [], jadwal: [], absensi: [], idx: new Map(), sumberJadwal: '', sumberAbsensi: '', kelas: [], model: null };
+
+  const ymdValid = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '');
+  const ymdTampil = ymd => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || ''); return m ? `${+m[3]}-${BLN[+m[2]-1]}-${m[1]}` : (ymd || ''); };
+  const ymdHari = ymd => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || ''); return m ? HARI[new Date(+m[1], +m[2]-1, +m[3]).getDay()] : ''; };
+  const sekarang = () => { const d = new Date(); return { ymd: `${d.getFullYear()}-${dua(d.getMonth()+1)}-${dua(d.getDate())}`, mnt: d.getHours() * 60 + d.getMinutes() }; };
+  const jamKe = t => { const m = String(t || '').match(/(\d{1,2})[:.](\d{2})/); return m ? `${dua(m[1])}:${m[2]}` : ''; };
+  const menit = t => { const j = jamKe(t); return j ? (+j.slice(0, 2)) * 60 + (+j.slice(3)) : 99999; };
+  const cell = (r, i) => { const c = r.c && r.c[i]; if (!c) return ''; const x = (c.f != null && c.f !== '') ? c.f : c.v; return x == null ? '' : String(x).trim(); };
+
+  function berlaku(prioritas, kelas){
+    const p = String(prioritas || '').trim();
+    if (!p) return true;
+    const k = norm(kelas), tingkat = (k.match(/^\d+/) || [''])[0];
+    return p.split(/[,;\/]+/).map(x => norm(x).replace(/\.0+$/, '')).filter(Boolean)
+            .some(tok => /^\d+$/.test(tok) ? tok === tingkat : tok === k);
+  }
+  function setStatus(t, tipe){ const e = $('rhStatus'); e.textContent = t || ''; e.className = 'status-msg rk-noprint' + (tipe ? ' ' + tipe : ''); }
+
+  /* ---------- Absensi: server (action=absensi) → cadangan baca sheet ABSENSI ---------- */
+  async function absensiViaServer(){
+    const res = await fetch((CONFIG.ABSENSI_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL) + '?action=absensi&t=' + Date.now(), { cache: 'no-store' });
+    const json = await res.json();
+    if (json.status !== 'ok' || !Array.isArray(json.rows)) throw new Error(json.message || 'action absensi belum tersedia');
+    return json.rows.map(r => ({ ts: r.ts, nisn: r.nisn, nama: r.nama, kelas: r.kelas, ruang: r.ruang }));
+  }
+  async function absensiViaCsv(){
+    const url = `https://docs.google.com/spreadsheets/d/${SS_PENGAWAS_ID}/gviz/tq?tqx=out:csv&sheet=ABSENSI&headers=1&t=${Date.now()}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = parseCSVGenerik(await res.text());
+    const h = rows.findIndex(r => norm(r[0]) === 'TIMESTAMP');
+    return rows.slice(h >= 0 ? h + 1 : 0).filter(r => (r[1] || r[2] || '').trim() !== '')
+      .map(r => ({ ts: (r[0] || '').trim(), nisn: (r[1] || '').trim(), nama: (r[2] || '').trim(), kelas: (r[3] || '').trim(), ruang: (r[4] || '').trim() }));
+  }
+  async function muatAbsensi(){
+    try { return { data: await absensiViaServer(), sumber: 'server' }; }
+    catch (e1){ console.warn('absensi server gagal:', e1.message);
+      return { data: await absensiViaCsv(), sumber: 'sheet ABSENSI' };
+    }
+  }
+
+  async function muatSemua(){
+    const t = Math.floor(Date.now() / 60000);
+    const [rS, jad, abs] = await Promise.all([ fetch(SISWA_CSV_URL + '?t=' + t, { cache: 'no-store' }), ambilDaftarJadwal(), muatAbsensi() ]);
+    if (!rS.ok) throw new Error('data/siswa.csv belum tersedia (HTTP ' + rS.status + ')');
+
+    RH.siswa = csvKeObjek(parseCSVGenerik(await rS.text())).map(o => ({
+      nama: ambilKolomRekap(o, 'NAMA') || '-', nisn: ambilKolomRekap(o, 'NISN'), kelas: ambilKolomRekap(o, 'KLS', 'KELAS') || '-'
+    })).filter(s => s.nama !== '-');
+
+    RH.jadwal = jad.map(r => {
+      const ymd = [gvizTanggalKeYMD(r.c[0] && r.c[0].v), tanggalTeksKeYMD(cell(r, 0))].find(ymdValid) || '';
+      return { ymd, kode: cell(r, 1), prioritas: cell(r, 2), mulai: jamKe(cell(r, 3)), selesai: jamKe(cell(r, 4)), mapel: cell(r, 5) };
+    }).filter(j => j.kode || j.ymd)
+      .sort((a, b) => (a.ymd || '9999').localeCompare(b.ymd || '9999') || menit(a.mulai) - menit(b.mulai) || a.kode.localeCompare(b.kode, 'id', { numeric: true }));
+    RH.sumberJadwal = (jad.info && jad.info.sumber) ? jad.info.sumber : 'Sheet1';
+
+    // indeks absensi: "tanggal|NISN" dan "tanggal|N:nama|kelas" → jam hadir paling awal
+    RH.absensi = abs.data; RH.sumberAbsensi = abs.sumber; RH.idx = new Map();
+    abs.data.forEach(a => {
+      const [dp, tp] = String(a.ts || '').trim().split(/[ T]/);
+      const ymd = [tanggalTeksKeYMD(dp), gvizTanggalKeYMD(dp)].find(ymdValid);
+      if (!ymd) return;
+      const jam = jamKe(tp) || '';
+      const simpan = k => { const lama = RH.idx.get(k); if (lama === undefined || (jam && (!lama || jam < lama))) RH.idx.set(k, jam); };
+      const n = nisnN(a.nisn);
+      if (n) simpan(`${ymd}|${n}`);
+      simpan(`${ymd}|N:${norm(a.nama)}|${norm(a.kelas)}`);
+    });
+
+    RH.kelas = [...new Set(RH.siswa.map(s => s.kelas))].filter(k => k && k !== '-')
+      .sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+  }
+
+  /* ---------- Susun matriks ---------- */
+  function susun(kelas){
+    const kolom = RH.jadwal.filter(j => berlaku(j.prioritas, kelas));
+    const siswa = RH.siswa.filter(s => norm(s.kelas) === norm(kelas));
+    const now = sekarang();
+    const status = (s, c) => {
+      if (!c.ymd) return { st: 'B' };
+      const n = nisnN(s.nisn);
+      let jam = n ? RH.idx.get(`${c.ymd}|${n}`) : undefined;
+      if (jam === undefined) jam = RH.idx.get(`${c.ymd}|N:${norm(s.nama)}|${norm(s.kelas)}`);
+      if (jam !== undefined) return { st: 'H', jam };
+      if (c.ymd > now.ymd) return { st: 'B' };
+      if (c.ymd === now.ymd && c.mulai && menit(c.mulai) > now.mnt) return { st: 'B' };
+      return { st: 'A' };
+    };
+    const baris = siswa.map(s => {
+      const vals = kolom.map(c => status(s, c));
+      const h = vals.filter(v => v.st === 'H').length, a = vals.filter(v => v.st === 'A').length;
+      return { nama: s.nama, nisn: s.nisn, vals, hadir: h, alpa: a, pct: (h + a) ? (h / (h + a)) * 100 : null };
+    });
+    const footer = kolom.map((_, i) => ({ hadir: baris.filter(b => b.vals[i].st === 'H').length, alpa: baris.filter(b => b.vals[i].st === 'A').length, belum: baris.filter(b => b.vals[i].st === 'B').length }));
+    return { kelas, kolom, baris, footer };
+  }
+  function urut(m, mode){
+    const b = m.baris.slice();
+    if (mode === 'nama') return b.sort((x, y) => x.nama.localeCompare(y.nama, 'id'));
+    return b.sort((x, y) => {
+      if (x.pct == null && y.pct == null) return x.nama.localeCompare(y.nama, 'id');
+      if (x.pct == null) return 1; if (y.pct == null) return -1;
+      return mode === 'asc' ? x.pct - y.pct : y.pct - x.pct;
+    });
+  }
+  function kelompok(kolom){
+    const g = []; kolom.forEach(c => { const l = g[g.length - 1]; if (l && l.ymd === c.ymd) l.n++; else g.push({ ymd: c.ymd, n: 1 }); }); return g;
+  }
+  const pctStr = p => p == null ? '—' : (Math.round(p * 10) / 10).toLocaleString('id-ID') + '%';
+
+  function render(){
+    const kelas = $('rhKelas').value;
+    if (!kelas){ $('rhWrap').innerHTML = '<div class="rk-state">Pilih kelas terlebih dahulu.</div>'; return; }
+    const m = susun(kelas); RH.model = m;
+    const baris = urut(m, $('rhUrut').value), hi = sekarang().ymd;
+
+    $('rhChips').innerHTML =
+      `<span class="rk-chip">📅 ${m.kolom.length} jadwal untuk kelas ${esc(kelas)}</span>` +
+      `<span class="rk-chip">👥 ${m.baris.length} siswa</span>` +
+      `<span class="rk-chip">🗂️ ${RH.jadwal.length} jadwal · sumber: ${esc(RH.sumberJadwal)}</span>` +
+      `<span class="rk-chip">✅ ${RH.absensi.length} catatan absensi · sumber: ${esc(RH.sumberAbsensi)}</span>` +
+      `<span class="rk-chip">Absensi per tanggal: jadwal sehari berstatus sama</span>`;
+    $('rhJudulCetak').innerHTML = `<h2>REKAP KEHADIRAN ASESMEN — KELAS ${esc(kelas)}</h2><p>${esc(NAMA_SEKOLAH)} · dicetak ${esc(ymdTampil(hi))} · ✓ hadir (jam scan) · A tidak hadir · · belum berlangsung</p>`;
+
+    if (!m.kolom.length){
+      $('rhWrap').innerHTML = `<div class="rk-state">Belum ada jadwal asesmen yang berlaku untuk kelas ${esc(kelas)}.<br>Cek kolom PRIORITAS pada Seting Jadwal.</div>`;
+    } else if (!m.baris.length){
+      $('rhWrap').innerHTML = `<div class="rk-state">Tidak ada siswa di kelas ${esc(kelas)}.</div>`;
+    } else {
+      let h1 = '<tr><th class="rk-no" rowspan="2">No</th><th class="rk-nama" rowspan="2">Nama</th><th rowspan="2">NISN</th>';
+      kelompok(m.kolom).forEach(g => { h1 += `<th class="rk-g${g.ymd && g.ymd > hi ? ' rk-fut' : ''}" colspan="${g.n}">${g.ymd ? esc(ymdHari(g.ymd) + ', ' + ymdTampil(g.ymd)) : 'Tanggal belum diisi'}</th>`; });
+      h1 += '<th rowspan="2">Hadir</th><th rowspan="2">Alpa</th><th rowspan="2">%</th></tr>';
+      let h2 = '<tr>';
+      m.kolom.forEach(c => {
+        const jam = c.mulai ? ` · ${c.mulai}${c.selesai ? '–' + c.selesai : ''}` : '';
+        h2 += `<th class="rk-h2${c.ymd && c.ymd > hi ? ' rk-fut' : ''}"><div class="rk-hm">${esc(c.mapel || c.kode)}</div><div class="rk-hk">${esc(c.kode + jam)}</div></th>`;
+      });
+      h2 += '</tr>';
+      const isi = baris.map((b, i) => {
+        const sels = b.vals.map(v => v.st === 'H' ? `<td class="rk-hadir">✓${v.jam ? `<small>${esc(v.jam)}</small>` : ''}</td>` : (v.st === 'A' ? '<td class="rk-alpa">A</td>' : '<td class="rk-belum">·</td>')).join('');
+        return `<tr><td class="rk-no">${i + 1}</td><td class="rk-nama">${esc(b.nama)}</td><td class="rk-nisn">${esc(b.nisn)}</td>${sels}<td class="rk-avg">${b.hadir}</td><td class="rk-terisi">${b.alpa}</td><td class="rk-pct">${pctStr(b.pct)}</td></tr>`;
+      }).join('');
+      const tot = m.baris.length;
+      const foot =
+        `<tr><td class="rk-lbl" colspan="3">Hadir</td>${m.footer.map(f => `<td>${f.hadir}/${tot}</td>`).join('')}<td></td><td></td><td></td></tr>` +
+        `<tr><td class="rk-lbl" colspan="3">Tidak hadir</td>${m.footer.map(f => `<td>${f.alpa ? f.alpa : '·'}</td>`).join('')}<td></td><td></td><td></td></tr>`;
+      $('rhWrap').innerHTML = `<table><thead>${h1}${h2}</thead><tbody>${isi}</tbody><tfoot>${foot}</tfoot></table>`;
+    }
+
+    // Diagnosa: catatan absensi kelas ini yang tidak cocok dengan siswa mana pun
+    const kunciSiswa = new Set(m.baris.flatMap(b => [nisnN(b.nisn), `N:${norm(b.nama)}`]).filter(Boolean));
+    const asing = RH.absensi.filter(a => norm(a.kelas) === norm(kelas) && !kunciSiswa.has(nisnN(a.nisn)) && !kunciSiswa.has(`N:${norm(a.nama)}`));
+    $('rhDiag').innerHTML = asing.length
+      ? `<details class="rk-diag"><summary>⚠️ ${asing.length} catatan absensi berkelas ${esc(kelas)} tidak cocok dengan siswa mana pun (ketuk untuk lihat)</summary><ul>${asing.slice(0, 15).map(a => `<li><b>${esc(a.nama)}</b> — NISN ${esc(a.nisn)} · ${esc(a.ts)}</li>`).join('')}</ul><div style="margin-top:6px">Biasanya NISN di sheet ABSENSI berbeda dengan data/siswa.csv.</div></details>` : '';
+
+    const ada = m.kolom.length && m.baris.length;
+    $('rhBtnXlsKelas').disabled = !ada; $('rhBtnCetak').disabled = !ada; $('rhBtnXlsSemua').disabled = !RH.kelas.length;
+  }
+
+  /* ---------- Excel ---------- */
+  function buatSheet(m, mode){
+    const baris = urut(m, mode), grup = kelompok(m.kolom);
+    const nK = m.kolom.length, k0 = 3, kH = k0 + nK, kA = kH + 1, kP = kA + 1;
+    const aoa = [[`REKAP KEHADIRAN ASESMEN — KELAS ${m.kelas}`], [NAMA_SEKOLAH + ' · H = hadir, A = tidak hadir, - = belum berlangsung'], []];
+    const r1 = ['No', 'Nama', 'NISN'], r2 = ['', '', ''];
+    grup.forEach(g => { for (let i = 0; i < g.n; i++) r1.push(i === 0 ? (g.ymd ? `${ymdHari(g.ymd)}, ${ymdTampil(g.ymd)}` : 'Tanggal belum diisi') : ''); });
+    m.kolom.forEach(c => r2.push(`${c.mapel || c.kode} (${c.kode})${c.mulai ? ' ' + c.mulai + (c.selesai ? '–' + c.selesai : '') : ''}`));
+    r1.push('Hadir', 'Alpa', '% Hadir'); r2.push('', '', '');
+    aoa.push(r1, r2);
+    baris.forEach((b, i) => aoa.push([i + 1, b.nama, String(b.nisn || '')]
+      .concat(b.vals.map(v => v.st === 'H' ? 'H' : (v.st === 'A' ? 'A' : '-')))
+      .concat([b.hadir, b.alpa, b.pct == null ? '' : Math.round(b.pct * 10) / 10])));
+    aoa.push(['', 'Hadir', ''].concat(m.footer.map(f => f.hadir)).concat(['', '', '']));
+    aoa.push(['', 'Tidak hadir', ''].concat(m.footer.map(f => f.alpa)).concat(['', '', '']));
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const mg = [{ s: { r: 0, c: 0 }, e: { r: 0, c: Math.max(kP, 4) } }, { s: { r: 1, c: 0 }, e: { r: 1, c: Math.max(kP, 4) } }];
+    [0, 1, 2, kH, kA, kP].forEach(c => mg.push({ s: { r: 3, c }, e: { r: 4, c } }));
+    let c0 = k0; grup.forEach(g => { if (g.n > 1) mg.push({ s: { r: 3, c: c0 }, e: { r: 3, c: c0 + g.n - 1 } }); c0 += g.n; });
+    ws['!merges'] = mg;
+    ws['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 13 }].concat(m.kolom.map(() => ({ wch: 17 }))).concat([{ wch: 8 }, { wch: 8 }, { wch: 10 }]);
+    return ws;
+  }
+  function namaSheet(s, dipakai){
+    const n = String(s).replace(/[\\\/\?\*\[\]:]/g, '-').slice(0, 28) || 'Kelas';
+    let u = n, i = 2; while (dipakai.has(u)) u = n + '_' + (i++);
+    dipakai.add(u); return u;
+  }
+  function unduhKelas(){
+    if (!RH.model || typeof XLSX === 'undefined') return;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, buatSheet(RH.model, $('rhUrut').value), namaSheet('Kelas ' + RH.model.kelas, new Set()));
+    XLSX.writeFile(wb, `Rekap-Kehadiran-${RH.model.kelas}-${sekarang().ymd}.xlsx`);
+  }
+  function unduhSemua(){
+    if (typeof XLSX === 'undefined') return;
+    const wb = XLSX.utils.book_new(), dipakai = new Set();
+    RH.kelas.forEach(k => { const m = susun(k); if (m.kolom.length && m.baris.length) XLSX.utils.book_append_sheet(wb, buatSheet(m, $('rhUrut').value), namaSheet(k, dipakai)); });
+    if (!wb.SheetNames.length){ setStatus('Tidak ada kelas yang punya jadwal & siswa untuk diunduh.', 'err'); return; }
+    XLSX.writeFile(wb, `Rekap-Kehadiran-Semua-Kelas-${sekarang().ymd}.xlsx`);
+  }
+  function cetak(){
+    document.body.classList.add('cetak-rk'); $('screenRekapHadir').classList.add('rk-cetak-target');
+    const bersih = () => { document.body.classList.remove('cetak-rk'); $('screenRekapHadir').classList.remove('rk-cetak-target'); window.removeEventListener('afterprint', bersih); };
+    window.addEventListener('afterprint', bersih);
+    window.print();
+  }
+
+  /* ---------- Kontrol ---------- */
+  function isiKelas(){
+    const lama = $('rhKelas').value || localStorage.getItem(KUNCI_KELAS) || '';
+    $('rhKelas').innerHTML = RH.kelas.map(k => `<option value="${esc(k)}">Kelas ${esc(k)}</option>`).join('') || '<option value="">(tidak ada kelas)</option>';
+    if (RH.kelas.includes(lama)) $('rhKelas').value = lama;
+  }
+  async function muat(){
+    $('rhBtnMuat').disabled = true; $('rhBtnMuatLabel').innerHTML = '<span class="spinner"></span>';
+    setStatus('');
+    try {
+      await muatSemua(); isiKelas(); render();
+      setStatus(`✅ Dimuat ${dua(new Date().getHours())}:${dua(new Date().getMinutes())} — ${RH.siswa.length} siswa, ${RH.absensi.length} catatan absensi, ${RH.jadwal.length} jadwal.`, 'ok');
+    } catch (err){
+      $('rhWrap').innerHTML = '<div class="rk-state">Data belum bisa dimuat.</div>';
+      setStatus('Gagal memuat rekap kehadiran: ' + err.message, 'err');
+    } finally {
+      $('rhBtnMuat').disabled = false; $('rhBtnMuatLabel').textContent = '🔄 Muat / Refresh';
+    }
+  }
+
+  $('cardRekapKehadiran').addEventListener('click', () => {
+    aturHeader('rekapkehadiran');
+    els.screenHome.classList.add('hidden');
+    $('screenRekapHadir').classList.remove('hidden');
+    muat();   // selalu segar: absensi bisa bertambah kapan saja
+  });
+  $('btnTutupRekapHadir').addEventListener('click', () => {
+    aturHeader('home');
+    $('screenRekapHadir').classList.add('hidden');
+    els.screenHome.classList.remove('hidden');
+  });
+  $('rhBtnMuat').addEventListener('click', muat);
+  $('rhKelas').addEventListener('change', () => { localStorage.setItem(KUNCI_KELAS, $('rhKelas').value); render(); });
+  $('rhUrut').addEventListener('change', render);
+  $('rhBtnXlsKelas').addEventListener('click', unduhKelas);
+  $('rhBtnXlsSemua').addEventListener('click', unduhSemua);
+  $('rhBtnCetak').addEventListener('click', cetak);
+})();
 
 let daftarSiswaCache = null; // cache hasil siswa.csv, dipakai bareng utk preview & rekap
 

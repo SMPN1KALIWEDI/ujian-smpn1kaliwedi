@@ -1681,15 +1681,72 @@ els.inputLokasi.addEventListener('change', cekMulaiSesiRuangKelas);
 /* =========================================================
    SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
 ========================================================= */
+// fetch dengan batas waktu (Apps Script yang "dingin" kadang lambat; jangan menggantung selamanya)
+async function fetchDenganBatas(url, init, batasMs){
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), batasMs);
+  try { return await fetch(url, Object.assign({}, init, { signal: ac.signal })); }
+  finally { clearTimeout(t); }
+}
+// Baca balasan Apps Script; kalau bukan JSON (mis. halaman login / halaman galat Google) tandai jelas
+async function bacaJsonAppsScript(res){
+  const teks = await res.text();
+  try { return JSON.parse(teks); }
+  catch (e){
+    const err = new Error('Balasan Apps Script bukan JSON');
+    err.kode = 'BUKAN_JSON';
+    err.cuplikan = teks.replace(/\s+/g, ' ').slice(0, 140);
+    throw err;
+  }
+}
+
 async function simpanPengawas(ruang, pengawas){
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'simpan', ruang, pengawas })
-  });
-  const json = await res.json();
-  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan data');
-  return json;
+  let galat;
+  for (let percobaan = 1; percobaan <= 2; percobaan++){
+    try {
+      const res = await fetchDenganBatas(CONFIG.APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'simpan', ruang, pengawas })
+      }, 25000);
+      const json = await bacaJsonAppsScript(res);
+      if (json.status !== 'ok'){
+        const e = new Error(json.message || 'Gagal menyimpan data');
+        e.kode = 'DITOLAK_SERVER';
+        throw e;
+      }
+      return json;
+    } catch (err){
+      galat = err;
+      // Ulangi sekali HANYA untuk gangguan jaringan/timeout (Apps Script dingin).
+      // Penolakan dari server tidak diulang supaya tidak menambah baris ganda.
+      const jaringan = err.name === 'AbortError' || err instanceof TypeError;
+      if (!jaringan || percobaan === 2) break;
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+  throw galat;
+}
+
+// Terjemahkan galat menjadi penyebab yang bisa ditindaklanjuti (bukan sekadar "periksa koneksi")
+async function jelaskanGalatSimpan(err){
+  const m = String((err && err.message) || err || '');
+  if (err && err.name === 'AbortError') return 'server tidak menjawab dalam 25 detik. Coba lagi sebentar lagi.';
+  if (err instanceof TypeError) return 'tidak bisa menghubungi Apps Script. Periksa internet HP/komputer ini, lalu coba lagi.';
+  if (err && err.kode === 'BUKAN_JSON')
+    return 'Apps Script membalas dengan halaman biasa, bukan data (' + (err.cuplikan || '-').slice(0, 80) + '…). Pastikan deployment diatur "Who has access: Anyone" lalu Deploy versi baru.';
+  if (/tidak dikenali|unknown action/i.test(m)){
+    // cek apakah script yang aktif memang script Akses Asesmen (action "token" seharusnya dikenal)
+    let catatan = '';
+    try {
+      const r = await fetchDenganBatas(CONFIG.APPS_SCRIPT_URL + '?action=token', { method: 'GET' }, 10000);
+      const j = await bacaJsonAppsScript(r);
+      if (j.status === 'ok') catatan = ' Action lain (token) masih jalan, jadi hanya action "simpan" yang hilang dari script.';
+      else catatan = ' Action "token" pun tidak dikenal — kemungkinan isi script Akses Asesmen tertimpa script lain (mis. script Absensi mandiri). Kembalikan script lamanya lalu Deploy versi baru.';
+    } catch (e2){ /* abaikan: pesan utama sudah cukup */ }
+    return 'Apps Script yang aktif menolak action "simpan" (' + m + ').' + catatan;
+  }
+  return 'server menolak: ' + m;
 }
 
 els.cardTokenAsesmen.addEventListener('click', async () => {
@@ -1712,7 +1769,11 @@ els.cardTokenAsesmen.addEventListener('click', async () => {
     aturHeader('token');
     openTokenScreen();
   } catch (err) {
-    els.entryStatus.textContent = 'Gagal menyimpan data. Periksa koneksi lalu coba lagi.';
+    console.error('Simpan data pengawas gagal:', err);
+    els.entryStatus.textContent = '⏳ Memeriksa penyebab…';
+    els.entryStatus.className = 'status-msg';
+    const alasan = await jelaskanGalatSimpan(err);
+    els.entryStatus.textContent = 'Gagal menyimpan data — ' + alasan;
     els.entryStatus.className = 'status-msg err';
   } finally {
     aturStatusKartuGrup1(); // sinkronkan lagi status kunci (disabled) yang benar

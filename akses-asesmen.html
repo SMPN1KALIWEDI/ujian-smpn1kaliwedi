@@ -1856,22 +1856,7 @@ function ekstrakToken(json){
   }
   return '';
 }
-// Sumber 1 (utama): baca langsung sel B6 di Sheet1 spreadsheet Token & Jadwal lewat gviz.
-// Tidak bergantung pada Apps Script, jadi tidak ikut gagal kalau deployment script bermasalah.
-async function ambilTokenDariSheet(){
-  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ASESMEN_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1&range=B6&headers=0&t=${Date.now()}`;
-  const res = await fetchDenganBatas(url, { method: 'GET', cache: 'no-store' }, 15000);
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const teks = await res.text();
-  if (/^\s*</.test(teks)) throw new Error('spreadsheet belum dibagikan (Anyone with the link: Viewer)');
-  const baris = parseCsv(teks);
-  const token = ((baris[0] && baris[0][0]) || '').trim();
-  if (!token) throw new Error('sel B6 kosong');
-  return token;
-}
-
-// Sumber 2 (cadangan): Apps Script token.
-async function ambilTokenDariScript(){
+async function ambilTokenValue(){
   const base = CONFIG.TOKEN_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL;
   const varian = ['?action=token', '?action=getToken', ''];
   let galat = null;
@@ -1886,17 +1871,7 @@ async function ambilTokenDariScript(){
       galat = new Error((json && json.message) ? json.message : 'balasan script tidak berisi token');
     } catch (e){ galat = e; }
   }
-  throw galat || new Error('tidak ada balasan');
-}
-
-async function ambilTokenValue(){
-  let galatSheet = null;
-  try { return await ambilTokenDariSheet(); }
-  catch (e){ galatSheet = e; console.warn('Token dari sheet gagal:', e.message); }
-  try { return await ambilTokenDariScript(); }
-  catch (e){
-    throw new Error('Token tidak tersedia (sheet: ' + ((galatSheet && galatSheet.message) || '-') + '; script: ' + ((e && e.message) || '-') + ')');
-  }
+  throw new Error('Token tidak tersedia (' + ((galat && galat.message) || 'tidak ada balasan') + ')');
 }
 
 /* =========================================================

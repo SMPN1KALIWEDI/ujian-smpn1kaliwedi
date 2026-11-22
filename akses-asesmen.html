@@ -1501,7 +1501,11 @@ async function cekScriptCepat(url){
     const r = await fetchDenganBatas(url + '?action=token&t=' + Date.now(), { method: 'GET', cache: 'no-store' }, 10000);
     const t = await r.text();
     let j = null; try { j = JSON.parse(t); } catch (e) {}
-    if (j !== null) return ekstrakToken(j) ? 'merespons, token ada' : ('merespons: ' + (j.message || 'tanpa token'));
+    if (j !== null){
+      if (ekstrakToken(j)) return 'merespons, token ada';
+      if (/Absensi siap/i.test(j.message || '')) return 'berisi script ABSENSI MANDIRI (menimpa script Akses Asesmen) — tempel AppsScript-Token-Asesmen.gs';
+      return 'merespons: ' + (j.message || 'tanpa token');
+    }
     return /^\s*</.test(t) ? 'membalas halaman web biasa (cek akses deployment)' : 'merespons teks';
   } catch (e){
     return e && e.name === 'AbortError' ? 'tidak menjawab (timeout)' : 'tidak bisa dihubungi dari browser';
@@ -1523,8 +1527,11 @@ async function jelaskanGalatSimpan(err){
       baris.push('script ' + r.nama + ' → ' + hasil);
     }
     const cek = await Promise.all(err.rincian.map(async r => 'script ' + r.nama + ': ' + await cekScriptCepat(r.url)));
-    return baris.join('; ') + '. Cek cepat → ' + cek.join(' | ') +
-      '. Perbaikan: tambahkan action "simpan" ke doPost script utama (AppsScript-perbaikan-simpan.gs) lalu Deploy versi baru.';
+    const mandiri = cek.some(c => /ABSENSI MANDIRI/.test(c));
+    const saran = mandiri
+      ? 'Perbaikan: di proyek Apps Script utama, ganti seluruh isi kode dengan AppsScript-Token-Asesmen.gs lalu Deploy versi baru.'
+      : 'Perbaikan: tambahkan action "simpan" ke doPost script utama (AppsScript-perbaikan-simpan.gs) lalu Deploy versi baru.';
+    return baris.join('; ') + '. Cek cepat → ' + cek.join(' | ') + '. ' + saran;
   }
   if (err && err.name === 'AbortError') return 'server tidak menjawab dalam 25 detik. Coba lagi sebentar lagi.';
   if (err instanceof TypeError) return 'tidak bisa menghubungi Apps Script. Periksa internet HP/komputer ini, lalu coba lagi.';
@@ -1596,13 +1603,16 @@ function ekstrakToken(json){
   return '';
 }
 async function ambilTokenValue(){
-  const base = CONFIG.TOKEN_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL;
-  const varian = ['?action=token', '?action=getToken', ''];
+  // Urutan: script utama (membaca Sheet1!B6) → script token (beberapa bentuk permintaan).
+  const percobaan = [[CONFIG.APPS_SCRIPT_URL, '?action=token']];
+  if (CONFIG.TOKEN_SCRIPT_URL && CONFIG.TOKEN_SCRIPT_URL !== CONFIG.APPS_SCRIPT_URL){
+    ['?action=token', '?action=getToken', ''].forEach(v => percobaan.push([CONFIG.TOKEN_SCRIPT_URL, v]));
+  }
   let galat = null;
-  for (const v of varian){
+  for (const [base, v] of percobaan){
     try {
       const url = base + v + (v ? '&' : '?') + 't=' + Date.now();
-      const res = await fetchDenganBatas(url, { method: 'GET', cache: 'no-store' }, 15000);
+      const res = await fetchDenganBatas(url, { method: 'GET', cache: 'no-store' }, 10000);
       const teks = await res.text();
       let json = null; try { json = JSON.parse(teks); } catch (e) {}
       const token = json !== null ? ekstrakToken(json) : (/^\s*</.test(teks) ? '' : teks.trim().slice(0, 200));

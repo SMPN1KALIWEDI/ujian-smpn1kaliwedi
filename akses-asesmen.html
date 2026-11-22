@@ -1559,7 +1559,7 @@ async function cekScriptCepat(url){
     let j = null; try { j = JSON.parse(t); } catch (e) {}
     if (j !== null){
       if (ekstrakToken(j)) return 'merespons, token ada';
-      if (/Absensi siap/i.test(j.message || '')) return 'berisi script ABSENSI MANDIRI (menimpa script Akses Asesmen) — tempel AppsScript-Token-Asesmen.gs';
+      if (/Absensi siap/i.test(j.message || '')) return 'berisi script ABSENSI (menimpa script Akses Asesmen)';
       return 'merespons: ' + (j.message || 'tanpa token');
     }
     return /^\s*</.test(t) ? 'membalas halaman web biasa (cek akses deployment)' : 'merespons teks';
@@ -1583,9 +1583,9 @@ async function jelaskanGalatSimpan(err){
       baris.push('script ' + r.nama + ' → ' + hasil);
     }
     const cek = await Promise.all(err.rincian.map(async r => 'script ' + r.nama + ': ' + await cekScriptCepat(r.url)));
-    const mandiri = cek.some(c => /ABSENSI MANDIRI/.test(c));
+    const mandiri = cek.some(c => /berisi script ABSENSI/.test(c));
     const saran = mandiri
-      ? 'Perbaikan: di proyek Apps Script utama, ganti seluruh isi kode dengan AppsScript-Token-Asesmen.gs lalu Deploy versi baru.'
+      ? 'Perbaikan: buka proyek Apps Script utama → Project History → salin kode versi SEBELUM script absensi di-deploy → tempel & Simpan → Deploy > Manage deployments > Edit > New version.'
       : 'Perbaikan: tambahkan action "simpan" ke doPost script utama (AppsScript-perbaikan-simpan.gs) lalu Deploy versi baru.';
     return baris.join('; ') + '. Cek cepat → ' + cek.join(' | ') + '. ' + saran;
   }

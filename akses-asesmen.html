@@ -961,6 +961,9 @@
 ========================================================= */
 const CONFIG = {
   APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyI3ZLv-jOhSxINB10yz8wMuUPwPUo3VeSw6hrkLCFdsuM8Hka49cvfBNzePgfgJAYbow/exec',
+  // Script khusus TOKEN (terpasang di spreadsheet Token & Jadwal; token ada di Sheet1!B6).
+  // Dipakai oleh Token Asesmen (QR) dan Token Manual.
+  TOKEN_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyIt_mQr0dNbEr5sa0mCL4BmuS7z4fnZX-FDyAvR2-tjvu13_nz9W9LuZ-M983fNBPmnA/exec',
   REFRESH_INTERVAL_MS: 5 * 60 * 1000 // 5 menit
 };
 
@@ -1420,15 +1423,125 @@ els.inputLokasi.addEventListener('change', cekMulaiSesiRuangKelas);
 /* =========================================================
    SIMPAN DATA PENGAWAS KE SHEET (via Apps Script)
 ========================================================= */
+// fetch dengan batas waktu (Apps Script yang "dingin" kadang lambat; jangan menggantung selamanya)
+async function fetchDenganBatas(url, init, batasMs){
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), batasMs);
+  try { return await fetch(url, Object.assign({}, init, { signal: ac.signal })); }
+  finally { clearTimeout(t); }
+}
+// Baca balasan Apps Script; kalau bukan JSON (mis. halaman login / halaman galat Google) tandai jelas
+async function bacaJsonAppsScript(res){
+  const teks = await res.text();
+  try { return JSON.parse(teks); }
+  catch (e){
+    const err = new Error('Balasan Apps Script bukan JSON');
+    err.kode = 'BUKAN_JSON';
+    err.cuplikan = teks.replace(/\s+/g, ' ').slice(0, 140);
+    throw err;
+  }
+}
+
+async function simpanKeEndpoint(url, ruang, pengawas){
+  let galat;
+  for (let percobaan = 1; percobaan <= 2; percobaan++){
+    try {
+      const res = await fetchDenganBatas(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'simpan', ruang, pengawas })
+      }, 25000);
+      const json = await bacaJsonAppsScript(res);
+      if (json.status !== 'ok'){
+        const e = new Error(json.message || 'Gagal menyimpan data');
+        e.kode = 'DITOLAK_SERVER';
+        throw e;
+      }
+      return json;
+    } catch (err){
+      galat = err;
+      // Ulangi sekali HANYA untuk gangguan jaringan/timeout (Apps Script dingin).
+      // Penolakan dari server tidak diulang supaya tidak menambah baris ganda.
+      const jaringan = err.name === 'AbortError' || err instanceof TypeError;
+      if (!jaringan || percobaan === 2) break;
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+  throw galat;
+}
+
+// Coba script utama dulu; kalau action "simpan" tidak dikenal di sana, coba script token
+// (backend Akses Asesmen yang terpasang di spreadsheet Token & Jadwal).
+// Hasil tiap script dicatat supaya pesan galat menjelaskan KEDUANYA.
 async function simpanPengawas(ruang, pengawas){
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'simpan', ruang, pengawas })
-  });
-  const json = await res.json();
-  if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan data');
-  return json;
+  const daftar = [{ nama: 'utama', url: CONFIG.APPS_SCRIPT_URL }];
+  if (CONFIG.TOKEN_SCRIPT_URL && CONFIG.TOKEN_SCRIPT_URL !== CONFIG.APPS_SCRIPT_URL) daftar.push({ nama: 'token', url: CONFIG.TOKEN_SCRIPT_URL });
+  const rincian = [];
+  let galatAkhir;
+  for (const d of daftar){
+    try { return await simpanKeEndpoint(d.url, ruang, pengawas); }
+    catch (err){
+      galatAkhir = err;
+      const tidakDikenal = err && err.kode === 'DITOLAK_SERVER' && /tidak dikenali|unknown action/i.test(err.message || '');
+      rincian.push({ nama: d.nama, url: d.url, err, tidakDikenal });
+      if (!tidakDikenal) break;            // galat lain (jaringan, ditolak server) → jangan lanjut ke script berikutnya
+    }
+  }
+  if (rincian.length > 1){
+    const e = new Error('Semua script gagal');
+    e.kode = 'GABUNGAN'; e.rincian = rincian;
+    throw e;
+  }
+  throw galatAkhir;
+}
+
+// Cek cepat apakah suatu script bisa dihubungi dari browser & masih menjawab (tanpa menampilkan nilai token)
+async function cekScriptCepat(url){
+  try {
+    const r = await fetchDenganBatas(url + '?action=token&t=' + Date.now(), { method: 'GET', cache: 'no-store' }, 10000);
+    const t = await r.text();
+    let j = null; try { j = JSON.parse(t); } catch (e) {}
+    if (j !== null) return ekstrakToken(j) ? 'merespons, token ada' : ('merespons: ' + (j.message || 'tanpa token'));
+    return /^\s*</.test(t) ? 'membalas halaman web biasa (cek akses deployment)' : 'merespons teks';
+  } catch (e){
+    return e && e.name === 'AbortError' ? 'tidak menjawab (timeout)' : 'tidak bisa dihubungi dari browser';
+  }
+}
+
+// Terjemahkan galat menjadi penyebab yang bisa ditindaklanjuti (bukan sekadar "periksa koneksi")
+async function jelaskanGalatSimpan(err){
+  const m = String((err && err.message) || err || '');
+  if (err && err.kode === 'GABUNGAN'){
+    const baris = [];
+    for (const r of err.rincian){
+      const e = r.err;
+      let hasil = r.tidakDikenal ? 'menolak action "simpan" (belum ada di doPost)'
+        : (e && e.name === 'AbortError') ? 'tidak menjawab (timeout)'
+        : (e instanceof TypeError) ? 'tidak bisa dihubungi dari browser'
+        : (e && e.kode === 'BUKAN_JSON') ? 'membalas halaman web biasa, bukan data'
+        : 'menolak: ' + ((e && e.message) || '-');
+      baris.push('script ' + r.nama + ' → ' + hasil);
+    }
+    const cek = await Promise.all(err.rincian.map(async r => 'script ' + r.nama + ': ' + await cekScriptCepat(r.url)));
+    return baris.join('; ') + '. Cek cepat → ' + cek.join(' | ') +
+      '. Perbaikan: tambahkan action "simpan" ke doPost script utama (AppsScript-perbaikan-simpan.gs) lalu Deploy versi baru.';
+  }
+  if (err && err.name === 'AbortError') return 'server tidak menjawab dalam 25 detik. Coba lagi sebentar lagi.';
+  if (err instanceof TypeError) return 'tidak bisa menghubungi Apps Script. Periksa internet HP/komputer ini, lalu coba lagi.';
+  if (err && err.kode === 'BUKAN_JSON')
+    return 'Apps Script membalas dengan halaman biasa, bukan data (' + (err.cuplikan || '-').slice(0, 80) + '…). Pastikan deployment diatur "Who has access: Anyone" lalu Deploy versi baru.';
+  if (/tidak dikenali|unknown action/i.test(m)){
+    // cek apakah script yang aktif memang script Akses Asesmen (action "token" seharusnya dikenal)
+    let catatan = '';
+    try {
+      const r = await fetchDenganBatas(CONFIG.APPS_SCRIPT_URL + '?action=token', { method: 'GET' }, 10000);
+      const j = await bacaJsonAppsScript(r);
+      if (j.status === 'ok') catatan = ' Action lain (token) masih jalan, jadi hanya action "simpan" yang hilang dari script.';
+      else catatan = ' Action "token" pun tidak dikenal — kemungkinan isi script Akses Asesmen tertimpa script lain (mis. script Absensi mandiri). Kembalikan script lamanya lalu Deploy versi baru.';
+    } catch (e2){ /* abaikan: pesan utama sudah cukup */ }
+    return 'Apps Script yang aktif menolak action "simpan" (' + m + ').' + catatan;
+  }
+  return 'server menolak: ' + m;
 }
 
 els.cardTokenAsesmen.addEventListener('click', async () => {
@@ -1451,7 +1564,11 @@ els.cardTokenAsesmen.addEventListener('click', async () => {
     aturHeader('token');
     openTokenScreen();
   } catch (err) {
-    els.entryStatus.textContent = 'Gagal menyimpan data. Periksa koneksi lalu coba lagi.';
+    console.error('Simpan data pengawas gagal:', err);
+    els.entryStatus.textContent = '⏳ Memeriksa penyebab…';
+    els.entryStatus.className = 'status-msg';
+    const alasan = await jelaskanGalatSimpan(err);
+    els.entryStatus.textContent = 'Gagal menyimpan data — ' + alasan;
     els.entryStatus.className = 'status-msg err';
   } finally {
     aturStatusKartuGrup1(); // sinkronkan lagi status kunci (disabled) yang benar
@@ -1462,11 +1579,38 @@ els.cardTokenAsesmen.addEventListener('click', async () => {
    AMBIL NILAI TOKEN (sumber data tidak ditampilkan ke UI;
    permintaan hanya menuju Apps Script milik aplikasi ini)
 ========================================================= */
+// Ambil token dari script khusus token (CONFIG.TOKEN_SCRIPT_URL). Bentuk balasan script
+// tidak harus seragam: dukung JSON {status,value|token|kode|data} maupun teks polos.
+// Sengaja TIDAK jatuh ke script lain — script lain bisa membaca sel yang salah dan
+// menampilkan QR yang keliru.
+function ekstrakToken(json){
+  if (json == null) return '';
+  if (typeof json === 'string') return json.trim();
+  if (typeof json !== 'object') return String(json).trim();
+  if (json.status !== undefined && !['ok', 'success', 'sukses'].includes(String(json.status).toLowerCase())) return '';
+  for (const k of ['value', 'token', 'kode', 'data', 'result']){
+    const v = json[k];
+    if (typeof v === 'string' && v.trim()) return v.trim();
+    if (v && typeof v === 'object'){ const d = ekstrakToken(v); if (d) return d; }
+  }
+  return '';
+}
 async function ambilTokenValue(){
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=token', { method: 'GET' });
-  const json = await res.json();
-  if (json.status !== 'ok' || !json.value) throw new Error('Token tidak tersedia');
-  return json.value;
+  const base = CONFIG.TOKEN_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL;
+  const varian = ['?action=token', '?action=getToken', ''];
+  let galat = null;
+  for (const v of varian){
+    try {
+      const url = base + v + (v ? '&' : '?') + 't=' + Date.now();
+      const res = await fetchDenganBatas(url, { method: 'GET', cache: 'no-store' }, 15000);
+      const teks = await res.text();
+      let json = null; try { json = JSON.parse(teks); } catch (e) {}
+      const token = json !== null ? ekstrakToken(json) : (/^\s*</.test(teks) ? '' : teks.trim().slice(0, 200));
+      if (token) return token;
+      galat = new Error((json && json.message) ? json.message : 'balasan script tidak berisi token');
+    } catch (e){ galat = e; }
+  }
+  throw new Error('Token tidak tersedia (' + ((galat && galat.message) || 'tidak ada balasan') + ')');
 }
 
 /* =========================================================

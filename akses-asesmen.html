@@ -1219,6 +1219,9 @@
 ========================================================= */
 const CONFIG = {
   APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyI3ZLv-jOhSxINB10yz8wMuUPwPUo3VeSw6hrkLCFdsuM8Hka49cvfBNzePgfgJAYbow/exec',
+  // Script khusus TOKEN (terpasang di spreadsheet Token & Jadwal; token ada di Sheet1!B6).
+  // Dipakai oleh Token Asesmen (QR) dan Token Manual.
+  TOKEN_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyIt_mQr0dNbEr5sa0mCL4BmuS7z4fnZX-FDyAvR2-tjvu13_nz9W9LuZ-M983fNBPmnA/exec',
   // Opsional: URL Web App terpisah khusus Absensi (AppsScript-Absensi-Mandiri.gs).
   // Kosong = pakai APPS_SCRIPT_URL di atas.
   ABSENSI_SCRIPT_URL: '',
@@ -1700,11 +1703,11 @@ async function bacaJsonAppsScript(res){
   }
 }
 
-async function simpanPengawas(ruang, pengawas){
+async function simpanKeEndpoint(url, ruang, pengawas){
   let galat;
   for (let percobaan = 1; percobaan <= 2; percobaan++){
     try {
-      const res = await fetchDenganBatas(CONFIG.APPS_SCRIPT_URL, {
+      const res = await fetchDenganBatas(url, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'simpan', ruang, pengawas })
@@ -1723,6 +1726,22 @@ async function simpanPengawas(ruang, pengawas){
       const jaringan = err.name === 'AbortError' || err instanceof TypeError;
       if (!jaringan || percobaan === 2) break;
       await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+  throw galat;
+}
+
+// Coba script utama dulu; kalau action "simpan" tidak dikenal di sana, coba script token
+// (backend Akses Asesmen yang terpasang di spreadsheet Token & Jadwal).
+async function simpanPengawas(ruang, pengawas){
+  const daftar = [CONFIG.APPS_SCRIPT_URL];
+  if (CONFIG.TOKEN_SCRIPT_URL && CONFIG.TOKEN_SCRIPT_URL !== CONFIG.APPS_SCRIPT_URL) daftar.push(CONFIG.TOKEN_SCRIPT_URL);
+  let galat;
+  for (const url of daftar){
+    try { return await simpanKeEndpoint(url, ruang, pengawas); }
+    catch (err){
+      galat = err;
+      if (!(err && err.kode === 'DITOLAK_SERVER' && /tidak dikenali|unknown action/i.test(err.message || ''))) throw err;
     }
   }
   throw galat;
@@ -1784,11 +1803,38 @@ els.cardTokenAsesmen.addEventListener('click', async () => {
    AMBIL NILAI TOKEN (sumber data tidak ditampilkan ke UI;
    permintaan hanya menuju Apps Script milik aplikasi ini)
 ========================================================= */
+// Ambil token dari script khusus token (CONFIG.TOKEN_SCRIPT_URL). Bentuk balasan script
+// tidak harus seragam: dukung JSON {status,value|token|kode|data} maupun teks polos.
+// Sengaja TIDAK jatuh ke script lain — script lain bisa membaca sel yang salah dan
+// menampilkan QR yang keliru.
+function ekstrakToken(json){
+  if (json == null) return '';
+  if (typeof json === 'string') return json.trim();
+  if (typeof json !== 'object') return String(json).trim();
+  if (json.status !== undefined && !['ok', 'success', 'sukses'].includes(String(json.status).toLowerCase())) return '';
+  for (const k of ['value', 'token', 'kode', 'data', 'result']){
+    const v = json[k];
+    if (typeof v === 'string' && v.trim()) return v.trim();
+    if (v && typeof v === 'object'){ const d = ekstrakToken(v); if (d) return d; }
+  }
+  return '';
+}
 async function ambilTokenValue(){
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=token', { method: 'GET' });
-  const json = await res.json();
-  if (json.status !== 'ok' || !json.value) throw new Error('Token tidak tersedia');
-  return json.value;
+  const base = CONFIG.TOKEN_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL;
+  const varian = ['?action=token', '?action=getToken', ''];
+  let galat = null;
+  for (const v of varian){
+    try {
+      const url = base + v + (v ? '&' : '?') + 't=' + Date.now();
+      const res = await fetchDenganBatas(url, { method: 'GET', cache: 'no-store' }, 15000);
+      const teks = await res.text();
+      let json = null; try { json = JSON.parse(teks); } catch (e) {}
+      const token = json !== null ? ekstrakToken(json) : (/^\s*</.test(teks) ? '' : teks.trim().slice(0, 200));
+      if (token) return token;
+      galat = new Error((json && json.message) ? json.message : 'balasan script tidak berisi token');
+    } catch (e){ galat = e; }
+  }
+  throw new Error('Token tidak tersedia (' + ((galat && galat.message) || 'tidak ada balasan') + ')');
 }
 
 /* =========================================================
@@ -3090,6 +3136,8 @@ els.btnTutupRekap.addEventListener('click', () => {
       return { ymd, kode: cell(r, 1), prioritas: cell(r, 2), mulai: jamKe(cell(r, 3)), selesai: jamKe(cell(r, 4)), mapel: cell(r, 5) };
     }).filter(j => j.kode || j.ymd)
       .sort((a, b) => (a.ymd || '9999').localeCompare(b.ymd || '9999') || menit(a.mulai) - menit(b.mulai) || a.kode.localeCompare(b.kode, 'id', { numeric: true }));
+    { const lihat = new Set();   // baris jadwal identik (tanggal+kode+jam) dihitung satu
+      RK.jadwal = RK.jadwal.filter(j => { const k = [j.ymd, norm2(j.kode), j.mulai, j.selesai].join('|'); if (lihat.has(k)) return false; lihat.add(k); return true; }); }
     RK.sumber = (jad.info && jad.info.sumber) ? jad.info.sumber : 'Sheet1';
 
     RK.kelas = [...new Set(RK.siswa.map(s => s.kelas))].filter(k => k && k !== '-')
@@ -3363,6 +3411,8 @@ els.btnTutupRekap.addEventListener('click', () => {
       return { ymd, kode: cell(r, 1), prioritas: cell(r, 2), mulai: jamKe(cell(r, 3)), selesai: jamKe(cell(r, 4)), mapel: cell(r, 5) };
     }).filter(j => j.kode || j.ymd)
       .sort((a, b) => (a.ymd || '9999').localeCompare(b.ymd || '9999') || menit(a.mulai) - menit(b.mulai) || a.kode.localeCompare(b.kode, 'id', { numeric: true }));
+    { const lihat = new Set();   // baris jadwal identik (tanggal+kode+jam) dihitung satu
+      RH.jadwal = RH.jadwal.filter(j => { const k = [j.ymd, norm(j.kode).replace(/[^A-Z0-9]/g, ''), j.mulai, j.selesai].join('|'); if (lihat.has(k)) return false; lihat.add(k); return true; }); }
     RH.sumberJadwal = (jad.info && jad.info.sumber) ? jad.info.sumber : 'Sheet1';
 
     // indeks absensi: "tanggal|NISN" dan "tanggal|N:nama|kelas" → jam hadir paling awal

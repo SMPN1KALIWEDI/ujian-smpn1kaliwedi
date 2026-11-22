@@ -1733,23 +1733,60 @@ async function simpanKeEndpoint(url, ruang, pengawas){
 
 // Coba script utama dulu; kalau action "simpan" tidak dikenal di sana, coba script token
 // (backend Akses Asesmen yang terpasang di spreadsheet Token & Jadwal).
+// Hasil tiap script dicatat supaya pesan galat menjelaskan KEDUANYA.
 async function simpanPengawas(ruang, pengawas){
-  const daftar = [CONFIG.APPS_SCRIPT_URL];
-  if (CONFIG.TOKEN_SCRIPT_URL && CONFIG.TOKEN_SCRIPT_URL !== CONFIG.APPS_SCRIPT_URL) daftar.push(CONFIG.TOKEN_SCRIPT_URL);
-  let galat;
-  for (const url of daftar){
-    try { return await simpanKeEndpoint(url, ruang, pengawas); }
+  const daftar = [{ nama: 'utama', url: CONFIG.APPS_SCRIPT_URL }];
+  if (CONFIG.TOKEN_SCRIPT_URL && CONFIG.TOKEN_SCRIPT_URL !== CONFIG.APPS_SCRIPT_URL) daftar.push({ nama: 'token', url: CONFIG.TOKEN_SCRIPT_URL });
+  const rincian = [];
+  let galatAkhir;
+  for (const d of daftar){
+    try { return await simpanKeEndpoint(d.url, ruang, pengawas); }
     catch (err){
-      galat = err;
-      if (!(err && err.kode === 'DITOLAK_SERVER' && /tidak dikenali|unknown action/i.test(err.message || ''))) throw err;
+      galatAkhir = err;
+      const tidakDikenal = err && err.kode === 'DITOLAK_SERVER' && /tidak dikenali|unknown action/i.test(err.message || '');
+      rincian.push({ nama: d.nama, url: d.url, err, tidakDikenal });
+      if (!tidakDikenal) break;            // galat lain (jaringan, ditolak server) → jangan lanjut ke script berikutnya
     }
   }
-  throw galat;
+  if (rincian.length > 1){
+    const e = new Error('Semua script gagal');
+    e.kode = 'GABUNGAN'; e.rincian = rincian;
+    throw e;
+  }
+  throw galatAkhir;
+}
+
+// Cek cepat apakah suatu script bisa dihubungi dari browser & masih menjawab (tanpa menampilkan nilai token)
+async function cekScriptCepat(url){
+  try {
+    const r = await fetchDenganBatas(url + '?action=token&t=' + Date.now(), { method: 'GET', cache: 'no-store' }, 10000);
+    const t = await r.text();
+    let j = null; try { j = JSON.parse(t); } catch (e) {}
+    if (j !== null) return ekstrakToken(j) ? 'merespons, token ada' : ('merespons: ' + (j.message || 'tanpa token'));
+    return /^\s*</.test(t) ? 'membalas halaman web biasa (cek akses deployment)' : 'merespons teks';
+  } catch (e){
+    return e && e.name === 'AbortError' ? 'tidak menjawab (timeout)' : 'tidak bisa dihubungi dari browser';
+  }
 }
 
 // Terjemahkan galat menjadi penyebab yang bisa ditindaklanjuti (bukan sekadar "periksa koneksi")
 async function jelaskanGalatSimpan(err){
   const m = String((err && err.message) || err || '');
+  if (err && err.kode === 'GABUNGAN'){
+    const baris = [];
+    for (const r of err.rincian){
+      const e = r.err;
+      let hasil = r.tidakDikenal ? 'menolak action "simpan" (belum ada di doPost)'
+        : (e && e.name === 'AbortError') ? 'tidak menjawab (timeout)'
+        : (e instanceof TypeError) ? 'tidak bisa dihubungi dari browser'
+        : (e && e.kode === 'BUKAN_JSON') ? 'membalas halaman web biasa, bukan data'
+        : 'menolak: ' + ((e && e.message) || '-');
+      baris.push('script ' + r.nama + ' → ' + hasil);
+    }
+    const cek = await Promise.all(err.rincian.map(async r => 'script ' + r.nama + ': ' + await cekScriptCepat(r.url)));
+    return baris.join('; ') + '. Cek cepat → ' + cek.join(' | ') +
+      '. Perbaikan: tambahkan action "simpan" ke doPost script utama (AppsScript-perbaikan-simpan.gs) lalu Deploy versi baru.';
+  }
   if (err && err.name === 'AbortError') return 'server tidak menjawab dalam 25 detik. Coba lagi sebentar lagi.';
   if (err instanceof TypeError) return 'tidak bisa menghubungi Apps Script. Periksa internet HP/komputer ini, lalu coba lagi.';
   if (err && err.kode === 'BUKAN_JSON')

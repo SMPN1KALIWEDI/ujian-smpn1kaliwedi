@@ -455,7 +455,7 @@
     <button type="button" id="btnSelesaiSesiRuang" class="btn btn-ghost hidden" style="margin:-6px 0 14px">✅ Selesai — Pilih Lokasi Baru</button>
     <div id="entryStatus" class="status-msg"></div>
     <div id="petunjukRuangBelumDipilih" style="font-size:11.5px;color:var(--ink-soft);margin:2px 0 14px;display:none">
-      ⚠️ Pilih ruang/kelas dulu untuk mengaktifkan menu di bawah. Pilihan ini tetap dipakai untuk keempat menu ini sampai sesi berakhir.
+      ⚠️ Pilih ruang/kelas dulu untuk mengaktifkan menu di bawah. Pilihan ini tetap dipakai untuk ketiga menu ini sampai sesi berakhir.
     </div>
 
     <div class="menu-list">
@@ -471,19 +471,6 @@
         <div class="menu-text">
           <div class="menu-title">Token Asesmen</div>
           <div class="menu-desc">QR untuk ruang ujian</div>
-        </div>
-      </button>
-
-      <button type="button" id="cardTokenManual" class="menu-card" style="--accent:var(--indigo-500)">
-        <div class="menu-icon">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.8"/>
-            <path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13.5h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="menu-text">
-          <div class="menu-title">Token Manual</div>
-          <div class="menu-desc">Kode token tanpa QR</div>
         </div>
       </button>
 
@@ -628,10 +615,24 @@
   <div id="screenManual" class="card hidden" style="margin-top:16px">
     <div class="field">
       <label for="inputNisnManual">NISN Siswa</label>
-      <input type="text" id="inputNisnManual" placeholder="Ketik NISN siswa yang kameranya gagal"
+      <input type="text" id="inputNisnManual" placeholder="Scan kartu peserta atau ketik NISN"
         style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
     </div>
-    <button id="btnKonfirmasiManual" class="btn btn-primary">
+    <button id="btnScanQrManual" class="btn btn-ghost" style="width:100%;margin-top:0">📷 Scan Kartu Peserta</button>
+    <div id="qrReaderManualWrap" style="margin-top:10px;display:none">
+      <div id="qr-reader-manual" style="border-radius:12px;overflow:hidden"></div>
+      <div id="qrStatusManualScan" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
+      <button id="btnTutupQrScanManual" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
+    </div>
+    <div id="previewSiswaManual" style="display:none;margin-top:12px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)">
+      <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px">Siswa ditemukan</div>
+      <div id="previewNamaManual" style="font-size:15px;font-weight:700;color:var(--navy-800)">-</div>
+      <div id="previewKelasManual" style="font-size:12.5px;color:var(--ink-soft)">-</div>
+    </div>
+    <div id="previewNotFoundManual" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF6E5;border:1.5px solid #F3DFA8;border-radius:var(--radius-md);font-size:12.5px;color:#8A6A17">
+      ⚠️ NISN belum ditemukan di data siswa — cek lagi penulisannya.
+    </div>
+    <button id="btnKonfirmasiManual" class="btn btn-primary" style="margin-top:14px">
       <span id="btnKonfirmasiManualLabel">✅ Konfirmasi Masuk</span>
     </button>
     <div id="manualStatus" class="status-msg"></div>
@@ -833,46 +834,6 @@
     <div id="daftarJadwalWrap" style="margin-top:20px"></div>
   </div>
 
-  <!-- ===================== SCREEN 7 : TOKEN MANUAL ===================== -->
-  <div id="screenTokenManual" class="card hidden" style="margin-top:16px">
-    <button type="button" class="menu-back" id="btnKembaliDariTokenManual">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Menu Utama
-    </button>
-    <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px">
-      Dipakai kalau siswa perlu tahu kode token tapi kameranya gagal scan QR. Dibatasi 10 kali dibuka per token supaya tidak disalahgunakan.
-    </div>
-    <div class="field">
-      <label for="inputNisnTokenManual">NISN Siswa</label>
-      <input type="text" id="inputNisnTokenManual" placeholder="Ketik atau scan QR NISN siswa"
-        style="width:100%;padding:16px;font-size:16px;font-family:'Inter',sans-serif;font-weight:500;border:2px solid var(--ring-track);border-radius:var(--radius-md);background:#FAFBFD;color:var(--ink);outline:none;box-sizing:border-box;">
-    </div>
-    <button id="btnScanQrTokenManual" class="btn btn-ghost" style="width:100%">📷 Scan QR Kartu Siswa</button>
-    <div id="qrReaderTokenManualWrap" style="margin-top:10px;display:none">
-      <div id="qr-reader-tokenmanual" style="border-radius:12px;overflow:hidden"></div>
-      <div id="qrStatusTokenManualScan" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px">Memulai kamera...</div>
-      <button id="btnTutupQrScanTokenManual" class="btn btn-ghost" style="width:100%;margin-top:8px">Tutup Kamera</button>
-    </div>
-    <div id="previewSiswaTokenManual" style="display:none;margin-top:12px;padding:12px 14px;background:#F0F6FF;border:1.5px solid #CFE0FA;border-radius:var(--radius-md)">
-      <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px">Siswa ditemukan</div>
-      <div id="previewNamaTokenManual" style="font-size:15px;font-weight:700;color:var(--navy-800)">-</div>
-      <div id="previewKelasTokenManual" style="font-size:12.5px;color:var(--ink-soft)">-</div>
-    </div>
-    <div id="previewNotFoundTokenManual" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF6E5;border:1.5px solid #F3DFA8;border-radius:var(--radius-md);font-size:12.5px;color:#8A6A17">
-      ⚠️ NISN belum ditemukan di data siswa — cek lagi penulisannya.
-    </div>
-    <button type="button" id="btnBukaTokenTeks" class="btn btn-primary" style="width:100%;margin-top:14px" onclick="toggleTokenTeks()">👁️ Tampilkan Kode Token</button>
-    <div id="tokenTeksBox" style="display:none;margin-top:14px;text-align:center;padding:20px;background:var(--bg);border-radius:var(--radius-md)">
-      <div id="tokenTeksUntuk" style="font-size:12px;font-weight:600;color:var(--navy-800);margin-bottom:6px"></div>
-      <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Kode Token Saat Ini</div>
-      <div id="tokenTeks" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:28px;letter-spacing:.14em;color:var(--navy-800)">-</div>
-    </div>
-    <div id="tokenManualStatus" class="status-msg" style="margin-top:10px"></div>
-    <button type="button" id="btnRefreshTokenManual" class="btn btn-ghost" style="width:100%;margin-top:10px">🔄 Muat Ulang Token</button>
-  </div>
-
   <!-- ===================== SCREEN 8 : QR KELUAR (izin darurat) ===================== -->
   <div id="screenQrKeluar" class="card hidden" style="margin-top:16px">
     <button type="button" class="menu-back" id="btnKembaliDariQrKeluar">
@@ -962,7 +923,7 @@
 const CONFIG = {
   APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyI3ZLv-jOhSxINB10yz8wMuUPwPUo3VeSw6hrkLCFdsuM8Hka49cvfBNzePgfgJAYbow/exec',
   // Script khusus TOKEN (terpasang di spreadsheet Token & Jadwal; token ada di Sheet1!B6).
-  // Dipakai oleh Token Asesmen (QR) dan Token Manual.
+  // Dipakai oleh Token Asesmen (QR).
   TOKEN_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyIt_mQr0dNbEr5sa0mCL4BmuS7z4fnZX-FDyAvR2-tjvu13_nz9W9LuZ-M983fNBPmnA/exec',
   REFRESH_INTERVAL_MS: 5 * 60 * 1000 // 5 menit
 };
@@ -1131,13 +1092,6 @@ const els = {
   jadwalStatus: document.getElementById('jadwalStatus'),
   daftarJadwalWrap: document.getElementById('daftarJadwalWrap'),
   btnKembaliDariToken: document.getElementById('btnKembaliDariToken'),
-  cardTokenManual: document.getElementById('cardTokenManual'),
-  screenTokenManual: document.getElementById('screenTokenManual'),
-  btnKembaliDariTokenManual: document.getElementById('btnKembaliDariTokenManual'),
-  btnBukaTokenTeks: document.getElementById('btnBukaTokenTeks'),
-  tokenTeksBox: document.getElementById('tokenTeksBox'),
-  tokenManualStatus: document.getElementById('tokenManualStatus'),
-  btnRefreshTokenManual: document.getElementById('btnRefreshTokenManual'),
   cardQrKeluar: document.getElementById('cardQrKeluar'),
   screenQrKeluar: document.getElementById('screenQrKeluar'),
   btnKembaliDariQrKeluar: document.getElementById('btnKembaliDariQrKeluar'),
@@ -1354,12 +1308,12 @@ function lokasiUntukDisimpan(){
 }
 
 // Ruang/Kelas sekarang tinggal di Menu Utama dan dipakai bareng oleh 4
-// menu grup 1 (Token Asesmen, Token Manual, Izin Keluar, Reset Password)
+// menu grup 1 (Token Asesmen, Izin Keluar, Reset Password)
 // — kartu-kartu itu dikunci sampai lokasi dipilih (nama pengawas sudah
 // pasti terisi karena wajib login dulu).
 function aturStatusKartuGrup1(){
   const ok = els.inputLokasi.value.trim().length > 0;
-  [els.cardTokenAsesmen, els.cardTokenManual, els.cardQrKeluar, els.cardResetPw].forEach(btn => {
+  [els.cardTokenAsesmen, els.cardQrKeluar, els.cardResetPw].forEach(btn => {
     if (btn) btn.disabled = !ok;
   });
   els.petunjukRuangBelumDipilih.style.display = ok ? 'none' : 'block';
@@ -1745,162 +1699,6 @@ els.btnScanQrKeluar.addEventListener('click', bukaQrScanKeluar);
 els.btnTutupQrScanKeluar.addEventListener('click', tutupQrScanKeluar);
 
 
-/* =========================================================
-   TOKEN MANUAL — layar terpisah dari QR. Tombol "Tampilkan
-   Kode Token" dibatasi 10 kali DIBUKA per token (bukan per
-   refresh). Counter cuma reset kalau nilai tokennya benar-benar
-   berubah, supaya tidak bisa di-reset dengan spam refresh.
-========================================================= */
-let tokenManualSebelumnya = null;
-let tokenTeksSisaBuka = 10;
-let tokenTeksSedangTampil = false;
-
-function resetTombolTokenTeks(){
-  if (!els.btnBukaTokenTeks || !els.tokenTeksBox) return;
-  tokenTeksSedangTampil = false;
-  els.tokenTeksBox.style.display = 'none';
-  els.btnBukaTokenTeks.disabled = false;
-  els.btnBukaTokenTeks.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
-}
-
-function toggleTokenTeks(){
-  if (tokenTeksSedangTampil){
-    // Sembunyikan lagi — tidak mengurangi jatah, cuma menutup pandangan
-    tokenTeksSedangTampil = false;
-    els.tokenTeksBox.style.display = 'none';
-    els.btnBukaTokenTeks.textContent = `👁️ Tampilkan Kode Token (sisa ${tokenTeksSisaBuka}x)`;
-    return;
-  }
-
-  if (!document.getElementById('inputNisnTokenManual').value.trim()){
-    els.tokenManualStatus.textContent = 'Ketik atau scan NISN siswa terlebih dahulu.';
-    els.tokenManualStatus.className = 'status-msg err';
-    return;
-  }
-  els.tokenManualStatus.textContent = '';
-  els.tokenManualStatus.className = 'status-msg';
-
-  if (tokenTeksSisaBuka <= 0){
-    els.btnBukaTokenTeks.disabled = true;
-    els.btnBukaTokenTeks.textContent = '🚫 Batas tampil token habis — pakai QR atau Otorisasi Manual';
-    return;
-  }
-
-  tokenTeksSisaBuka--;
-  tokenTeksSedangTampil = true;
-  const namaTM = document.getElementById('previewNamaTokenManual').textContent;
-  const adaTM = document.getElementById('previewSiswaTokenManual').style.display === 'block';
-  document.getElementById('tokenTeksUntuk').textContent =
-    'Untuk: ' + (adaTM && namaTM && namaTM !== '-' ? namaTM + ' · ' : '') + 'NISN ' + document.getElementById('inputNisnTokenManual').value.trim();
-  els.tokenTeksBox.style.display = 'block';
-  els.btnBukaTokenTeks.textContent = tokenTeksSisaBuka > 0
-    ? `🙈 Sembunyikan (sisa ${tokenTeksSisaBuka}x)`
-    : `🙈 Sembunyikan (jatah habis, jangan dibuka lagi)`;
-}
-
-/* ---- Scan QR NISN di Token Manual (pola sama dengan Izin Keluar) ---- */
-let qrScannerTokenManual = null;
-
-function sembunyikanTokenTeksKarenaGantiSiswa(){
-  // Ganti siswa → kode token disembunyikan lagi (jatah tidak dikembalikan)
-  if (tokenTeksSedangTampil) toggleTokenTeks();
-}
-
-async function tampilkanPreviewSiswaTokenManual(){
-  const nisn = document.getElementById('inputNisnTokenManual').value.trim();
-  const boxOk = document.getElementById('previewSiswaTokenManual');
-  const boxNo = document.getElementById('previewNotFoundTokenManual');
-  boxOk.style.display = 'none';
-  boxNo.style.display = 'none';
-  if (!nisn) return;
-
-  const daftar = await muatDaftarSiswaCache();
-  const siswa = cariSiswaByNisn(daftar, nisn);
-  if (siswa){
-    document.getElementById('previewNamaTokenManual').textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
-    document.getElementById('previewKelasTokenManual').textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
-    boxOk.style.display = 'block';
-  } else {
-    boxNo.style.display = 'block';
-  }
-}
-
-document.getElementById('inputNisnTokenManual').addEventListener('input', () => {
-  sembunyikanTokenTeksKarenaGantiSiswa();
-  clearTimeout(window._debounceLookupTokenManual);
-  window._debounceLookupTokenManual = setTimeout(tampilkanPreviewSiswaTokenManual, 350);
-});
-
-function bukaQrScanTokenManual(){
-  const wrap = document.getElementById('qrReaderTokenManualWrap');
-  const status = document.getElementById('qrStatusTokenManualScan');
-  wrap.style.display = 'block';
-  status.textContent = 'Memulai kamera...';
-  setTimeout(() => {
-    try {
-      qrScannerTokenManual = new Html5Qrcode('qr-reader-tokenmanual');
-      qrScannerTokenManual.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
-        (decodedText) => {
-          const teks = decodedText.trim();
-          document.getElementById('inputNisnTokenManual').value = teks;
-          status.textContent = '✅ Terbaca: ' + teks;
-          sembunyikanTokenTeksKarenaGantiSiswa();
-          tampilkanPreviewSiswaTokenManual();
-          if (qrScannerTokenManual) { try { qrScannerTokenManual.pause(true); } catch(e){} }
-          setTimeout(tutupQrScanTokenManual, 700);
-        },
-        () => {}
-      ).then(() => { status.textContent = '🔍 Arahkan ke QR Code kartu siswa...'; })
-       .catch(err => { status.textContent = '❌ Kamera tidak bisa diakses'; console.warn(err); });
-    } catch (e) {
-      status.textContent = '❌ ' + e.message;
-    }
-  }, 300);
-}
-
-function tutupQrScanTokenManual(){
-  if (qrScannerTokenManual){
-    const sc = qrScannerTokenManual;
-    qrScannerTokenManual = null;
-    sc.stop().catch(() => {}).finally(() => { try { sc.clear(); } catch(e){} });
-  }
-  document.getElementById('qrReaderTokenManualWrap').style.display = 'none';
-}
-
-document.getElementById('btnScanQrTokenManual').addEventListener('click', bukaQrScanTokenManual);
-document.getElementById('btnTutupQrScanTokenManual').addEventListener('click', tutupQrScanTokenManual);
-
-function resetFormNisnTokenManual(){
-  tutupQrScanTokenManual();
-  document.getElementById('inputNisnTokenManual').value = '';
-  document.getElementById('previewSiswaTokenManual').style.display = 'none';
-  document.getElementById('previewNotFoundTokenManual').style.display = 'none';
-}
-
-async function muatTokenManual(){
-  els.tokenManualStatus.textContent = '';
-  els.tokenManualStatus.className = 'status-msg';
-  els.btnRefreshTokenManual.disabled = true;
-  try {
-    const value = await ambilTokenValue();
-    const elTokenTeks = document.getElementById('tokenTeks');
-    if (elTokenTeks) elTokenTeks.textContent = value;
-
-    if (value !== tokenManualSebelumnya){
-      tokenManualSebelumnya = value;
-      tokenTeksSisaBuka = 10;
-    }
-    resetTombolTokenTeks();
-  } catch (err) {
-    els.tokenManualStatus.textContent = 'Gagal memuat token: ' + err.message;
-    els.tokenManualStatus.className = 'status-msg err';
-  } finally {
-    els.btnRefreshTokenManual.disabled = false;
-  }
-}
-
 function renderQR(value){
   els.qrCanvasWrap.innerHTML = '';
   qrObj = new QRCode(els.qrCanvasWrap, {
@@ -1999,11 +1797,11 @@ els.btnBukaManual.addEventListener('click', () => {
   els.btnBukaManual.textContent = buka
     ? '⬆️ Tutup Panel Konfirmasi Manual'
     : '🧑‍🎓 Kamera Siswa Gagal? Konfirmasi Manual';
-  if (buka) els.inputNisnManual.focus();
+  if (buka) els.inputNisnManual.focus(); else tutupQrScanManual();
 });
 
 async function kirimOtorisasiManual(nisn){
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+  const res = await fetchDenganBatas(CONFIG.APPS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({
@@ -2012,8 +1810,8 @@ async function kirimOtorisasiManual(nisn){
       ruang: els.metaRuang.textContent,
       pengawas: els.metaPengawas.textContent,
     })
-  });
-  const json = await res.json();
+  }, 25000);
+  const json = await bacaJsonAppsScript(res);
   if (json.status !== 'ok') throw new Error(json.message || 'Gagal mengonfirmasi');
   return json;
 }
@@ -2045,8 +1843,16 @@ els.btnKonfirmasiManual.addEventListener('click', async () => {
     els.manualStatus.className = 'status-msg ok';
     tambahLogManual(nisn);
     els.inputNisnManual.value = '';
+    tampilkanPreviewSiswaManual();
   } catch (err) {
-    els.manualStatus.textContent = 'Gagal mengonfirmasi. Periksa koneksi lalu coba lagi.';
+    console.error('Konfirmasi manual gagal:', err);
+    const m = String((err && err.message) || '');
+    els.manualStatus.textContent = 'Gagal mengonfirmasi — ' + (
+      /tidak dikenali|unknown action/i.test(m) ? 'Apps Script belum punya action "otorisasiManual" (cek script utama).'
+      : (err && err.kode === 'BUKAN_JSON') ? 'Apps Script membalas halaman biasa, bukan data (cek akses deployment "Anyone").'
+      : (err && err.name === 'AbortError') ? 'server tidak menjawab dalam 25 detik, coba lagi.'
+      : (err instanceof TypeError) ? 'tidak bisa menghubungi Apps Script. Periksa internet lalu coba lagi.'
+      : m);
     els.manualStatus.className = 'status-msg err';
   } finally {
     els.btnKonfirmasiManual.disabled = false;
@@ -2057,6 +1863,95 @@ els.btnKonfirmasiManual.addEventListener('click', async () => {
 els.inputNisnManual.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') els.btnKonfirmasiManual.click();
 });
+
+/* ---- Scan kartu peserta untuk mengisi NISN (pola sama dengan Izin Keluar) ---- */
+let qrScannerManual = null;
+
+// Isi QR kartu bisa NISN polos atau teks yang memuat NISN → ambil deret angka panjang pertama
+function ambilNisnDariTeks(teks){
+  const t = String(teks == null ? '' : teks).trim();
+  const m = t.match(/\d{5,}/);
+  return m ? m[0] : t;
+}
+
+async function tampilkanPreviewSiswaManual(){
+  const nisn = els.inputNisnManual.value.trim();
+  const ok = document.getElementById('previewSiswaManual');
+  const no = document.getElementById('previewNotFoundManual');
+  ok.style.display = 'none'; no.style.display = 'none';
+  if (!nisn) return;
+  const daftar = await muatDaftarSiswaCache();
+  const siswa = cariSiswaByNisn(daftar, nisn);
+  if (siswa){
+    document.getElementById('previewNamaManual').textContent = ambilKolomRekap(siswa, 'NAMA') || '-';
+    document.getElementById('previewKelasManual').textContent = 'Kelas ' + (ambilKolomRekap(siswa, 'KLS', 'KELAS') || '-');
+    ok.style.display = 'block';
+  } else {
+    no.style.display = 'block';
+  }
+}
+
+els.inputNisnManual.addEventListener('input', () => {
+  clearTimeout(window._debounceLookupManual);
+  window._debounceLookupManual = setTimeout(tampilkanPreviewSiswaManual, 350);
+});
+
+function bukaQrScanManual(){
+  const wrap = document.getElementById('qrReaderManualWrap');
+  const status = document.getElementById('qrStatusManualScan');
+  wrap.style.display = 'block';
+  status.textContent = 'Memulai kamera...';
+
+  const berhasil = (decodedText) => {
+    const nisn = ambilNisnDariTeks(decodedText);
+    els.inputNisnManual.value = nisn;
+    status.textContent = '✅ Terbaca: ' + nisn;
+    els.manualStatus.textContent = '';
+    els.manualStatus.className = 'status-msg';
+    tampilkanPreviewSiswaManual();
+    if (qrScannerManual){ try { qrScannerManual.pause(true); } catch(e){} }
+    setTimeout(tutupQrScanManual, 700);
+  };
+
+  // Konfigurasi "tajam" (resolusi 1280x720, area baca lebar, hanya QR); jatuh ke pengaturan biasa kalau gagal.
+  const cfgTajam = {
+    fps: 15,
+    qrbox: (w, h) => { const m = Math.min(w, h); const sz = Math.max(180, Math.floor(m * 0.8)); return { width: sz, height: sz }; },
+    experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+    videoConstraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+  };
+  if (typeof Html5QrcodeSupportedFormats !== 'undefined') cfgTajam.formatsToSupport = [Html5QrcodeSupportedFormats.QR_CODE];
+  const cfgBiasa = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+
+  const mulai = (cfg, cadangan) => {
+    qrScannerManual = new Html5Qrcode('qr-reader-manual');
+    return qrScannerManual.start({ facingMode: 'environment' }, cfg, berhasil, () => {})
+      .then(() => { status.textContent = '🔍 Arahkan ke QR Code kartu peserta... (dekatkan 15–25 cm)'; })
+      .catch(err => {
+        console.warn('Scanner gagal:', err);
+        try { qrScannerManual.clear(); } catch(e){}
+        qrScannerManual = null;
+        if (cadangan) return mulai(cadangan, null);
+        status.textContent = '❌ Kamera tidak bisa diakses — ketik NISN secara manual';
+      });
+  };
+  setTimeout(() => {
+    try { mulai(cfgTajam, cfgBiasa); }
+    catch (e){ status.textContent = '❌ ' + e.message; }
+  }, 300);
+}
+
+function tutupQrScanManual(){
+  if (qrScannerManual){
+    const sc = qrScannerManual;
+    qrScannerManual = null;
+    sc.stop().catch(() => {}).finally(() => { try { sc.clear(); } catch(e){} });
+  }
+  document.getElementById('qrReaderManualWrap').style.display = 'none';
+}
+
+document.getElementById('btnScanQrManual').addEventListener('click', bukaQrScanManual);
+document.getElementById('btnTutupQrScanManual').addEventListener('click', tutupQrScanManual);
 
 /* =========================================================
    REKAP NILAI — baca data/nilai.csv & data/siswa.csv dari
@@ -2371,7 +2266,6 @@ const HEADER_LAYAR = {
   kartusiswa:  { judul: 'Kartu Siswa',   tampilkanIkon: false },
   inputsoal:   { judul: 'Input Link Soal', tampilkanIkon: false },
   setingjadwal:{ judul: 'Seting Jadwal', tampilkanIkon: false },
-  tokenmanual: { judul: 'Token Manual',  tampilkanIkon: false },
   qrkeluar:    { judul: 'Izin Keluar',    tampilkanIkon: false },
 };
 function aturHeader(kunci){
@@ -2550,21 +2444,6 @@ els.btnTutupKartuSiswa.addEventListener('click', () => {
   els.screenHome.classList.remove('hidden');
 });
 
-els.cardTokenManual.addEventListener('click', () => {
-  aturHeader('tokenmanual');
-  els.screenHome.classList.add('hidden');
-  els.screenTokenManual.classList.remove('hidden');
-  resetFormNisnTokenManual();
-  muatTokenManual();
-});
-els.btnKembaliDariTokenManual.addEventListener('click', () => {
-  resetFormNisnTokenManual();
-  aturHeader('home');
-  els.screenTokenManual.classList.add('hidden');
-  els.screenHome.classList.remove('hidden');
-});
-els.btnRefreshTokenManual.addEventListener('click', muatTokenManual);
-
 els.cardQrKeluar.addEventListener('click', () => {
   aturHeader('qrkeluar');
   els.screenHome.classList.add('hidden');
@@ -2585,6 +2464,9 @@ els.btnKembaliDariQrKeluar.addEventListener('click', () => {
 
 els.btnKembaliDariToken.addEventListener('click', () => {
   stopTimers();
+  tutupQrScanManual();
+  els.screenManual.classList.add('hidden');
+  els.btnBukaManual.textContent = '🧑‍🎓 Kamera Siswa Gagal? Konfirmasi Manual';
   aturHeader('home');
   els.screenToken.classList.add('hidden');
   els.screenHome.classList.remove('hidden');
@@ -2780,20 +2662,7 @@ const DATA_PETUNJUK = [
       'Tap tombol <b>Buka Token</b>.',
       'QR Code tampil dan otomatis refresh tiap beberapa menit.',
       'Tunjukkan layar HP ke siswa satu per satu untuk di-scan.',
-    ],
-  },
-  {
-    judul: 'Token Manual', accent: 'var(--indigo-500)',
-    ikonSvg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.8"/>
-      <path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13.5h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`,
-    fungsi: 'Menampilkan kode token dalam bentuk TEKS (bukan QR) — dipakai kalau ada siswa yang kameranya bermasalah dan tidak bisa scan QR sama sekali.',
-    caraPakai: [
-      'Tap tombol <b>Tampilkan Kode Token</b>.',
-      'Bacakan atau tunjukkan kode yang muncul ke siswa.',
-      'Siswa mengetik kode itu manual lewat tombol pensil ✏️ di halaman ujiannya.',
-      'Tombol ini dibatasi <b>10 kali dibuka</b> per token, supaya tidak disalahgunakan.',
+      'Kalau kamera siswa gagal, tap <b>Kamera Siswa Gagal? Konfirmasi Manual</b>, lalu <b>scan kartu peserta</b> (atau ketik NISN) dan tap <b>Konfirmasi Masuk</b>.',
     ],
   },
   {
